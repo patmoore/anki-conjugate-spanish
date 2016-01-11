@@ -1,0 +1,13 @@
+prefix
+stem
+suffix: er, ar, ir, erse, irse, arse
+
+convert note to cloze
+
+
+cards: 
+id - 
+nid - note id
+did - deck id : but where ?
+ord - order?
+mod - 
