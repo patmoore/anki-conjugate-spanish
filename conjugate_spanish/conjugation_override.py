@@ -86,11 +86,58 @@ class ConjugationOverride():
     
 Zar_CO = ConjugationOverride(inf_match=re.compile(u'zar$'), 
     documentation='verbs ending in -zar have z -> c before e',
-    examples=['comenzar']
+    examples=[six.u('comenzar'), six.u('lanzar')]
     )
 Zar_CO.override_tense_stem(past_tense, lambda self, tense, person: self.stem[:-1]+six.u('c'), first_person_singular)
 Zar_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('c'))
 print Zar_CO.is_match("comenzar")
+Gar_CO = ConjugationOverride(inf_match=re.compile(six.u('gar$')), 
+    documentation='verbs ending in -gar have g -> gu before e',
+    examples=[six.u('pagar')]
+    )
+Gar_CO.override_tense_stem(past_tense, lambda self, tense, person: self.stem[:-1]+six.u('gu'), first_person_singular)
+Gar_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('gu'))
+print Gar_CO.is_match(six.u('pagar'))
+Car_CO = ConjugationOverride(inf_match=re.compile(six.u('car$')), 
+    documentation='verbs ending in -car have c -> qu before e',
+    examples=[six.u('tocar')]
+    )
+Car_CO.override_tense_stem(past_tense, lambda self, tense, person: self.stem[:-1]+six.u('qu'), first_person_singular)
+Car_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('qu'))
+
+# http://www.intro2spanish.com/verbs/listas/master-zco.htm
+Cir_Cer_After_Vowel_CO = ConjugationOverride(inf_match=re.compile(six.u('[aeiouáéíóú]c[ie]r$')),
+    documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o',
+    examples=[six.u('ofrecer')]
+    )
+
+Cir_Cer_After_Vowel_CO.override_tense_stem(past_tense, lambda self, tense, person: self.stem[:-1]+six.u('zc'), first_person_singular)
+Cir_Cer_After_Vowel_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('zc'))
+
+Cir_Cer_After_Const_CO = ConjugationOverride(inf_match=re.compile(six.u('[^aeiouáéíóú]c[ie]r$')),
+    documentation='verbs ending in -cer or -cir with a preceding constant have c -> z before o',
+    examples=[six.u('convencer')]
+    )
+
+Cir_Cer_After_Const_CO.override_tense_stem(past_tense, lambda self, tense, person: self.stem[:-1]+six.u('z'), first_person_singular)
+Cir_Cer_After_Const_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('z'))
+
+Uir_CO = ConjugationOverride(inf_match=re.compile(six.u('[^q]uir$'), re.I)
+    )
+Guir_CO = ConjugationOverride(inf_match=re.compile(six.u('guir$'), re.I),
+    parent=Uir_CO
+    )
+Ucir_CO = ConjugationOverride(inf_match=re.compile(six.u('[úu]cir$')),
+    parent=Cir_Cer_After_Vowel_CO,
+    documentation=six.u('')
+    )
+
+Ducir_CO = ConjugationOverride(inf_match=re.compile(six.u('d[úu]cir$')),
+    parent=Ucir_CO,
+    documentation=six.u('verbs ending in -ducir are also irregular in the past tense'),
+    examples=[six.u('producir'), six.u('aducir')]
+    )
+
 """
 Special casing
 key: need to allow verbs to opt out of special casing. For example, relucir does not have a c-> j substitution in past tense.
@@ -112,28 +159,7 @@ Special_Changes = [
         'conjugation_ending' : re.compile(u'^[oó]'),
         'conjugation': lambda stem, ending: stem[:-1] + u'z'+ ending,
     },
-    {
-        '__doc__': 'verbs ending in -car have c -> qu before e',
-        '__examples__': 'tocar',                
-        'inf_ending': re.compile(u'car$'),
-        'conjugation_ending' : re.compile(u'^[eé]'),
-        'conjugation': lambda stem, ending: stem[:-1] + u'qu'+ ending,
-    },
-    {
-        '__doc__': 'verbs ending in -gar have g -> gu before e',
-        '__examples__': 'pagar',                
-        'inf_ending': re.compile(u'gar$'),
-        'conjugation_ending' : re.compile(u'^[eé]'),
-        'conjugation': lambda stem, ending: stem[:-1] + u'gu'+ ending,
-    },
-    {
-        '__doc__': 'verbs ending in -zar have z -> c before e',
-        '__examples__': 'comenzar',                
-        'inf_ending': re.compile(u'zar$'),
-        # tocar - example
-        'conjugation_ending' : re.compile(u'^[eé]'),
-        'conjugation': lambda stem, ending: stem[:-1] + u'c'+ ending,
-    },
+
     {
         'key' : u'ucir_present',
         'inf_ending': re.compile(u'ucir'),
@@ -166,7 +192,3 @@ Cer_Cir_Without_Vowel = re.compile(u'[^aeiouáéíóú]c[ie]r$')
 
 Ger_Gir = re.compile(six.u('g[ei]r$'))
 
-Gar = re.compile(six.u('gar$'))
-Car = re.compile(six.u('car$'))
-Car = re.compile(six.u('car$'))
-Zar = re.compile(six.u('zar$'))
