@@ -108,22 +108,23 @@ Car_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person:
 # http://www.intro2spanish.com/verbs/listas/master-zco.htm
 Cir_Cer_After_Vowel_CO = ConjugationOverride(inf_match=re.compile(six.u('[aeiouáéíóú]c[ie]r$')),
     documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o',
-    examples=[six.u('ofrecer')]
+    examples=[six.u('aparecer')]
     )
-
-Cir_Cer_After_Vowel_CO.override_tense_stem(past_tense, lambda self, tense, person: self.stem[:-1]+six.u('zc'), first_person_singular)
-Cir_Cer_After_Vowel_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('zc'))
+Cir_Cer_After_Vowel_CO.override_tense_stem(present_tense, lambda self, tense, person: self.stem[:-1]+six.u('zc'), first_person_singular)
+# Cir_Cer_After_Vowel_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('zc'))
 
 Cir_Cer_After_Const_CO = ConjugationOverride(inf_match=re.compile(six.u('[^aeiouáéíóú]c[ie]r$')),
     documentation='verbs ending in -cer or -cir with a preceding constant have c -> z before o',
     examples=[six.u('convencer')]
     )
+Cir_Cer_After_Const_CO.override_tense_stem(present_tense, lambda self, tense, person: self.stem[:-1]+six.u('z'), first_person_singular)
+# Cir_Cer_After_Const_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('z'))
 
-Cir_Cer_After_Const_CO.override_tense_stem(past_tense, lambda self, tense, person: self.stem[:-1]+six.u('z'), first_person_singular)
-Cir_Cer_After_Const_CO.override_tense_stem(present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('z'))
-
-Uir_CO = ConjugationOverride(inf_match=re.compile(six.u('[^q]uir$'), re.I)
+Uir_CO = ConjugationOverride(inf_match=re.compile(six.u('[^q]uir$'), re.I),
+    documentation='-uir but NOT quir verbs. Add a y before inflection except 1st/2nd plurals',
+    examples=[six.u('incluir'), six.u('construir')]
     )
+
 Guir_CO = ConjugationOverride(inf_match=re.compile(six.u('guir$'), re.I),
     parent=Uir_CO
     )
@@ -192,3 +193,4 @@ Cer_Cir_Without_Vowel = re.compile(u'[^aeiouáéíóú]c[ie]r$')
 
 Ger_Gir = re.compile(six.u('g[ei]r$'))
 
+__all__ = [ConjugationOverride]

@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+infinitive_endings = [
+    u'ar',
+    u'er',
+    u'ir'
+]
+
+ar_verb = 0
+er_verb = 1
+ir_verb = 2
+
 Persons = [
     u'yo',
     u'tú',
@@ -33,3 +43,5 @@ third_person_singular = 2
 first_person_plural = 3
 second_person_plural = 4
 third_person_plural = 5
+
+Present_Tense_Stem_Changing_Persons = [first_person_singular, second_person_singular, third_person_singular, third_person_plural]
