@@ -232,7 +232,7 @@ Zar = re.compile(six.u('zar$'))
 
 class ConjugationOverrides():
     
-    def __init__(self, inf_match=None, parent=None):
+    def __init__(self, inf_match=None, parent=None, documentation=None, examples=None):
         self.parent = parent
         self.inf_match = inf_match
 #         self.conjugation = ConjugationOverrides.SparseList()
