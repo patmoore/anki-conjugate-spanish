@@ -127,7 +127,7 @@ class Verb():
     def conjugate_ending(self, tense, person):
         ending = self.__get_override(tense, person, 'conjugation_endings')
         if ending is None:
-            ending = Standard_Conjugation_Endings[self.verb_ending_index][tense][person](tense, person)
+            ending = Standard_Conjugation_Endings[self.verb_ending_index][tense][person]
         return ending
     
     def __conjugation_present_subjective_stem(self, tense, person):

@@ -7,74 +7,74 @@ Standard_Conjugation_Endings = [ [ [] for t in range(len(Tenses)) ] for v in ran
 present tense
 """ 
 Standard_Conjugation_Endings[ar_verb][present_tense] = [
-    lambda tense, person : u"o",
-    lambda tense, person : u"as",
-    lambda tense, person : u"a",
-    lambda tense, person : u"amos",
-    lambda tense, person : u"áis",
-    lambda tense, person : u"an"
+     u"o",
+     u"as",
+     u"a",
+     u"amos",
+     u"áis",
+     u"an"
     ]  
 Standard_Conjugation_Endings[er_verb][present_tense] = [
     Standard_Conjugation_Endings[ar_verb][present_tense][first_person_singular],
-    lambda tense, person : u'es',
-    lambda tense, person : u'e',
-    lambda tense, person : u'emos',
-    lambda tense, person : u'éis',
-    lambda tense, person : u'en'
+     u'es',
+     u'e',
+     u'emos',
+     u'éis',
+     u'en'
     ]  
 Standard_Conjugation_Endings[ir_verb][present_tense] = list(Standard_Conjugation_Endings[er_verb][present_tense])
-Standard_Conjugation_Endings[ir_verb][present_tense][first_person_plural] = lambda tense, person : u'imos'
-Standard_Conjugation_Endings[ir_verb][present_tense][second_person_plural] = lambda tense, person : u'ís'
+Standard_Conjugation_Endings[ir_verb][present_tense][first_person_plural] =  u'imos'
+Standard_Conjugation_Endings[ir_verb][present_tense][second_person_plural] =  u'ís'
 
 """
 imperfect tense
 """
 Standard_Conjugation_Endings[ar_verb][incomplete_past_tense] = [
-    lambda tense, person : u'aba',
-    lambda tense, person : u'abas',
-    lambda tense, person : u'aba',
-    lambda tense, person : u'ábamos',
-    lambda tense, person : u'abais',
-    lambda tense, person : u'aban'
+     u'aba',
+     u'abas',
+     u'aba',
+     u'ábamos',
+     u'abais',
+     u'aban'
     ]
 Standard_Conjugation_Endings[er_verb][incomplete_past_tense] = Standard_Conjugation_Endings[ir_verb][incomplete_past_tense] = [
-    lambda tense, person : u'ía',
-    lambda tense, person : u'ías',
-    lambda tense, person : u'ía',
-    lambda tense, person : u'íamos',
-    lambda tense, person : u'íais',
-    lambda tense, person : u'ían'
+     u'ía',
+     u'ías',
+     u'ía',
+     u'íamos',
+     u'íais',
+     u'ían'
     ]
 """
 past tense
 """
 Standard_Conjugation_Endings[ar_verb][past_tense] = [
-        lambda tense, person : u'é',
-        lambda tense, person : u'aste',
-        lambda tense, person : u'ó',
+         u'é',
+         u'aste',
+         u'ó',
         Standard_Conjugation_Endings[ar_verb][present_tense][first_person_plural],
-        lambda tense, person : u'asteis',
-        lambda tense, person : u'aron' 
+         u'asteis',
+         u'aron' 
     ]
 Standard_Conjugation_Endings[er_verb][past_tense] = Standard_Conjugation_Endings[ir_verb][past_tense] =  [
-        lambda tense, person : u'í',
-        lambda tense, person : u'iste',
-        lambda tense, person : u'ió',
+         u'í',
+         u'iste',
+         u'ió',
         Standard_Conjugation_Endings[ir_verb][present_tense][first_person_plural],
-        lambda tense, person : u'isteis',
-        lambda tense, person : u'ieron' 
+         u'isteis',
+         u'ieron' 
     ]
 """
 Future - present tense endings for haber
 """
 Standard_Conjugation_Endings[ar_verb][future_tense] = \
     Standard_Conjugation_Endings[er_verb][future_tense] = Standard_Conjugation_Endings[ir_verb][future_tense] =  [
-        lambda tense, person : u'é',
-        lambda tense, person : u'ás',
-        lambda tense, person : u'á',
-        lambda tense, person : u'emos',
-        lambda tense, person : u'éis',
-        lambda tense, person : u'án' 
+         u'é',
+         u'ás',
+         u'á',
+         u'emos',
+         u'éis',
+         u'án' 
     ]
  
 Standard_Conjugation_Endings[ar_verb][conditional_tense] = \
@@ -82,17 +82,17 @@ Standard_Conjugation_Endings[er_verb][conditional_tense] = Standard_Conjugation_
     Standard_Conjugation_Endings[er_verb][incomplete_past_tense]
  
 Standard_Conjugation_Endings[ar_verb][present_subjective_tense] = list(Standard_Conjugation_Endings[er_verb][present_tense])
-Standard_Conjugation_Endings[ar_verb][present_subjective_tense][first_person_singular] = lambda tense, person : u'e'     
+Standard_Conjugation_Endings[ar_verb][present_subjective_tense][first_person_singular] =  u'e'     
 Standard_Conjugation_Endings[er_verb][present_subjective_tense] = Standard_Conjugation_Endings[ir_verb][present_subjective_tense] =\
     list(Standard_Conjugation_Endings[ar_verb][present_tense])
-Standard_Conjugation_Endings[er_verb][present_subjective_tense][first_person_singular] = lambda tense, person : u'a'       
+Standard_Conjugation_Endings[er_verb][present_subjective_tense][first_person_singular] =  u'a'       
  
 Standard_Conjugation_Endings[ar_verb][past_subjective_tense] =\
 Standard_Conjugation_Endings[er_verb][past_subjective_tense] = Standard_Conjugation_Endings[ir_verb][past_subjective_tense] = [
-    lambda tense, person : u'ra',
-    lambda tense, person : u'ras',
-    lambda tense, person : u'ra',
-    lambda tense, person : u'ramos',
-    lambda tense, person : u'ráis',
-    lambda tense, person : u'ran'
+     u'ra',
+     u'ras',
+     u'ra',
+     u'ramos',
+     u'rais',
+     u'ran'
     ]
