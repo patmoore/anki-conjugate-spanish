@@ -15,13 +15,13 @@ from __init__ import *
 # sys.stdout = UTF8Writer(sys.stdout)
 from standard_endings import Standard_Conjugation_Endings
 
-
+_vowel_check = re.compile(six.u('[aeiou]$'), re.UNICODE)
 class Verb():
     '''
     classdocs
     '''
     
-    def __init__(self, verb_string, conjugation_overrides=None, prefix=None):
+    def __init__(self, verb_string, definition, conjugation_overrides=None, prefix=None):
         '''
         Constructor
         prefix - remove to find related word for conjugation.
@@ -42,6 +42,7 @@ class Verb():
             self.stem = verb_string[:-2]
             
         self.prefix = prefix
+        self.definition = definition
         
         if conjugation_overrides is not None:
             conjugation_overrides.apply(self)
@@ -225,7 +226,7 @@ class Verb():
     
             
             
-v = Verb("lanzar", conjugation_overrides=Zar_CO)
+v = Verb("lanzar", conjugation_overrides=Zar_CO, definition='')
 # c = v.conjugate_all_tenses()
 c = v.conjugate_tense(past_tense)
 print repr(c).decode("unicode-escape")
