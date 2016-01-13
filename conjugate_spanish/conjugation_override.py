@@ -78,6 +78,9 @@ class ConjugationOverride():
             return False
 
     def apply(self, verb):
+        if self.parent is not None:
+            self.parent.apply(verb)
+            
         for applies in ['conjugations', 'conjugation_stems', 'conjugation_endings']:
             overrides = getattr(self, applies, None)
             if overrides != None:
