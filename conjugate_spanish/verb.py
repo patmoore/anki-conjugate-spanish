@@ -137,7 +137,7 @@ class Verb():
             conjugation_stem = first_person_conjugation[:-1]
             return conjugation_stem
         else:
-            raise "First person conjugation does not end in 'o' = "+first_person_conjugation
+            raise Exception("First person conjugation does not end in 'o' = "+first_person_conjugation)
 
     def __conjugation_past_subjective_stem(self, tense, person):
         third_person_plural_conjugation = self.conjugate(past_tense, third_person_plural)
@@ -156,13 +156,12 @@ class Verb():
             raise "Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation            
             
     def _overrides(self, tense, overrides, attr_name,persons=None):
-        def __convert_to_function(override):            
+        def __convert_to_self_function(override):            
             if inspect.isfunction(override) or inspect.ismethod(override):
-                func = override                
+                boundfunc = six.create_bound_method(override, self)
+                return boundfunc                
             else:
-                func = lambda self, tense, person: override
-            boundfunc = six.create_bound_method(func, self)
-            return boundfunc
+                return override                        
             
         if not hasattr(self, attr_name):
             self_overrides = [ None ] * len(Tenses)
@@ -171,7 +170,7 @@ class Verb():
             self_overrides = getattr(self, attr_name)
             
         if isinstance(overrides, six.string_types) or inspect.isfunction(overrides):
-            fn = __convert_to_function(overrides)
+            fn = __convert_to_self_function(overrides)
             if persons is not None:
                 if self_overrides[tense] is None:
                     self_overrides[tense] = [None] * len(Persons)
@@ -192,7 +191,7 @@ class Verb():
                 
             for person, override in enumerate(overrides):
                 if override is not None:
-                    self_overrides[tense][person] = __convert_to_function(override)
+                    self_overrides[tense][person] = __convert_to_self_function(override)
                     
     def override_tense_stem(self, tense, overrides,persons=None):
         """

@@ -31,6 +31,7 @@ class ConjugationOverride():
                         self_overrides[tense][person] = overrides
             else:
                 # a single stem for all persons of this tense
+                # expand it out to allow for later overrides of specific persons to be applied.
                 self_overrides[tense] = [overrides] * len(Persons)
         else:
             # overrides better be a list

@@ -19,6 +19,3 @@ _ir_conjugation_overrides.override_tense_stem(present_tense, six.u('v'))
 _ir_conjugation_overrides.override_tense(incomplete_past_tense, [six.u('iba'), six.u('ibas'), six.u('iba'), six.u('ibamos'),six.u('ibais'), six.u('iban')])
 _ir_conjugation_overrides.override_tense_stem(present_subjective_tense, six.u('vay'))
 Ir_Definition = Verb(six.u('ir'), conjugation_overrides=_ir_conjugation_overrides, definition="to go")
-c= Ir_Definition.conjugate_all_tenses()
- 
-print repr(c).decode("unicode-escape")

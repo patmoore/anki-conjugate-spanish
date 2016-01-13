@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __init__ import *
+import copy
 
 Standard_Conjugation_Endings = [ [ [] for t in range(len(Tenses)) ] for v in range(len(infinitive_endings))]
 
@@ -96,3 +97,7 @@ Standard_Conjugation_Endings[er_verb][past_subjective_tense] = Standard_Conjugat
      u'rais',
      u'ran'
     ]
+
+Irregular_Past_Endings = copy.deepcopy(Standard_Conjugation_Endings[er_verb][past_tense])
+Irregular_Past_Endings[first_person_singular] = u'e'
+Irregular_Past_Endings[third_person_singular] = u'o'
