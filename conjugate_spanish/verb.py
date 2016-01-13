@@ -9,7 +9,7 @@ import re
 import codecs
 import sys 
 import six
-from conjugation_override import ConjugationOverride, Zar_CO
+from conjugation_override import *
 from __init__ import *
 # UTF8Writer = codecs.getwriter('utf8')
 # sys.stdout = UTF8Writer(sys.stdout)
@@ -21,7 +21,7 @@ class Verb():
     classdocs
     '''
     
-    def __init__(self, verb_string, definition, conjugation_overrides=None, prefix=None):
+    def __init__(self, verb_string, definition, conjugation_overrides=None, prefix=None, base_verb=None):
         '''
         Constructor
         prefix - remove to find related word for conjugation.
@@ -43,60 +43,17 @@ class Verb():
             
         self.prefix = prefix
         self.definition = definition
-        
+        self.doNotApply = []
+                        
         if conjugation_overrides is not None:
-            conjugation_overrides.apply(self)
-                
-            
-        # look for known special cases
-#         last_three = verb_string[-3:]
-#         last_four = verb_string[-4:]        
-#         if verb_string[-5:] == u'ducir':
-#             # past tense is special case c-> j
-#             self.__conjugation_stems[past_tense] = [lambda tense, person: self.stem[:-1] + u'j' for person in Persons]
-#             # first person past is e instead of i
-#             self.__conjugation_endings[past_tense][first_person_singular] = lambda tense, person: u'e'
-#             # normally ió
-#             self.__conjugation_endings[past_tense][third_person_singular] = lambda tense, person: u'o'
-#             # normally ieron
-#             self.__conjugation_endings[past_tense][third_person_singular] = lambda tense, person: u'eron'
-#             
-#         if last_four == u'ucir':
-#             # including ducir verbs
-#             pass # for now
-#         elif last_four == u'quir':
-#             #not special - does not follow uir exceptions
-#             pass
-#         if Cer_Cir_With_Vowel.search(self.verb_string):
-#             self.override_tense_stem(present_tense, self.stem[:-1] +u'zc', first_person_singular)
-#         elif last_three == u'ger' or last_three == u'gir':
-#             # g-> j in yo form
-#             self.__conjugation_stems[present_tense][first_person_singular] = lambda tense, person: self.stem[:-1] +u'j'
-#         elif last_four == u'guir':
-#             # drop the 'u' in yo form
-#             self.override_tense_stem(present_tense, self.stem[:-1], first_person_singular) 
-#         elif last_three == u'uir':
-#             for person in stem_changing_persons :
-#                 self.__conjugation_stems[present_tense][person] = lambda tense, person: self.stem + u'y'
-#             
-#             self.__conjugation_ending[past_tense][third_person_singular] = lambda tense, person: u'yó'
-#             self.__conjugation_ending[past_tense][third_person_singular] = lambda tense, person: u'yeron'
-#             
-#         elif last_three == u'car':
-#             # c -> qu in past tense first person ( before e ) 
-#             self.__conjugation_stems[past_tense][first_person_singular] = lambda tense, person: self.stem[:-1] +u'qu'
-#             self.__conjugation_stems[present_subjective_tense][first_person_singular] = lambda tense, person: self.stem[:-1] +u'qu'
-#         elif last_three == u'gar':
-#             # g -> gu in past tense first person ( before e ) 
-#             self.__conjugation_stems[past_tense][first_person_singular] = lambda tense, person: self.stem[:-1] +u'gu'
-#         elif last_three == u'zar':
-#             # z -> c in past tense first person ( before e ) 
-#             self.__conjugation_stems[past_tense][first_person_singular] = lambda tense, person: self.stem[:-1] +u'c'
-#             
-#         if modifiers is not None:
-#             if "stem_modifiers" in modifiers:
-#                 self.__stem_changing(modifiers['stem_modifiers'])             
-        
+            if isinstance(conjugation_overrides, list):
+                for conjugation_override in conjugation_overrides:
+                    self.__process_conjugation_override(conjugation_override)                               
+        # look for default overrides - apply to end so that user could explicitly turn off the override
+        for conjugation_override in Standard_Overrides.itervalues():
+            if conjugation_override.auto_match != False and conjugation_override.is_match(self.inf_verb_string):
+                self.__process_conjugation_override(conjugation_override)
+                 
     def conjugate_all_tenses(self):
         # present to imperative
         return [ self.conjugate_tense(tense) for tense in range(len(Tenses)) ]
@@ -210,6 +167,11 @@ class Verb():
         self._overrides(tense, overrides, 'conjugations',persons)
         
     def __get_override(self, tense, person, attr_name):
+        """
+        TODO return just the function to allow the stem as it currently is in progress, 
+        this will allow multiple stem changing to be handled
+        return string corresponding override.
+        """
         if hasattr(self, attr_name):
             self_overrides = getattr(self, attr_name)
             if self_overrides[tense] is not None:
@@ -231,9 +193,21 @@ class Verb():
                     raise "Unknown type in override"
         return None
     
+    def __process_conjugation_override(self, conjugation_override):
+        if isinstance(conjugation_override, ConjugationOverride):
+            conjugation_override.apply(self)
+        elif conjugation_override in self.doNotApply:
+            # user has explicitly blocked this override for this verb
+            pass
+        elif conjugation_override[0] == '-':
+            # do not apply the override ever for this verb
+            self.doNotApply.expand(conjugation_override[1:])
+        elif conjugation_override in Standard_Overrides:
+            Standard_Overrides[conjugation_override].apply(self)
+        elif conjugation_override is not None:
+            raise Exception(conjugation_override+" not a ConjugationOverride or a index into Standard_Overrides")
             
-            
-v = Verb("lanzar", conjugation_overrides=Zar_CO, definition='')
+v = Verb("lanzar", '')
 # c = v.conjugate_all_tenses()
 c = v.conjugate_tense(past_tense)
 print repr(c).decode("unicode-escape")
@@ -248,8 +222,8 @@ print repr(c).decode("unicode-escape")
 # c = v.conjugate_all_tenses()
 # print repr(c).decode("unicode-escape")
 # 
-# v = Verb(u"distinguir")
-# c = v.conjugate_all_tenses()
-# print repr(c).decode("unicode-escape")
+v = Verb(u"distinguir", '')
+c = v.conjugate_all_tenses()
+print repr(c).decode("unicode-escape")
 
 

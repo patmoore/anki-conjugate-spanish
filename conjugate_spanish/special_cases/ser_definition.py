@@ -2,6 +2,7 @@
 from conjugate_spanish.conjugation_override import ConjugationOverride
 from conjugate_spanish.__init__ import *
 from conjugate_spanish.standard_endings import Standard_Conjugation_Endings 
+from conjugate_spanish.verb_dictionary import Verb_Dictionary
 import six
 from conjugate_spanish.verb import Verb
 from ir_definition import Past_Tense_IR_CO
@@ -16,6 +17,4 @@ _conjugation_overrides.override_tense_stem(incomplete_past_tense, u'ér', first_
 _conjugation_overrides.override_tense_ending(incomplete_past_tense, _remove_i, documentation="just the leading character is different")
 _conjugation_overrides.override_tense_stem(present_subjective_tense, u'se')
 Ser_Definition = Verb(six.u('ser'), 'to be', conjugation_overrides=_conjugation_overrides)
-# c= Ser_Definition.conjugate_all_tenses()
-#   
-# print repr(c).decode("unicode-escape")
+Verb_Dictionary[Ser_Definition.inf_verb_string] = Ser_Definition
