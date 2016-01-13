@@ -143,10 +143,18 @@ class Verb():
         third_person_plural_conjugation = self.conjugate(past_tense, third_person_plural)
         if third_person_plural_conjugation[-3:] == u'ron':
             conjugation_stem = third_person_plural_conjugation[:-3]
+            if person == first_person_plural:
+                # accent on last vowel                                
+                if _vowel_check.search(conjugation_stem):
+                    conjugation_stem += u'\u0301'
+                else:
+                    # assuming last stem character is a vowel
+                    # and assuming already accented for some reason
+                    pass
             return conjugation_stem
         else:
             raise "Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation            
-        
+            
     def _overrides(self, tense, overrides, attr_name,persons=None):
         def __convert_to_function(override):            
             if inspect.isfunction(override) or inspect.ismethod(override):
