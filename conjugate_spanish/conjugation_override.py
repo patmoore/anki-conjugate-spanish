@@ -4,6 +4,7 @@ import re
 import inspect
 from __init__ import *
 
+# TODO need a way of adding notes to overrides
 class ConjugationOverride():
     
     def __init__(self, inf_match=None, parent=None, documentation=None, examples=None):
@@ -40,13 +41,13 @@ class ConjugationOverride():
                 if override is not None:
                     self_overrides[tense][person] = override
                     
-    def override_tense_stem(self, tense, overrides,persons=None):
+    def override_tense_stem(self, tense, overrides,persons=None, documentation=None):
         self.__overrides(tense, overrides, 'conjugation_stems', persons)
                     
-    def override_tense_ending(self, tense, overrides,persons=None):
+    def override_tense_ending(self, tense, overrides,persons=None, documentation=None):
         self.__overrides(tense, overrides, 'conjugation_endings',persons)
     
-    def override_tense(self, tense, overrides,persons=None):
+    def override_tense(self, tense, overrides,persons=None, documentation=None):
         """
         Used for case when the entire tense is very irregular
         """
