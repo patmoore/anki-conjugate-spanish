@@ -3,11 +3,8 @@
 
 @author: patmoore
 '''
-import copy
 import inspect
 import re
-import codecs
-import sys 
 import six
 from conjugation_override import *
 from __init__ import *
@@ -44,11 +41,15 @@ class Verb():
         self.prefix = prefix
         self.definition = definition
         self.doNotApply = []
+        self.appliedOverrides = []
                         
         if conjugation_overrides is not None:
             if isinstance(conjugation_overrides, list):
                 for conjugation_override in conjugation_overrides:
-                    self.__process_conjugation_override(conjugation_override)                               
+                    self.__process_conjugation_override(conjugation_override)  
+            else:
+                 self.__process_conjugation_override(conjugation_overrides)
+                 
         # look for default overrides - apply to end so that user could explicitly turn off the override
         for conjugation_override in Standard_Overrides.itervalues():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self.inf_verb_string):
@@ -150,6 +151,11 @@ class Verb():
                 if override is not None:
                     self_overrides[tense][person] = __convert_to_self_function(override)
                     
+    def overrides_applied(self):
+        return {u'applied' : self.appliedOverrides,
+            u'excluded': self.doNotApply
+        }
+        
     def override_tense_stem(self, tense, overrides,persons=None):
         """
         :param overrides - array of all persons, or a unicode string that applies to all persons
@@ -194,18 +200,24 @@ class Verb():
         return None
     
     def __process_conjugation_override(self, conjugation_override):
+        """
+        Before applying the override first check to see if this verb says that it is a special case
+        and the override should not be applied.
+        """        
         if isinstance(conjugation_override, ConjugationOverride):
-            conjugation_override.apply(self)
-        elif conjugation_override in self.doNotApply:
-            # user has explicitly blocked this override for this verb
-            pass
-        elif conjugation_override[0] == '-':
-            # do not apply the override ever for this verb
-            self.doNotApply.expand(conjugation_override[1:])
-        elif conjugation_override in Standard_Overrides:
-            Standard_Overrides[conjugation_override].apply(self)
-        elif conjugation_override is not None:
-            raise Exception(conjugation_override+" not a ConjugationOverride or a index into Standard_Overrides")
+            override = conjugation_override            
+        else:
+            lookup_key = conjugation_override if conjugation_override[0] != '-' else conjugation_override[1:]
+            override = Standard_Overrides[lookup_key]
+            if override is None:
+                raise Exception("no override with key ", lookup_key)
+            if conjugation_override[0] == '-':
+                self.doNotApply.append(override.key)
+                return
+            
+        if override.key not in self.doNotApply:
+            override.apply(self)
+            self.appliedOverrides.append(override.key)
             
 v = Verb("lanzar", '')
 # c = v.conjugate_all_tenses()
@@ -213,6 +225,8 @@ c = v.conjugate_tense(past_tense)
 print repr(c).decode("unicode-escape")
 c = v.conjugate_tense(present_subjective_tense)
 print repr(c).decode("unicode-escape")
+
+print v.overrides_applied()
 
 # v = Verb(u"hablar")
 # c = v.conjugate_all_tenses()

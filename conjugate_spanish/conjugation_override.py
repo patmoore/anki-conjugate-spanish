@@ -4,6 +4,13 @@ import re
 import inspect
 from __init__ import *
 from standard_endings import Standard_Conjugation_Endings
+"""
+Special casing
+key: need to allow verbs to opt out of special casing. For example, relucir does not have a c-> j substitution in past tense.
+http://www.intro2spanish.com/verbs/listas/master-zco.htm
+"""
+
+__all__ = ['ConjugationOverride', 'Standard_Overrides']
 
 # TODO need a way of adding notes to overrides
 class ConjugationOverride():
@@ -188,11 +195,3 @@ Iar_CO = ConjugationOverride(inf_match=re.compile(u'iar$', re.IGNORECASE+re.UNIC
     documentation=u'some iar verbs accent the i so that it is not weak in the yo form')
 Iar_CO.override_tense_ending(present_tense, u'\u0301' + Standard_Conjugation_Endings[ar_verb][present_tense][first_person_singular], first_person_singular)
 Standard_Overrides[Iar_CO.key] = Iar_CO
-
-"""
-Special casing
-key: need to allow verbs to opt out of special casing. For example, relucir does not have a c-> j substitution in past tense.
-http://www.intro2spanish.com/verbs/listas/master-zco.htm
-"""
-
-__all__ = ['ConjugationOverride', 'Standard_Overrides']
