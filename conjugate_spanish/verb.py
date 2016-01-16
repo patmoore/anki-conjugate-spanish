@@ -7,7 +7,7 @@ import inspect
 import re
 import six
 from conjugation_override import *
-from __init__ import *
+from constants import *
 # UTF8Writer = codecs.getwriter('utf8')
 # sys.stdout = UTF8Writer(sys.stdout)
 from standard_endings import Standard_Conjugation_Endings
@@ -30,7 +30,7 @@ class Verb():
             
         self.verb_string = verb_string
         self.inf_ending = verb_string[-2:]            
-        self.verb_ending_index = infinitive_endings.index(self.inf_ending)      
+        self.verb_ending_index = Infinitive_Endings.index(self.inf_ending)      
            
         if verb_string == six.u('ir'):
             # ir special case
@@ -73,13 +73,13 @@ class Verb():
         if stem is not None:
             return stem
         
-        if tense == present_tense or tense == incomplete_past_tense or tense == past_tense:
+        if tense == Tenses.present_tense or tense == Tenses.incomplete_past_tense or tense == Tenses.past_tense:
             return self.stem
-        elif tense == future_tense or tense == conditional_tense:
+        elif tense == Tenses.future_tense or tense == Tenses.conditional_tense:
             return self.verb_string
-        elif tense == present_subjective_tense:
+        elif tense == Tenses.present_subjective_tense:
             return self.__conjugation_present_subjective_stem(tense, person)
-        elif tense == past_subjective_tense:
+        elif tense == Tenses.past_subjective_tense:
             return self.__conjugation_past_subjective_stem(tense, person)
         raise "tense="+str(tense)
         
@@ -90,7 +90,7 @@ class Verb():
         return ending
     
     def __conjugation_present_subjective_stem(self, tense, person):
-        first_person_conjugation = self.conjugate(present_tense, first_person_singular)
+        first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular)
         if first_person_conjugation[-1:] =='o':
             conjugation_stem = first_person_conjugation[:-1]
             return conjugation_stem
@@ -98,17 +98,17 @@ class Verb():
             raise Exception("First person conjugation does not end in 'o' = "+first_person_conjugation)
 
     def __conjugation_past_subjective_stem(self, tense, person):
-        third_person_plural_conjugation = self.conjugate(past_tense, third_person_plural)
+        third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural)
         if third_person_plural_conjugation[-3:] == u'ron':
             conjugation_stem = third_person_plural_conjugation[:-3]
-            if person == first_person_plural:
+            if person == Persons.first_person_plural:
                 # accent on last vowel                                
                 if _vowel_check.search(conjugation_stem):
                     conjugation_stem += u'\u0301'
                 else:
                     # assuming last stem character is a vowel
                     # and assuming already accented for some reason
-                    pass
+                    raise Exception("No ending vowel")
             return conjugation_stem
         else:
             raise "Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation            
@@ -217,27 +217,4 @@ class Verb():
             
         if override.key not in self.doNotApply:
             override.apply(self)
-            self.appliedOverrides.append(override.key)
-            
-v = Verb("lanzar", '')
-# c = v.conjugate_all_tenses()
-c = v.conjugate_tense(past_tense)
-print repr(c).decode("unicode-escape")
-c = v.conjugate_tense(present_subjective_tense)
-print repr(c).decode("unicode-escape")
-
-print v.overrides_applied()
-
-# v = Verb(u"hablar")
-# c = v.conjugate_all_tenses()
-# print repr(c).decode("unicode-escape")
-# 
-# v = Verb(u"ofrecer")
-# c = v.conjugate_all_tenses()
-# print repr(c).decode("unicode-escape")
-# 
-v = Verb(u"distinguir", '')
-c = v.conjugate_all_tenses()
-print repr(c).decode("unicode-escape")
-
-
+            self.appliedOverrides.append(override.key)            
