@@ -21,7 +21,7 @@ class ConjugationOverride():
         self.documentation = documentation
         self.examples=examples
         self.key= key if key is not None else inf_match
-        self.auto_match = auto_match        
+        self.auto_match = auto_match and inf_match is not None        
         
     def __overrides(self, tense, overrides, attr_name, persons):
         if not hasattr(self, attr_name):
@@ -189,9 +189,15 @@ Ducir_CO.override_tense_ending(Tenses.past_tense, u'o', Persons.third_person_sin
 Ducir_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_plural, documentation=u'normally ieron')
 Standard_Overrides[Ducir_CO.key]=Ducir_CO
 
+# optional
+
 Iar_CO = ConjugationOverride(inf_match=re.compile(u'iar$', re.IGNORECASE+re.UNICODE),
     auto_match=False,
     key=u'iar',
     documentation=u'some iar verbs accent the i so that it is not weak in the yo form')
 Iar_CO.override_tense_ending(Tenses.present_tense, u'\u0301' + Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_tense][Persons.first_person_singular], Persons.first_person_singular)
 Standard_Overrides[Iar_CO.key] = Iar_CO
+
+Go_CO = ConjugationOverride(key=u'go', documentation="go verbs")
+Go_CO.override_tense_ending(Tenses.present_tense, "u'go", Persons.first_person_singular, documentation="go verb")
+Standard_Overrides[Go_CO.key] = Go_CO
