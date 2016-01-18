@@ -27,13 +27,17 @@ class Verb():
         self.inf_verb_string = verb_string
         if verb_string[-2:] == 'se':
             self.reflexive = True
-            verb_string = verb_string[:-2]
+            verb_string = verb_string[:-2]                    
             
         self.verb_string = verb_string
-        self.inf_ending = verb_string[-2:]            
-        self.verb_ending_index = Infinitive_Endings.index(self.inf_ending)      
+        self.inf_ending = verb_string[-2:]
+        # special casing for eír verbs which have accented i
+        if self.inf_ending == u'ír':
+            self.verb_ending_index = Infinitive_Endings.index(Infinitive_Endings.ir_verb)
+        else:
+            self.verb_ending_index = Infinitive_Endings.index(self.inf_ending)      
            
-        if verb_string == six.u('ir'):
+        if verb_string == u'ir':
             # ir special case
             self.stem = verb_string
         else:

@@ -4,6 +4,7 @@ import re
 import inspect
 from standard_endings import Standard_Conjugation_Endings
 from constants import *
+
 """
 Special casing
 key: need to allow verbs to opt out of special casing. For example, relucir does not have a c-> j substitution in past tense.
@@ -219,14 +220,21 @@ Standard_Overrides[Cir_Cer_After_Const_CO.key] = Cir_Cer_After_Const_CO
 Standard_Overrides['v_cer'] = Cir_Cer_After_Const_CO
 Standard_Overrides['v_cir'] = Cir_Cer_After_Const_CO
 
+I2Y_PastTense_CO = ConjugationOverride(
+    key=u'i2y',
+    documentation="uir verbs and eer verbs"
+)
+I2Y_PastTense_CO.override_tense_ending(Tenses.past_tense, u'yó', Persons.third_person_singular)
+I2Y_PastTense_CO.override_tense_ending(Tenses.past_tense, u'yeron', Persons.third_person_plural)
+Standard_Overrides[I2Y_PastTense_CO.key] = I2Y_PastTense_CO
+    
 Uir_CO = ConjugationOverride(inf_match=re.compile(six.u('[^qg]uir$'), re.I),
+    parents=I2Y_PastTense_CO,
     key="uir",
     documentation='-uir but NOT quir nor guir verbs. Add a y before inflection except 1st/2nd plurals',
     examples=[u'incluir', u'construir', u'contribuir']
     )
 Uir_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: stem + u'y', Persons.Present_Tense_Stem_Changing_Persons)
-Uir_CO.override_tense_ending(Tenses.past_tense, u'yó', Persons.third_person_singular)
-Uir_CO.override_tense_ending(Tenses.past_tense, u'yeron', Persons.third_person_plural)
 Standard_Overrides[Uir_CO.key]=Uir_CO
 
 Guir_CO = ConjugationOverride(inf_match=re.compile(six.u('guir$'), re.I),
@@ -248,6 +256,24 @@ Ducir_CO.override_tense_ending(Tenses.past_tense, u'o', Persons.third_person_sin
 Ducir_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_plural, documentation=u'normally ieron')
 Standard_Overrides[Ducir_CO.key]=Ducir_CO
 
+Eir_CO = ConjugationOverride(inf_match=re.compile(u'e[ií]r$'),
+    #pattern includes without the accent as well because user may forget the accent.
+    key="eir",
+    documentation="eír verbs have accent on i in the infinitive",
+    examples = [u'reír', u'freír']
+    )
+Eir_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: stem[:-1] + u'í', Persons.Present_Tense_Stem_Changing_Persons)
+Eir_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: stem[:-1], Persons.Past_Tense_Stem_Changing_Persons, documentation="remove the e from the stem")
+Standard_Overrides[Eir_CO.key]=Eir_CO
+Standard_Overrides["eír"]=Eir_CO
+
+Eer_CO = ConjugationOverride(inf_match=re.compile(u'eer$'),
+    # the i2y pattern that can be automatically assigned to eer verbs
+    key="eer",
+    parents=I2Y_PastTense_CO,
+    documentation="eer verbs",
+    examples = [u'creer']
+    )
 # optional
 
 Iar_CO = ConjugationOverride(inf_match=re.compile(u'iar$', re.IGNORECASE+re.UNICODE),

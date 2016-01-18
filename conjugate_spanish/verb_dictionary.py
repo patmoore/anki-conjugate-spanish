@@ -28,5 +28,5 @@ try:
             Verb_Dictionary_add(**line)
         except Exception as e:
             print "error reading dictionary.csv: ", line            
-except:
+except Exception as e:
     print "error reading dictionary.csv"
