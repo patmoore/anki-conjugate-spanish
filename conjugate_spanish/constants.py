@@ -39,6 +39,7 @@ class Persons_(list):
     second_person_plural = 4
     third_person_plural = 5
     Present_Tense_Stem_Changing_Persons = [first_person_singular, second_person_singular, third_person_singular, third_person_plural]
+    Past_Tense_Stem_Changing_Persons = [third_person_singular, third_person_plural]
 
 Persons = Persons_([
     u'yo',

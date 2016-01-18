@@ -13,7 +13,7 @@ Past_Tense_IR_CO.override_tense_ending(Tenses.past_tense, six.u('i'), Persons.fi
 Past_Tense_IR_CO.override_tense_ending(Tenses.past_tense, six.u('e'), Persons.third_person_singular)
 Past_Tense_IR_CO.override_tense_ending(Tenses.past_tense, six.u('eron'), Persons.third_person_plural, documentation="missing i")
 
-_ir_conjugation_overrides = ConjugationOverride(parent=Past_Tense_IR_CO)
+_ir_conjugation_overrides = ConjugationOverride(parents=Past_Tense_IR_CO)
 _ir_conjugation_overrides.override_tense_ending(Tenses.present_tense, Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_tense])
 _ir_conjugation_overrides.override_tense_ending(Tenses.present_tense, six.u('oy'), Persons.first_person_singular) 
 _ir_conjugation_overrides.override_tense_ending(Tenses.present_tense, six.u('ais'), Persons.second_person_plural, documentation="no accent on a")
