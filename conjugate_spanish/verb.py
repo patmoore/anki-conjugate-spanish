@@ -263,6 +263,6 @@ class Verb():
                 self.doNotApply.append(override.key)
                 return
             
-        if override.key not in self.doNotApply:
+        if override.key not in self.doNotApply and override.key not in self.appliedOverrides:
             override.apply(self)
             self.appliedOverrides.append(override.key)            
