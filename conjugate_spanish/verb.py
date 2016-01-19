@@ -13,6 +13,13 @@ from constants import *
 # sys.stdout = UTF8Writer(sys.stdout)
 from standard_endings import Standard_Conjugation_Endings
 
+def make_unicode(inputStr):
+    if type(inputStr) != unicode:
+        inputStr = inputStr.decode('utf-8')
+        return inputStr
+    else:
+        return inputStr
+    
 _vowel_check = re.compile(six.u('[aeiou]$'), re.UNICODE)
 class Verb():
     '''
@@ -24,6 +31,9 @@ class Verb():
         Constructor
         prefix - remove to find related word for conjugation.
         '''
+        # when reading from a file or some other place - it may be a ascii string.
+        # must be unicode for us reliably do things like [:-1] to peel off last character 
+        verb_string = make_unicode(verb_string)
         self.inf_verb_string = verb_string
         if verb_string[-2:] == 'se':
             self.reflexive = True
@@ -32,16 +42,17 @@ class Verb():
         self.verb_string = verb_string
         self.inf_ending = verb_string[-2:]
         # special casing for eír verbs which have accented i
-        if self.inf_ending == u'ír':
-            self.verb_ending_index = Infinitive_Endings.index(Infinitive_Endings.ir_verb)
-        else:
-            self.verb_ending_index = Infinitive_Endings.index(self.inf_ending)      
-           
-        if verb_string == u'ir':
+        if verb_string == u'ir': 
             # ir special case
             self.stem = verb_string
+            self.verb_ending_index = Infinitive_Endings.ir_verb
+        elif self.inf_ending == u'ír':
+            self.inf_ending = u'ir'
+            self.stem = verb_string[:-2]
+            self.verb_ending_index = Infinitive_Endings.ir_verb
         else:
             self.stem = verb_string[:-2]
+            self.verb_ending_index = Infinitive_Endings.index(self.inf_ending)
             
         self.prefix = prefix
         self.definition = definition
