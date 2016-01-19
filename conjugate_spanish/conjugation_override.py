@@ -65,6 +65,20 @@ class ConjugationOverride():
                     
     def override_tense_ending(self, tense, overrides,persons=None, documentation=None):
         self.__overrides(tense, overrides, 'conjugation_endings',persons)
+        
+    def override_present_stem_changers(self, overrides, documentation=None):
+        """
+        Special case because occurs so often in spanish
+        overrides 1st person singular, 2nd person singular and 3rd person singular and plural
+        """
+        self.override_tense_stem(tense=Tenses.present_tense, overrides=overrides, persons=Persons.Present_Tense_Stem_Changing_Persons, documentation=documentation)
+        
+    def override_past_stem_changers(self, overrides, documentation=None):
+        """
+        Special case because occurs so often in spanish
+        overrides 3rd person singular and plural
+        """
+        self.override_tense_stem(tense=Tenses.past_tense, overrides=overrides, persons=Persons.Past_Tense_Stem_Changing_Persons, documentation=documentation)
     
     def override_tense(self, tense, overrides,persons=None, documentation=None):
         """
