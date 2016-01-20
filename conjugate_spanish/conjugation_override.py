@@ -309,3 +309,25 @@ Standard_Overrides[Go_CO.key] = Go_CO
 Oy_CO = ConjugationOverride(key=u'oy', documentation="oy verbs")
 Oy_CO.override_tense_ending(Tenses.present_tense, u"oy", Persons.first_person_singular, documentation="oy verb")
 Standard_Overrides[Oy_CO.key] = Oy_CO
+
+Past_Yo_Ud_Irr_CO = ConjugationOverride(key=u'e_and_o', 
+    documentation="Some irregular verbs have past tense changes yo: 'e' and usted has 'o'",
+    examples=[u'estar', u'tener'])
+Past_Yo_Ud_Irr_CO.override_tense_ending(Tenses.past_tense, u'e', Persons.first_person_singular)
+Past_Yo_Ud_Irr_CO.override_tense_ending(Tenses.past_tense, u'o', Persons.third_person_singular)
+Standard_Overrides[Past_Yo_Ud_Irr_CO.key] = Past_Yo_Ud_Irr_CO
+
+Infinitive_Stems_E2D = ConjugationOverride(key=u'e2d', documentation="Future Tense/Conditional Tense:Some verbs convert the -er ending infinitive stem to a 'd'",
+        examples=[u'tener'])
+Infinitive_Stems_E2D.override_tense_stem(Tenses.future_tense, lambda self, stem, **kwargs: stem[:-2] + u'dr')
+Infinitive_Stems_E2D.override_tense_stem(Tenses.conditional_tense, lambda self, stem, **kwargs: stem[:-2] + u'dr')
+Standard_Overrides[Infinitive_Stems_E2D.key]=Infinitive_Stems_E2D
+
+Infinitive_Stems_R_Only = ConjugationOverride(key=u'ronly', documentation="Future Tense/Conditional Tense:Some verbs remove the vowel in the infinitive ending to a r",
+        examples=[u'haber'])
+Infinitive_Stems_R_Only.override_tense_stem(Tenses.future_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
+Infinitive_Stems_R_Only.override_tense_stem(Tenses.conditional_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
+Standard_Overrides[Infinitive_Stems_R_Only.key]=Infinitive_Stems_R_Only
+
+# Third person only conjugations
+
