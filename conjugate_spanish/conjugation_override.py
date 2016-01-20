@@ -162,7 +162,7 @@ for vowel_from, present_vowels_to, past_vowels_to in radical_stem_changes:
     conjugation_override.override_tense_stem(Tenses.past_tense, __make_radical_call(vowel_from, past_vowels_to), Persons.Past_Tense_Stem_Changing_Persons)
     Standard_Overrides[key] = conjugation_override
     
-def __replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= None):
+def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= None):
     truncated_stem = stem[:-1]
     last_letter = stem[-1]
     if expected_last_letter is not None and expected_last_letter != last_letter:
@@ -177,8 +177,8 @@ Zar_CO = ConjugationOverride(inf_match=re.compile(u'zar$'),
     documentation='verbs ending in -zar have z -> c before e',
     examples=[six.u('comenzar'), six.u('lanzar')]
     )
-Zar_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'z',u'c'), Persons.first_person_singular)
-Zar_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'z',u'c'))
+Zar_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'z',u'c'), Persons.first_person_singular)
+Zar_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'z',u'c'))
 Standard_Overrides[Zar_CO.key] = Zar_CO
 
 Gar_CO = ConjugationOverride(inf_match=re.compile(u'gar$'),
@@ -186,14 +186,14 @@ Gar_CO = ConjugationOverride(inf_match=re.compile(u'gar$'),
     documentation='verbs ending in -gar have g -> gu before e',
     examples=[six.u('pagar')]
     )
-Gar_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'g', u'gu'), Persons.first_person_singular)
-Gar_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'g',u'gu'))
+Gar_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'g', u'gu'), Persons.first_person_singular)
+Gar_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'g',u'gu'))
 Standard_Overrides[Gar_CO.key] = Gar_CO
 
 Ger_CO = ConjugationOverride(inf_match=re.compile(u'ger$'),
     key="ger"
     )
-Ger_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'g', u'j'), 
+Ger_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'g', u'j'), 
     persons=Persons.first_person_singular,
     documentation=u'g->j before o (present:first person singular)')
 Standard_Overrides[Ger_CO.key] = Ger_CO
@@ -209,8 +209,8 @@ Car_CO = ConjugationOverride(inf_match=re.compile(six.u('car$')),
     documentation='verbs ending in -car have c -> qu before e',
     examples=[six.u('tocar')]
     )
-Car_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'c',u'qu'), Persons.first_person_singular)
-Car_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'c',u'qu'))
+Car_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'c',u'qu'), Persons.first_person_singular)
+Car_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'c',u'qu'))
 Standard_Overrides[Car_CO.key] = Car_CO
 
 # http://www.intro2spanish.com/verbs/listas/master-zco.htm
@@ -219,7 +219,7 @@ Cir_Cer_After_Vowel_CO = ConjugationOverride(inf_match=re.compile(six.u('[aeiou�
     documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o',
     examples=[six.u('aparecer')]
     )
-Cir_Cer_After_Vowel_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'c',u'zc'), Persons.first_person_singular)
+Cir_Cer_After_Vowel_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'c',u'zc'), Persons.first_person_singular)
 # Cir_Cer_After_Vowel_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('zc'))
 Standard_Overrides[Cir_Cer_After_Vowel_CO.key] = Cir_Cer_After_Vowel_CO
 Standard_Overrides['v_cer'] = Cir_Cer_After_Vowel_CO
@@ -230,7 +230,7 @@ Cir_Cer_After_Const_CO = ConjugationOverride(inf_match=re.compile(six.u('[^aeiou
     documentation='verbs ending in -cer or -cir with a preceding constant have c -> z before o',
     examples=[six.u('convencer')]
     )
-Cir_Cer_After_Const_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem,u'c',u'z'), Persons.first_person_singular)
+Cir_Cer_After_Const_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem,u'c',u'z'), Persons.first_person_singular)
 # Cir_Cer_After_Const_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, tense, person: self.stem[:-1]+six.u('z'))
 Standard_Overrides[Cir_Cer_After_Const_CO.key] = Cir_Cer_After_Const_CO
 Standard_Overrides['v_cer'] = Cir_Cer_After_Const_CO
@@ -257,7 +257,7 @@ Guir_CO = ConjugationOverride(inf_match=re.compile(six.u('guir$'), re.I),
     key='guir'
     )
 # drop u in 1st person present
-Guir_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs:__replace_last_letter_of_stem(stem,u'u'), Persons.first_person_singular)
+Guir_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs:_replace_last_letter_of_stem(stem,u'u'), Persons.first_person_singular)
 Standard_Overrides[Guir_CO.key]=Guir_CO
 
 Ducir_CO = ConjugationOverride(inf_match=re.compile(u'd[úu]cir$', re.IGNORECASE+re.UNICODE),
@@ -266,7 +266,7 @@ Ducir_CO = ConjugationOverride(inf_match=re.compile(u'd[úu]cir$', re.IGNORECASE
     documentation=six.u('verbs ending in -ducir are also irregular in the past tense'),
     examples=[six.u('producir'), six.u('aducir')]
     )
-Ducir_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'c', u'j'), documentation=u'past tense is special case c-> j')
+Ducir_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'c', u'j'), documentation=u'past tense is special case c-> j')
 Ducir_CO.override_tense_ending(Tenses.past_tense, u'e', Persons.first_person_singular, documentation=u'first person past is e instead of i')
 Ducir_CO.override_tense_ending(Tenses.past_tense, u'o', Persons.third_person_singular, documentation=u'normally ió')
 Ducir_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_plural, documentation=u'normally ieron')
@@ -278,9 +278,10 @@ Eir_CO = ConjugationOverride(inf_match=re.compile(u'e[ií]r$'),
     documentation="eír verbs have accent on i in the infinitive",
     examples = [u'reír', u'freír']
     )
-Eir_CO.override_present_stem_changers(lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'e', u'í'), 
+Eir_CO.override_present_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'e', u'í'), 
         documentation="replace stem ending e with accented í")
-Eir_CO.override_past_stem_changers(lambda self, stem, **kwargs: __replace_last_letter_of_stem(stem, u'e'), documentation="remove the e from the stem")
+Eir_CO.override_tense_ending(Tenses.present_tense, lambda self, **kwargs: u'ímos', documentation="accent on the i", persons=Persons.first_person_plural)
+Eir_CO.override_past_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'e'), documentation="remove the e from the stem")
 Standard_Overrides[Eir_CO.key]=Eir_CO
 Standard_Overrides["eír"]=Eir_CO
 
@@ -291,7 +292,8 @@ Eer_CO = ConjugationOverride(inf_match=re.compile(u'eer$'),
     documentation="eer verbs",
     examples = [u'creer']
     )
-# optional
+
+# These endings must be explicitly added
 
 Iar_CO = ConjugationOverride(inf_match=re.compile(u'iar$', re.IGNORECASE+re.UNICODE),
     auto_match=False,
