@@ -8,6 +8,7 @@ import re
 import six
 import sys
 from conjugation_override import *
+from conjugation_override import _replace_last_letter_of_stem
 from constants import *
 # UTF8Writer = codecs.getwriter('utf8')
 # sys.stdout = UTF8Writer(sys.stdout)
@@ -21,6 +22,21 @@ def make_unicode(inputStr):
         return inputStr
     
 _vowel_check = re.compile(six.u('[aeiou]$'), re.UNICODE)
+_accented_vowels = re.compile(u'[áéíóú]')
+def _check_for_multiple_accents(conjugation):
+    if conjugation is not None:
+        accented = _accented_vowels.findall(conjugation)
+        if len(accented) > 1:
+            raise Exception("Too many accents in "+conjugation) 
+
+_replace_accents = [
+    [ re.compile(u'á'), u'a' ],
+    [ re.compile(u'é'), u'e' ],
+    [ re.compile(u'í'), u'i' ],
+    [ re.compile(u'ó'), u'o' ],
+    [ re.compile(u'ú'), u'u' ]
+]    
+
 class Verb():
     '''
     classdocs
@@ -37,7 +53,9 @@ class Verb():
         self.inf_verb_string = verb_string
         if verb_string[-2:] == 'se':
             self.reflexive = True
-            verb_string = verb_string[:-2]                    
+            verb_string = verb_string[:-2] 
+        else:
+            self.reflexive = False                   
             
         self.verb_string = verb_string
         self.inf_ending = verb_string[-2:]
@@ -72,9 +90,6 @@ class Verb():
         for conjugation_override in Standard_Overrides.itervalues():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self.inf_verb_string):
                 self.__process_conjugation_override(conjugation_override)
-                 
-    def conjugate_irregular_tenses(self):
-        pass
     
     def conjugate_all_tenses(self):
         # present to imperative
@@ -85,10 +100,7 @@ class Verb():
             
     def conjugate(self, tense, person):
         conjugation_overrides = self.__get_override(tense, person, 'conjugations')
-        if conjugation_overrides is None:
-            current_conjugation_ending = self.conjugate_ending(tense, person)
-            conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
-        else:
+        if conjugation_overrides is not None:
             for conjugation_override in conjugation_overrides:
                 if isinstance(conjugation_override, six.string_types):
                     conjugation = conjugation_override
@@ -100,17 +112,22 @@ class Verb():
 #                         formatted = traceback.format_exception_only(extype, ex)[-1]
                         message = "%s: Trying to conjugate irregular=%d person=%d; %s" % self.inf_verb_string, tense, person, ex.message
                         raise RuntimeError, message, traceback
-
+        elif tense in [Tenses.imperative_positive, Tenses.imperative_negative]:
+            conjugation = self.__conjugation_imperative(tense, person)
+        else:
+            current_conjugation_ending = self.conjugate_ending(tense, person)
+            conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
+        _check_for_multiple_accents(conjugation)
         return conjugation
     
     def conjugate_stem(self, tense, person, current_conjugation_ending):
         """
         :current_conjugation_ending - important because some rule only apply if the conjugation ending starts with an o or e
         """         
-        if tense == Tenses.present_tense or tense == Tenses.incomplete_past_tense or tense == Tenses.past_tense:
+        if tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense]:
             current_conjugation_stem = self.stem
-        elif tense == Tenses.future_tense or tense == Tenses.conditional_tense:
-            current_conjugation_stem = self.verb_string
+        elif tense in [ Tenses.future_tense, Tenses.conditional_tense]:
+            current_conjugation_stem = self.__remove_accent(self.verb_string)
         elif tense == Tenses.present_subjective_tense:
             current_conjugation_stem = self.__conjugation_present_subjective_stem(tense, person)
         elif tense == Tenses.past_subjective_tense:
@@ -131,7 +148,8 @@ class Verb():
 #                         formatted = traceback.format_exception_only(extype, ex)[-1]
 #                         message = "%s: Trying to conjugate stem tense=%d person=%d" % self.inf_verb_string, tense, person, ex.message
 #                         raise RuntimeError, message, traceback
-
+        if current_conjugation_stem is None:
+            raise Exception(self.inf_verb_string+": no stem created tense="+tense+" person="+person)
         return current_conjugation_stem
         
     def conjugate_ending(self, tense, person):
@@ -153,6 +171,97 @@ class Verb():
                     
         return current_conjugation_ending
     
+    def __explicit_accent(self, conjugation_string):
+        """
+        look for vowel to accent.
+        """
+        _strong_vowel = [u'a', u'e', u'o']
+        _weak_vowel = [u'i', u'u']
+        if _accented_vowels.search(conjugation_string):
+            return conjugation_string
+        else:            
+            if conjugation_string[-1] in [u'n', u's'] or conjugation_string[-1] in _strong_vowel or conjugation_string[-1] in _weak_vowel:
+                # skip the first vowel for words ending in s or n or a vowel
+                vowel_skip = 1
+            else:
+                vowel_skip = 0
+            
+            result = None
+            while result is None:
+                #May need to go through twice if there is only 1 vowel in the word and it would be normally skipped
+                for index in range(len(conjugation_string)-1,0,-1):                    
+                    if conjugation_string[index] in _strong_vowel:
+                        #strong vowel                        
+                        if vowel_skip > 0:
+                            vowel_skip -=1
+                            continue
+                        else:
+                            result = conjugation_string[:index+1] + u'\u0301' + conjugation_string[index+1:]
+                    elif conjugation_string[index] in _weak_vowel:
+                        #weak vowel                                   
+                        if vowel_skip > 0:
+                            vowel_skip -=1
+                            continue
+                        elif index-1 >= 0 and conjugation_string[index-1] in _strong_vowel:
+                            # accent should be on strong vowel immediately before the weak vowel                            
+                            continue
+                        else:
+                            # for two weak vowels the accent is on the second one (i.e. this one) 
+                            # or if there is any other letter or this is the beginning of the word
+                            result = conjugation_string[:index+1] + u'\u0301' + conjugation_string[index+1:]
+                            
+            return result
+            
+    def __remove_accent(self, string_):       
+        result = string_ 
+        for regex, replace in _replace_accents:
+            result = regex.sub(replace, result)
+        return result
+    
+    def __conjugation_imperative(self, tense, person):
+        """
+        TODO: placement of lo. examples:
+            no me lo dé - don't give it to me
+            Démelo - give it to me
+            
+        TODO: (reflexive) apply accent to vowel that was originally accented
+        when appending reflexive pronoun 
+        """        
+        if person == Persons.first_person_singular:
+            # no such conjugation
+            return None
+        elif person == Persons.first_person_plural:
+            conjugation = self.conjugate(Tenses.present_subjective_tense, person)
+            if self.reflexive:
+                conjugation = _replace_last_letter_of_stem(self.__explicit_accent(conjugation), u's', Persons_Indirect[Persons.first_person_plural])
+                
+        elif person == Persons.second_person_singular and tense == Tenses.imperative_positive:
+            conjugation = self.conjugate(Tenses.present_tense, Persons.third_person_singular)
+            if self.reflexive:
+                conjugation = self.__explicit_accent(conjugation) + Persons_Indirect[person]
+        elif person == Persons.second_person_plural and tense == Tenses.imperative_positive:
+            if not self.reflexive:
+                # xxxv rule j: drop 'r' in infinitive and replace with 'd' in non-reflexive cases 
+                conjugation = _replace_last_letter_of_stem(self.inf_verb_string, u'r', u'd')
+            elif self.verb_ending_index == Infinitive_Endings.ir_verb:
+                # ir verbs need the i accented rule k and l
+                # example ¡Vestíos! - Get Dressed!
+                # what about verbs that already have explicit accent?
+                conjugation = self.__remove_accent(self.stem) + u'í' + Persons_Indirect[Persons.second_person_plural]
+            else:
+                # ex: ¡Sentaos! - Sit down!
+                conjugation = _replace_last_letter_of_stem(self.__explicit_accent(self.inf_verb_string), u'r', Persons_Indirect[Persons.second_person_plural])                
+        elif person in [Persons.second_person_singular, Persons.second_person_plural] and tense == Tenses.imperative_negative:
+            conjugation = u"no "
+            if self.reflexive:
+                conjugation += Persons_Indirect[person] + " "
+            conjugation += self.conjugate(Tenses.present_subjective_tense, person)                   
+        elif person in [Persons.third_person_singular, Persons.third_person_plural]:
+            conjugation = self.conjugate(Tenses.present_subjective_tense, person)
+        else:
+            raise Exception("Person value is out of range person="+str(person))                                                
+        return conjugation
+            
     def __conjugation_present_subjective_stem(self, tense, person):
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular)
         if first_person_conjugation[-1:] =='o':
@@ -161,7 +270,9 @@ class Verb():
             # estoy, doy, voy, etc.
             conjugation_stem = first_person_conjugation[:-2]
         else:
-            raise Exception("First person conjugation does not end in 'o' = "+first_person_conjugation)
+            # haber (he) is just such an example - but there better be an override available.
+            return None
+#             raise Exception("First person conjugation does not end in 'o' = "+first_person_conjugation)
         return conjugation_stem
 
     def __conjugation_past_subjective_stem(self, tense, person):

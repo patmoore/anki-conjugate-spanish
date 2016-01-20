@@ -28,7 +28,7 @@ try:
     for line in reader:
         try:
             verb = Verb_Dictionary_add(**line)
-            print repr(verb.conjugate(Tenses.present_tense, Persons.third_person_singular))
+#             print repr(verb.conjugate(Tenses.present_tense, Persons.third_person_singular))
             c= verb.conjugate_all_tenses()
             print repr(c).decode("unicode-escape")
         except Exception as e:

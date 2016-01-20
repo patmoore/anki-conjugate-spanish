@@ -19,6 +19,8 @@ class Tenses_(list):
     conditional_tense = 4
     present_subjective_tense = 5
     past_subjective_tense = 6
+    imperative_positive = 7
+    imperative_negative = 8
     
 Tenses = Tenses_([
     u'present',
@@ -27,8 +29,9 @@ Tenses = Tenses_([
     u'future',
     u'conditional',
     u'present subjective',
-    u'past subjective'
-#     u'imperative'
+    u'past subjective',
+    u'imperative_positive',
+    u'imperative_negative'
 ])
 
 class Persons_(list):
@@ -38,6 +41,11 @@ class Persons_(list):
     first_person_plural = 3
     second_person_plural = 4
     third_person_plural = 5
+    @staticmethod
+    def all_except(except_persons):
+        _except_persons = except_persons if isinstance(except_persons, list) else [ except_persons ]
+        return [person for person in range(len(Persons)) if person not in _except_persons]
+     
     Present_Tense_Stem_Changing_Persons = [first_person_singular, second_person_singular, third_person_singular, third_person_plural]
     Past_Tense_Stem_Changing_Persons = [third_person_singular, third_person_plural]
 
@@ -49,6 +57,15 @@ Persons = Persons_([
     u'vosotros',
     u'ustedes'
 ])
+
+Persons_Indirect = [
+    u'me',
+    u'te',
+    u'se',
+    u'nos',
+    u'os',
+    u'se'
+    ]
 
 
 

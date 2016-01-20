@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import copy
-from constants import *
+from constants import Tenses,Persons,Infinitive_Endings
 
 Standard_Conjugation_Endings = [ [ [] for t in range(len(Tenses)) ] for v in range(len(Infinitive_Endings))]
 
@@ -98,6 +97,11 @@ Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.past_subjective_
      u'ran'
     ]
 
-Irregular_Past_Endings = copy.deepcopy(Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.past_tense])
-Irregular_Past_Endings[Persons.first_person_singular] = u'e'
-Irregular_Past_Endings[Persons.third_person_singular] = u'o'
+"""
+Imperative 
+"""
+for inf in range(len(Infinitive_Endings)):
+    Standard_Conjugation_Endings[inf][Tenses.imperative_positive] = [None] * len(Persons)
+    Standard_Conjugation_Endings[inf][Tenses.imperative_negative] = [None] * len(Persons)
+
+
