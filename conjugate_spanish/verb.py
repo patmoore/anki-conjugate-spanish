@@ -3,6 +3,7 @@
 
 @author: patmoore
 '''
+from __future__ import print_function
 import inspect
 import re
 import six
@@ -10,6 +11,8 @@ import sys
 from conjugation_override import *
 from conjugation_override import _replace_last_letter_of_stem
 from constants import *
+
+
 # UTF8Writer = codecs.getwriter('utf8')
 # sys.stdout = UTF8Writer(sys.stdout)
 from standard_endings import Standard_Conjugation_Endings
@@ -27,7 +30,14 @@ def _check_for_multiple_accents(conjugation):
     if conjugation is not None:
         accented = _accented_vowels.findall(conjugation)
         if len(accented) > 1:
-            raise Exception("Too many accents in "+conjugation) 
+            raise Exception("Too many accents in "+conjugation)
+
+            
+def _remove_accent(string_):       
+    result = string_ 
+    for regex, replace in _replace_accents:
+        result = regex.sub(replace, result)
+    return result
 
 _replace_accents = [
     [ re.compile(u'á'), u'a' ],
@@ -39,7 +49,7 @@ _replace_accents = [
 
 class Verb():
     '''
-    classdocs
+    verb conjugation
     '''
     
     def __init__(self, verb_string, definition, conjugation_overrides=None, prefix=None, base_verb=None):
@@ -90,6 +100,16 @@ class Verb():
         for conjugation_override in Standard_Overrides.itervalues():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self.inf_verb_string):
                 self.__process_conjugation_override(conjugation_override)
+                
+    def print_all_tenses(self):
+        c= self.conjugate_all_tenses()
+        for tense in range(len(Tenses)):
+            print( Tenses[tense])
+            for person in range(len(Persons)):
+                if c[tense][person] is not None:
+                    print( Persons[person]+" "+c[tense][person], end="; ") 
+            print()
+
     
     def conjugate_all_tenses(self):
         # present to imperative
@@ -127,7 +147,7 @@ class Verb():
         if tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense]:
             current_conjugation_stem = self.stem
         elif tense in [ Tenses.future_tense, Tenses.conditional_tense]:
-            current_conjugation_stem = self.__remove_accent(self.verb_string)
+            current_conjugation_stem = _remove_accent(self.verb_string)
         elif tense == Tenses.present_subjective_tense:
             current_conjugation_stem = self.__conjugation_present_subjective_stem(tense, person)
         elif tense == Tenses.past_subjective_tense:
@@ -144,12 +164,17 @@ class Verb():
                         current_conjugation_stem = stem_override(**override_call)
                     except Exception as e:
                         extype, ex, traceback = sys.exc_info()
-                        print ex.message
+                        print( ex.message)
 #                         formatted = traceback.format_exception_only(extype, ex)[-1]
 #                         message = "%s: Trying to conjugate stem tense=%d person=%d" % self.inf_verb_string, tense, person, ex.message
 #                         raise RuntimeError, message, traceback
         if current_conjugation_stem is None:
             raise Exception(self.inf_verb_string+": no stem created tense="+tense+" person="+person)
+        
+        # if the ending has an accent then we remove the accent on the stem
+        if _accented_vowels.search(current_conjugation_stem) and _accented_vowels.search(current_conjugation_ending):
+            current_conjugation_stem = _remove_accent(current_conjugation_stem)
+            
         return current_conjugation_stem
         
     def conjugate_ending(self, tense, person):
@@ -211,12 +236,6 @@ class Verb():
                             result = conjugation_string[:index+1] + u'\u0301' + conjugation_string[index+1:]
                             
             return result
-            
-    def __remove_accent(self, string_):       
-        result = string_ 
-        for regex, replace in _replace_accents:
-            result = regex.sub(replace, result)
-        return result
     
     def __conjugation_imperative(self, tense, person):
         """
@@ -247,7 +266,7 @@ class Verb():
                 # ir verbs need the i accented rule k and l
                 # example ¡Vestíos! - Get Dressed!
                 # what about verbs that already have explicit accent?
-                conjugation = self.__remove_accent(self.stem) + u'í' + Persons_Indirect[Persons.second_person_plural]
+                conjugation = _remove_accent(self.stem) + u'í' + Persons_Indirect[Persons.second_person_plural]
             else:
                 # ex: ¡Sentaos! - Sit down!
                 conjugation = _replace_last_letter_of_stem(self.__explicit_accent(self.inf_verb_string), u'r', Persons_Indirect[Persons.second_person_plural])                
@@ -264,7 +283,7 @@ class Verb():
             
     def __conjugation_present_subjective_stem(self, tense, person):
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular)
-        if first_person_conjugation[-1:] =='o':
+        if first_person_conjugation[-1:] ==u'o':
             conjugation_stem = first_person_conjugation[:-1]            
         elif first_person_conjugation[-2:] == u'oy':
             # estoy, doy, voy, etc.
@@ -365,7 +384,7 @@ class Verb():
         """        
         if isinstance(conjugation_override, ConjugationOverride):
             override = conjugation_override            
-        else:
+        elif len(conjugation_override) > 1:
             lookup_key = conjugation_override if conjugation_override[0] != '-' else conjugation_override[1:]
             override = Standard_Overrides[lookup_key]
             if override is None:
@@ -373,7 +392,9 @@ class Verb():
             if conjugation_override[0] == '-':
                 self.doNotApply.append(override.key)
                 return
-            
+        else:
+            #No override or blank
+            return
         if override.key not in self.doNotApply and override.key not in self.appliedOverrides:
             override.apply(self)
             self.appliedOverrides.append(override.key)            

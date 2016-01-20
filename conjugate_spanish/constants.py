@@ -30,8 +30,8 @@ Tenses = Tenses_([
     u'conditional',
     u'present subjective',
     u'past subjective',
-    u'imperative_positive',
-    u'imperative_negative'
+    u'imperative positive',
+    u'imperative negative'
 ])
 
 class Persons_(list):
