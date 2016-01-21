@@ -112,8 +112,8 @@ class ConjugationOverride():
             
         return overrides if len(overrides) > 0 else None
 
-    def is_match(self, infinitive):
-        if self.inf_match.search(infinitive):
+    def is_match(self, verb):
+        if self.inf_match.search(verb.inf_verb_string):
             return True
         else:
             return False
@@ -141,7 +141,24 @@ def __radical_stem_change(stem, vowel_change, vowels_to):
     return changed_stem
 
 Standard_Overrides = {}
-
+# http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
+Stem_Changing_Ir_Gerund_CO = ConjugationOverride(key=u"stem_changing_ir",
+    documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
+    )
+def __check_for_stem_ir(self):
+    if self.verb_ending_index == Infinitive_Endings.ir_verb:        
+        for conjugation_override in self.conjugation_overrides:
+            
+            if isinstance(conjugation_override, ConjugationOverride):
+                key = conjugation_override.key
+            else:
+                key =conjugation_override
+            if key in [u'e:i', u'o:ue']:
+                return True
+    return False
+    
+Stem_Changing_Ir_Gerund_CO.is_match  = six.create_bound_method(__check_for_stem_ir, Stem_Changing_Ir_Gerund_CO)
+Standard_Overrides[Stem_Changing_Ir_Gerund_CO.key] = Stem_Changing_Ir_Gerund_CO 
 """
 RADICAL STEM CHANGE PATTERNS
 """
@@ -318,11 +335,11 @@ Eer_CO = ConjugationOverride(inf_match=re.compile(u'eer$'),
     )
 Standard_Overrides[Eer_CO.key]=Eer_CO
 
-LL_N_CO = ConjugationOverride(inf_match=re.compile(u'[ll|ñ][eií]r'),
+LL_N_CO = ConjugationOverride(inf_match=re.compile(u'(ll|ñ)[eií]r$'),
     key=u"ll_ñ",
     documentation=u"If the stem of -er or -ir verbs ends in ll or ñ, -iendo changes to -endo. (Since ll and ñ already have an i sound in them, it is not necessary to add it to the gerund ending.)")
 LL_N_CO.override_tense_ending(Tenses.gerund, u'endo')
-
+Standard_Overrides[LL_N_CO.key]=LL_N_CO
 
 # These endings must be explicitly added
 

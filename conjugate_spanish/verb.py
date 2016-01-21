@@ -90,6 +90,7 @@ class Verb():
         self.doNotApply = []
         self.appliedOverrides = []
         self.overridesMap = []
+        self.conjugation_overrides =conjugation_overrides
                         
         if conjugation_overrides is not None:
             if isinstance(conjugation_overrides, list):
@@ -100,7 +101,7 @@ class Verb():
                  
         # look for default overrides - apply to end so that user could explicitly turn off the override
         for conjugation_override in Standard_Overrides.itervalues():
-            if conjugation_override.auto_match != False and conjugation_override.is_match(self.inf_verb_string):
+            if conjugation_override.auto_match != False and conjugation_override.is_match(self):
                 self.__process_conjugation_override(conjugation_override)
                 
     def print_all_tenses(self):
