@@ -36,7 +36,7 @@ class ConjugationOverride():
         else:
             self_overrides = getattr(self, attr_name)
             
-        if isinstance(overrides, six.string_types) or inspect.isfunction(overrides):
+        if overrides is None or isinstance(overrides, six.string_types) or inspect.isfunction(overrides):
             if persons is not None:
                 if self_overrides[tense] is None:
                     self_overrides[tense] = [None] * len(Persons)
@@ -47,10 +47,15 @@ class ConjugationOverride():
                 else:
                     for person in persons:
                         self_overrides[tense][person] = overrides
+            elif tense in Tenses.Person_Agnostic:
+                # person is not relevant for gerund and past participle
+                self_overrides[tense] = overrides
             else:
                 # a single stem for all persons of this tense
                 # expand it out to allow for later overrides of specific persons to be applied.
                 self_overrides[tense] = [overrides] * len(Persons)
+        elif tense in Tenses.Person_Agnostic:
+            self_overrides[tense] = overrides
         else:
             # overrides better be a list
             if self_overrides[tense] is None:
@@ -171,7 +176,20 @@ def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= No
         return truncated_stem + new_stem_ending
     else:
         return truncated_stem        
-    
+
+"""
+==================================================
+Gerund  - http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA2iFNsOEI
+Whenever an unstressed i appears between two vowels, the spelling always changes to a y, not just in the following gerunds.
+"""
+Yendo_Gerund_CO = ConjugationOverride(
+    inf_match=re.compile(u'[aeiouáéíóú][eéíi]r$', re.UNICODE+re.IGNORECASE),
+    key=u'yendo',
+    documentation="-er or -er verbs that have a preceding vowel",
+    examples=[u'ir', u'poseer'])
+Yendo_Gerund_CO.override_tense_ending(Tenses.gerund, u'yendo')
+Standard_Overrides[Yendo_Gerund_CO.key] = Yendo_Gerund_CO
+
 Zar_CO = ConjugationOverride(inf_match=re.compile(u'zar$'), 
     key='zar',
     documentation='verbs ending in -zar have z -> c before e',
@@ -272,26 +290,39 @@ Ducir_CO.override_tense_ending(Tenses.past_tense, u'o', Persons.third_person_sin
 Ducir_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_plural, documentation=u'normally ieron')
 Standard_Overrides[Ducir_CO.key]=Ducir_CO
 
-Eir_CO = ConjugationOverride(inf_match=re.compile(u'e[ií]r$'),
-    #pattern includes without the accent as well because user may forget the accent.
-    key="eir",
-    documentation="eír verbs have accent on i in the infinitive",
+Eir_CO = ConjugationOverride(inf_match=re.compile(u'eír$'),
+    #pattern does not include the unaccented i.
+    key=u"eír",
+    documentation=u"eír verbs have accent on i in the infinitive",
     examples = [u'reír', u'freír']
     )
 Eir_CO.override_present_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'e', u'í'), 
         documentation="replace stem ending e with accented í")
 Eir_CO.override_tense_ending(Tenses.present_tense, lambda self, **kwargs: u'ímos', documentation="accent on the i", persons=Persons.first_person_plural)
 Eir_CO.override_past_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'e'), documentation="remove the e from the stem")
+
 Standard_Overrides[Eir_CO.key]=Eir_CO
-Standard_Overrides["eír"]=Eir_CO
+
+Ei_r_CO = ConjugationOverride(inf_match=re.compile(u'eir$'),
+    parents=Eir_CO,
+    key=u'eir',
+    documentation=u"eir ending usually has accent i but just in case, but separate than the 'correct' case")
+Standard_Overrides[Ei_r_CO.key]=Ei_r_CO
 
 Eer_CO = ConjugationOverride(inf_match=re.compile(u'eer$'),
     # the i2y pattern that can be automatically assigned to eer verbs
-    key="eer",
-    parents=I2Y_PastTense_CO,
-    documentation="eer verbs",
+    key=u"eer",
+    parents=[I2Y_PastTense_CO],
+    documentation=u"eer verbs",
     examples = [u'creer']
     )
+Standard_Overrides[Eer_CO.key]=Eer_CO
+
+LL_N_CO = ConjugationOverride(inf_match=re.compile(u'[ll|ñ][eií]r'),
+    key=u"ll_ñ",
+    documentation=u"If the stem of -er or -ir verbs ends in ll or ñ, -iendo changes to -endo. (Since ll and ñ already have an i sound in them, it is not necessary to add it to the gerund ending.)")
+LL_N_CO.override_tense_ending(Tenses.gerund, u'endo')
+
 
 # These endings must be explicitly added
 
@@ -311,7 +342,7 @@ Oy_CO.override_tense_ending(Tenses.present_tense, u"oy", Persons.first_person_si
 Standard_Overrides[Oy_CO.key] = Oy_CO
 
 Past_Yo_Ud_Irr_CO = ConjugationOverride(key=u'e_and_o', 
-    documentation="Some irregular verbs have past tense changes yo: 'e' and usted has 'o'",
+    documentation=u"Some irregular verbs have past tense changes yo: 'e' and usted has 'o'",
     examples=[u'estar', u'tener'])
 Past_Yo_Ud_Irr_CO.override_tense_ending(Tenses.past_tense, u'e', Persons.first_person_singular)
 Past_Yo_Ud_Irr_CO.override_tense_ending(Tenses.past_tense, u'o', Persons.third_person_singular)
@@ -328,6 +359,7 @@ Infinitive_Stems_R_Only = ConjugationOverride(key=u'ronly', documentation="Futur
 Infinitive_Stems_R_Only.override_tense_stem(Tenses.future_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
 Infinitive_Stems_R_Only.override_tense_stem(Tenses.conditional_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
 Standard_Overrides[Infinitive_Stems_R_Only.key]=Infinitive_Stems_R_Only
+
 
 # Third person only conjugations
 

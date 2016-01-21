@@ -3,7 +3,6 @@
 # These are the standard words (special case)
 import codecs
 import csv
-import re
 from verb import Verb
 from constants import Persons,Tenses
 

@@ -18,7 +18,9 @@ from constants import *
 from standard_endings import Standard_Conjugation_Endings
 
 def make_unicode(inputStr):
-    if type(inputStr) != unicode:
+    if inputStr is None:
+        return None
+    elif type(inputStr) != unicode:
         inputStr = inputStr.decode('utf-8')
         return inputStr
     else:
@@ -105,9 +107,12 @@ class Verb():
         c= self.conjugate_all_tenses()
         for tense in range(len(Tenses)):
             print( Tenses[tense])
-            for person in range(len(Persons)):
-                if c[tense][person] is not None:
-                    print( Persons[person]+" "+c[tense][person], end="; ") 
+            if tense in Tenses.Person_Agnostic:
+                print(c[tense])
+            else:
+                for person in range(len(Persons)):
+                    if c[tense][person] is not None:
+                        print( Persons[person]+" "+c[tense][person], end="; ") 
             print()
 
     
@@ -116,7 +121,11 @@ class Verb():
         return [ self.conjugate_tense(tense) for tense in range(len(Tenses)) ]
         
     def conjugate_tense(self, tense):
-        return [ self.conjugate(tense=tense, person=person) for person in range(len(Persons)) ]    
+        if tense in Tenses.Person_Agnostic:
+            results = self.conjugate(tense=tense, person=None)
+        else:
+            results = [ self.conjugate(tense=tense, person=person) for person in range(len(Persons)) ]
+        return results
             
     def conjugate(self, tense, person):
         conjugation_overrides = self.__get_override(tense, person, 'conjugations')
@@ -137,6 +146,7 @@ class Verb():
         else:
             current_conjugation_ending = self.conjugate_ending(tense, person)
             conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
+        
         _check_for_multiple_accents(conjugation)
         return conjugation
     
@@ -145,6 +155,8 @@ class Verb():
         :current_conjugation_ending - important because some rule only apply if the conjugation ending starts with an o or e
         """         
         if tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense]:
+            current_conjugation_stem = self.stem
+        elif tense in Tenses.Person_Agnostic:
             current_conjugation_stem = self.stem
         elif tense in [ Tenses.future_tense, Tenses.conditional_tense]:
             current_conjugation_stem = _remove_accent(self.verb_string)
@@ -178,7 +190,11 @@ class Verb():
         return current_conjugation_stem
         
     def conjugate_ending(self, tense, person):
-        current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense][person]
+        if tense in Tenses.Person_Agnostic:
+            current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense]
+        else:
+            current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense][person]
+            
         ending_overrides = self.__get_override(tense, person, 'conjugation_endings')
         if ending_overrides is not None:
             for ending_override in ending_overrides:
@@ -308,7 +324,7 @@ class Verb():
                     raise Exception("No ending vowel")
             return conjugation_stem
         else:
-            raise "Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation            
+            raise "Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation
             
     def _overrides(self, tense, overrides, attr_name,persons=None):
         """
@@ -336,6 +352,17 @@ class Verb():
         else:
             self_overrides = getattr(self, attr_name)
             
+        if tense in Tenses.Person_Agnostic:
+            if isinstance(overrides, six.string_types) or inspect.isfunction(overrides) or inspect.ismethod(overrides):
+                self_overrides[tense] = overrides
+            elif len(overrides) == 1:
+                self_overrides[tense] = overrides[0]
+            elif len(overrides) ==0:
+                pass
+            else:
+                raise Exception(self.inf_verb_string+":Tense is person agnostic so only 1 override is allowed")
+            return
+        
         if self_overrides[tense] is None:
             self_overrides[tense] = [None] * len(Persons)
             
@@ -374,7 +401,10 @@ class Verb():
         if hasattr(self, attr_name):
             self_overrides = getattr(self, attr_name)
             if self_overrides[tense] is not None:
-                return self_overrides[tense][person]
+                if tense in Tenses.Person_Agnostic:
+                    return self_overrides[tense]
+                else:
+                    return self_overrides[tense][person]
         return None
     
     def __process_conjugation_override(self, conjugation_override):

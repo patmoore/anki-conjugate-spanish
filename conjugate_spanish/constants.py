@@ -21,6 +21,9 @@ class Tenses_(list):
     past_subjective_tense = 6
     imperative_positive = 7
     imperative_negative = 8
+    gerund = 9
+    past_participle = 10
+    Person_Agnostic = [ gerund, past_participle ]
     
 Tenses = Tenses_([
     u'present',
@@ -31,7 +34,9 @@ Tenses = Tenses_([
     u'present subjective',
     u'past subjective',
     u'imperative positive',
-    u'imperative negative'
+    u'imperative negative',
+    u'gerund',
+    u'past participle'
 ])
 
 class Persons_(list):
@@ -66,6 +71,3 @@ Persons_Indirect = [
     u'os',
     u'se'
     ]
-
-
-

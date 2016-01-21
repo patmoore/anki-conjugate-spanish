@@ -103,5 +103,13 @@ Imperative
 for inf in range(len(Infinitive_Endings)):
     Standard_Conjugation_Endings[inf][Tenses.imperative_positive] = [None] * len(Persons)
     Standard_Conjugation_Endings[inf][Tenses.imperative_negative] = [None] * len(Persons)
-
+    
+# -ing verb
+Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.gerund] = u'ando'
+Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.gerund] = u'iendo'
+Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.gerund] = u'iendo'
+# -ed verb
+Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.past_participle] = u'ado'
+Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.past_participle] = u'ido'
+Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.past_participle] = u'ido'
 
