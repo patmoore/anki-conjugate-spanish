@@ -152,6 +152,21 @@ class Verb():
         return conjugation
     
     def conjugate_stem(self, tense, person, current_conjugation_ending):
+        def __check_override(stem_override, current_conjugation_stem):
+            if isinstance(stem_override, six.string_types):
+                current_conjugation_stem = stem_override
+            else:
+                override_call = { 'tense': tense, 'person': person, 'stem': current_conjugation_stem, 'ending' : current_conjugation_ending }
+                try:
+                    current_conjugation_stem = stem_override(**override_call)
+                except Exception as e:
+                    extype, ex, traceback = sys.exc_info()
+                    print( ex.message)
+#                         formatted = traceback.format_exception_only(extype, ex)[-1]
+#                         message = "%s: Trying to conjugate stem tense=%d person=%d" % self.inf_verb_string, tense, person, ex.message
+#                         raise RuntimeError, message, traceback
+            return current_conjugation_stem
+        
         """
         :current_conjugation_ending - important because some rule only apply if the conjugation ending starts with an o or e
         """         
@@ -165,22 +180,18 @@ class Verb():
             current_conjugation_stem = self.__conjugation_present_subjective_stem(tense, person)
         elif tense == Tenses.past_subjective_tense:
             current_conjugation_stem = self.__conjugation_past_subjective_stem(tense, person)
+        else:
+            pass
         
         stem_overrides = self.__get_override(tense, person, 'conjugation_stems')
-        if stem_overrides is not None:
+        if isinstance(stem_overrides, list):
             for stem_override in stem_overrides:
-                if isinstance(stem_override, six.string_types):
-                    current_conjugation_stem = stem_override
-                else:
-                    override_call = { 'tense': tense, 'person': person, 'stem': current_conjugation_stem, 'ending' : current_conjugation_ending }
-                    try:
-                        current_conjugation_stem = stem_override(**override_call)
-                    except Exception as e:
-                        extype, ex, traceback = sys.exc_info()
-                        print( ex.message)
-#                         formatted = traceback.format_exception_only(extype, ex)[-1]
-#                         message = "%s: Trying to conjugate stem tense=%d person=%d" % self.inf_verb_string, tense, person, ex.message
-#                         raise RuntimeError, message, traceback
+                current_conjugation_stem = __check_override(stem_override, current_conjugation_stem)
+        elif stem_overrides is not None:
+            current_conjugation_stem = __check_override(stem_overrides, current_conjugation_stem)
+        else:
+            pass
+        
         if current_conjugation_stem is None:
             raise Exception(self.inf_verb_string+": no stem created tense="+tense+" person="+person)
         
@@ -191,26 +202,31 @@ class Verb():
         return current_conjugation_stem
         
     def conjugate_ending(self, tense, person):
+        def __check_override(ending_override, current_conjugation_ending):
+            if isinstance(ending_override, six.string_types):
+                current_conjugation_ending = ending_override
+            else:
+                override_call = { 'tense': tense, 'person': person, 'ending' : current_conjugation_ending }
+                try:
+                    current_conjugation_ending = ending_override(**override_call)
+                except Exception as e:
+                    extype, ex, traceback = sys.exc_info()
+#                         formatted = traceback.format_exception_only(extype, ex)[-1]
+                    message = "%s: Trying to conjugate ending=%d person=%d; %s" % self.inf_verb_string, tense, person, ex.message
+                    raise RuntimeError, message, traceback
+            return current_conjugation_ending
+        
         if tense in Tenses.Person_Agnostic:
             current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense]
         else:
             current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense][person]
             
         ending_overrides = self.__get_override(tense, person, 'conjugation_endings')
-        if ending_overrides is not None:
+        if isinstance(ending_overrides, list):
             for ending_override in ending_overrides:
-                if isinstance(ending_override, six.string_types):
-                    current_conjugation_ending = ending_override
-                else:
-                    override_call = { 'tense': tense, 'person': person, 'ending' : current_conjugation_ending }
-                    try:
-                        current_conjugation_ending = ending_override(**override_call)
-                    except Exception as e:
-                        extype, ex, traceback = sys.exc_info()
-#                         formatted = traceback.format_exception_only(extype, ex)[-1]
-                        message = "%s: Trying to conjugate ending=%d person=%d; %s" % self.inf_verb_string, tense, person, ex.message
-                        raise RuntimeError, message, traceback
-                    
+                current_conjugation_ending = __check_override(ending_override, current_conjugation_ending)
+        elif ending_overrides is not None:
+            current_conjugation_ending = __check_override(ending_overrides, current_conjugation_ending)
         return current_conjugation_ending
     
     def __explicit_accent(self, conjugation_string):
