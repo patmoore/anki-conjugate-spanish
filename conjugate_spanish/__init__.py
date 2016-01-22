@@ -9,4 +9,5 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides',
     'Infinitive_Endings',
     'Tenses', 'Persons', 
     'Standard_Conjugation_Endings', 'Verb', 'Verb_Dictionary',
-    'Verb_Dictionary_add']
+    'Verb_Dictionary_add',
+    'get_iterable']

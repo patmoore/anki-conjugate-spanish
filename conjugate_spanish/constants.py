@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import collections
 
 class Infinitive_Endings_(list):
     ar_verb = 0
@@ -71,3 +72,13 @@ Persons_Indirect = [
     u'os',
     u'se'
     ]
+
+
+def get_iterable(x):
+    """
+    http://stackoverflow.com/a/6711233/20161
+    """
+    if isinstance(x, collections.Iterable):
+        return x
+    else:
+        return (x,)

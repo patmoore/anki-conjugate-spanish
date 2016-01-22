@@ -93,11 +93,8 @@ class Verb():
         self.conjugation_overrides =conjugation_overrides
                         
         if conjugation_overrides is not None:
-            if isinstance(conjugation_overrides, list):
-                for conjugation_override in conjugation_overrides:
-                    self.__process_conjugation_override(conjugation_override)  
-            else:
-                self.__process_conjugation_override(conjugation_overrides)
+            for conjugation_override in get_iterable(conjugation_overrides):
+                self.__process_conjugation_override(conjugation_override)  
                  
         # look for default overrides - apply to end so that user could explicitly turn off the override
         for conjugation_override in Standard_Overrides.itervalues():
@@ -134,7 +131,7 @@ class Verb():
             for conjugation_override in conjugation_overrides:
                 if isinstance(conjugation_override, six.string_types):
                     conjugation = conjugation_override
-                else:
+                elif conjugation_override is not None:
                     try:
                         conjugation = conjugation_override(tense, person)
                     except Exception as e:
@@ -155,7 +152,7 @@ class Verb():
         def __check_override(stem_override, current_conjugation_stem):
             if isinstance(stem_override, six.string_types):
                 current_conjugation_stem = stem_override
-            else:
+            elif stem_override is not None:
                 override_call = { 'tense': tense, 'person': person, 'stem': current_conjugation_stem, 'ending' : current_conjugation_ending }
                 try:
                     current_conjugation_stem = stem_override(**override_call)
@@ -184,13 +181,8 @@ class Verb():
             pass
         
         stem_overrides = self.__get_override(tense, person, 'conjugation_stems')
-        if isinstance(stem_overrides, list):
-            for stem_override in stem_overrides:
-                current_conjugation_stem = __check_override(stem_override, current_conjugation_stem)
-        elif stem_overrides is not None:
-            current_conjugation_stem = __check_override(stem_overrides, current_conjugation_stem)
-        else:
-            pass
+        for stem_override in get_iterable(stem_overrides):
+            current_conjugation_stem = __check_override(stem_override, current_conjugation_stem)
         
         if current_conjugation_stem is None:
             raise Exception(self.inf_verb_string+": no stem created tense="+tense+" person="+person)

@@ -16,7 +16,7 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides']
 # TODO need a way of adding notes to overrides
 class ConjugationOverride():
     
-    def __init__(self, inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=True):
+    def __init__(self, inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None):
         if parents is None:
             self.parent = None
         else:
@@ -27,7 +27,10 @@ class ConjugationOverride():
         self.documentation = documentation
         self.examples=examples
         self.key= key if key is not None else inf_match
-        self.auto_match = auto_match and inf_match is not None        
+        if auto_match is None:
+            self.auto_match = inf_match is not None
+        else:
+            self.auto_match = auto_match        
         
     def __overrides(self, tense, overrides, attr_name, persons):
         if not hasattr(self, attr_name):
@@ -143,12 +146,12 @@ def __radical_stem_change(stem, vowel_change, vowels_to):
 Standard_Overrides = {}
 # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
 Stem_Changing_Ir_Gerund_CO = ConjugationOverride(key=u"stem_changing_ir",
+    auto_match=True,
     documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
     )
-def __check_for_stem_ir(self):
-    if self.verb_ending_index == Infinitive_Endings.ir_verb:        
-        for conjugation_override in self.conjugation_overrides:
-            
+def __check_for_stem_ir(self, verb):
+    if verb.verb_ending_index == Infinitive_Endings.ir_verb:        
+        for conjugation_override in get_iterable(verb.conjugation_overrides):            
             if isinstance(conjugation_override, ConjugationOverride):
                 key = conjugation_override.key
             else:

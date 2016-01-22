@@ -11,7 +11,7 @@ def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,prefi
     try:
         verb = Verb(inf_ending, definition,conjugation_overrides=conjugation_overrides)
     except Exception as e:
-        print "while adding to verb_dictionary" + e
+        print "while adding to verb_dictionary", repr(e)
         
     Verb_Dictionary[inf_ending] = verb
     return verb
