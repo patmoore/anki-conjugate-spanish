@@ -144,35 +144,17 @@ def __radical_stem_change(stem, vowel_change, vowels_to):
     return changed_stem
 
 Standard_Overrides = {}
-# http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
-Stem_Changing_Ir_Gerund_CO = ConjugationOverride(key=u"stem_changing_ir",
-    auto_match=True,
-    documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
-    )
-def __check_for_stem_ir(self, verb):
-    if verb.verb_ending_index == Infinitive_Endings.ir_verb:        
-        for conjugation_override in get_iterable(verb.conjugation_overrides):            
-            if isinstance(conjugation_override, ConjugationOverride):
-                key = conjugation_override.key
-            else:
-                key =conjugation_override
-            if key in [u'e:i', u'o:ue']:
-                return True
-    return False
-
-Stem_Changing_Ir_Gerund_CO.is_match  = six.create_bound_method(__check_for_stem_ir, Stem_Changing_Ir_Gerund_CO)
-Standard_Overrides[Stem_Changing_Ir_Gerund_CO.key] = Stem_Changing_Ir_Gerund_CO 
 """
 RADICAL STEM CHANGE PATTERNS
 """
 radical_stem_changes = [
     #including gir 
-    [u'e', u'i', u'i'],
-    [u'e', u'ie', u'ie'],
+    [u'e', u'i', u'i', u'i'],
+    [u'e', u'ie', u'ie', None],
     # dormir
-    [u'o', u'ue', u'u']
+    [u'o', u'ue', u'u', u'u']
 ]
-for vowel_from, present_vowels_to, past_vowels_to in radical_stem_changes:
+for vowel_from, present_vowels_to, past_vowels_to, gerund_vowel in radical_stem_changes:
     key=vowel_from+':'+present_vowels_to
     if past_vowels_to is None:
         past_vowels_to = present_vowels_to
@@ -184,8 +166,27 @@ for vowel_from, present_vowels_to, past_vowels_to in radical_stem_changes:
         return lambda self, stem, **kwargs: __radical_stem_change(stem, vowel_from, vowels_to)
     radical_prstem_call = __make_radical_call(vowel_from, present_vowels_to)
     conjugation_override.override_tense_stem(Tenses.present_tense, __make_radical_call(vowel_from, present_vowels_to), Persons.Present_Tense_Stem_Changing_Persons)
-    conjugation_override.override_tense_stem(Tenses.past_tense, __make_radical_call(vowel_from, past_vowels_to), Persons.Past_Tense_Stem_Changing_Persons)
+    conjugation_override.override_tense_stem(Tenses.past_tense, __make_radical_call(vowel_from, past_vowels_to), Persons.Past_Tense_Stem_Changing_Persons)        
     Standard_Overrides[key] = conjugation_override
+    if gerund_vowel is not None:
+        # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
+        stem_changing_ir_gerund = ConjugationOverride(key=u"stem_changing_ir_"+key,
+            auto_match=True,
+            documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
+        )
+        stem_changing_ir_gerund.override_tense_stem(Tenses.gerund, __make_radical_call(vowel_from, gerund_vowel))
+        def __check_for_stem_ir(self, verb):
+            if verb.verb_ending_index == Infinitive_Endings.ir_verb:        
+                for conjugation_override in get_iterable(verb.conjugation_overrides):            
+                    if isinstance(conjugation_override, ConjugationOverride):
+                        _key = conjugation_override.key
+                    else:
+                        _key =conjugation_override
+                    if _key == key:
+                        return True
+            return False
+        stem_changing_ir_gerund.is_match  = six.create_bound_method(__check_for_stem_ir, stem_changing_ir_gerund)
+        Standard_Overrides[stem_changing_ir_gerund.key] = stem_changing_ir_gerund 
     
 def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= None):
     truncated_stem = stem[:-1]
