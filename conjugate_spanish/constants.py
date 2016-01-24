@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import collections
+import six
 
 class Infinitive_Endings_(list):
     ar_verb = 0
@@ -76,9 +77,10 @@ Persons_Indirect = [
 
 def get_iterable(x):
     """
+    except ... a string is iterable :-(
     http://stackoverflow.com/a/6711233/20161
     """
-    if isinstance(x, collections.Iterable):
+    if not isinstance(x, six.string_types) and isinstance(x, collections.Iterable):
         return x
     else:
         return (x,)

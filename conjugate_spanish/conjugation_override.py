@@ -159,7 +159,7 @@ def __check_for_stem_ir(self, verb):
             if key in [u'e:i', u'o:ue']:
                 return True
     return False
-    
+
 Stem_Changing_Ir_Gerund_CO.is_match  = six.create_bound_method(__check_for_stem_ir, Stem_Changing_Ir_Gerund_CO)
 Standard_Overrides[Stem_Changing_Ir_Gerund_CO.key] = Stem_Changing_Ir_Gerund_CO 
 """
