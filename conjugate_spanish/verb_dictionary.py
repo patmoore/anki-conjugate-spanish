@@ -19,13 +19,34 @@ def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,prefi
 
 import special_cases
 
-csvfile = codecs.open('./conjugate_spanish/dictionary.csv', mode='r' )
+csvfile = codecs.open('./conjugate_spanish/dictionaries/dictionary.csv', mode='r' )
 reader = csv.DictReader(csvfile, delimiter=',', quotechar='"')
 try:
     # discard header
 #     csvfile.readline()
     for line in reader:
         try:
+            verb = Verb_Dictionary_add(**line)
+#             print repr(verb.conjugate(Tenses.present_tense, Persons.third_person_singular))
+#             c= verb.conjugate_all_tenses()
+#             print repr(c).decode("unicode-escape")
+        except Exception as e:
+            print "error reading dictionary.csv: ", line            
+except Exception as e:
+    print "error reading dictionary.csv"
+    
+csvfile = codecs.open('./conjugate_spanish/dictionaries/e2i.csv', mode='r' )
+reader = csv.DictReader(csvfile, delimiter=',', quotechar='"')
+try:
+    # discard header
+#     csvfile.readline()
+    for line in reader:
+        try:
+            if len(line.conjugation_overrides) > 0:
+                line.conjugation_overrides = [ line.conjugation_overrides, "e:i" ]
+            else:
+                line.conjugation_overrides = "e:i"
+                 
             verb = Verb_Dictionary_add(**line)
 #             print repr(verb.conjugate(Tenses.present_tense, Persons.third_person_singular))
 #             c= verb.conjugate_all_tenses()
