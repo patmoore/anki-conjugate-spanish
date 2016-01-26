@@ -11,7 +11,7 @@ key: need to allow verbs to opt out of special casing. For example, relucir does
 http://www.intro2spanish.com/verbs/listas/master-zco.htm
 """
 
-__all__ = ['ConjugationOverride', 'Standard_Overrides']
+__all__ = ['ConjugationOverride', 'Standard_Overrides', 'Dependent_Standard_Overrides']
 
 # TODO need a way of adding notes to overrides
 class ConjugationOverride():
@@ -122,6 +122,9 @@ class ConjugationOverride():
             return False
 
     def apply(self, verb):
+        if self.key:
+            # Custom overrides do not always have keys
+            verb.appliedOverrides.append(self.key)
         if self.parent is not None:
             for parent in self.parent:
                 parent.apply(verb)
@@ -143,7 +146,11 @@ def __radical_stem_change(stem, vowel_change, vowels_to):
     changed_stem = stem[:index] + vowels_to + stem[index+1:]
     return changed_stem
 
+def __make_radical_call(vowel_from, vowels_to):
+    return lambda self, stem, **kwargs: __radical_stem_change(stem, vowel_from, vowels_to)
+
 Standard_Overrides = {}
+Dependent_Standard_Overrides = {}
 """
 RADICAL STEM CHANGE PATTERNS
 """
@@ -154,6 +161,20 @@ radical_stem_changes = [
     # dormir
     [u'o', u'ue', u'u', u'u']
 ]
+def __check_for_stem_ir(key, verb):
+    if verb.verb_ending_index == Infinitive_Endings.ir_verb:        
+        for conjugation_override in get_iterable(verb.appliedOverrides):            
+            if isinstance(conjugation_override, ConjugationOverride):
+                _key = conjugation_override.key
+            else:
+                _key =conjugation_override
+            if _key is not None: # _key is None is always fail.
+                if _key == key:
+                    return True
+    return False
+def __make_check_stem_ir(key):
+    return lambda self, verb: __check_for_stem_ir(key, verb)
+
 for vowel_from, present_vowels_to, past_vowels_to, gerund_vowel in radical_stem_changes:
     key=vowel_from+':'+present_vowels_to
     if past_vowels_to is None:
@@ -162,8 +183,7 @@ for vowel_from, present_vowels_to, past_vowels_to, gerund_vowel in radical_stem_
     conjugation_override = ConjugationOverride(key=key,
         documentation='radical stem changing '+key+ "; past tense="+vowel_from+':'+past_vowels_to
         )
-    def __make_radical_call(vowel_from, vowels_to):
-        return lambda self, stem, **kwargs: __radical_stem_change(stem, vowel_from, vowels_to)
+
     radical_prstem_call = __make_radical_call(vowel_from, present_vowels_to)
     conjugation_override.override_tense_stem(Tenses.present_tense, __make_radical_call(vowel_from, present_vowels_to), Persons.Present_Tense_Stem_Changing_Persons)
     conjugation_override.override_tense_stem(Tenses.past_tense, __make_radical_call(vowel_from, past_vowels_to), Persons.Past_Tense_Stem_Changing_Persons)        
@@ -175,18 +195,9 @@ for vowel_from, present_vowels_to, past_vowels_to, gerund_vowel in radical_stem_
             documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
         )
         stem_changing_ir_gerund.override_tense_stem(Tenses.gerund, __make_radical_call(vowel_from, gerund_vowel))
-        def __check_for_stem_ir(self, verb):
-            if verb.verb_ending_index == Infinitive_Endings.ir_verb:        
-                for conjugation_override in get_iterable(verb.conjugation_overrides):            
-                    if isinstance(conjugation_override, ConjugationOverride):
-                        _key = conjugation_override.key
-                    else:
-                        _key =conjugation_override
-                    if _key == key:
-                        return True
-            return False
-        stem_changing_ir_gerund.is_match  = six.create_bound_method(__check_for_stem_ir, stem_changing_ir_gerund)
-        Standard_Overrides[stem_changing_ir_gerund.key] = stem_changing_ir_gerund 
+
+        stem_changing_ir_gerund.is_match  = six.create_bound_method(__make_check_stem_ir(key), stem_changing_ir_gerund)
+        Dependent_Standard_Overrides[stem_changing_ir_gerund.key] = stem_changing_ir_gerund 
     
 def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= None):
     truncated_stem = stem[:-1]
@@ -229,19 +240,31 @@ Gar_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _repl
 Gar_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'g',u'gu'))
 Standard_Overrides[Gar_CO.key] = Gar_CO
 
+#
+# -ger, -gir verbs change g-> j
 Ger_CO = ConjugationOverride(inf_match=re.compile(u'ger$'),
     key="ger"
     )
 Ger_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'g', u'j'), 
     persons=Persons.first_person_singular,
-    documentation=u'g->j before o (present:first person singular)')
+    documentation=u'g->j before o (present:first person singular) (present subjective) - preserves "g" sound')
 Standard_Overrides[Ger_CO.key] = Ger_CO
 
 Gir_CO = ConjugationOverride(inf_match=re.compile(u'gir$'),
-    parents=[Ger_CO, 'e:i'],
+    #TODO only if the -gir verb has 'e'
+    parents=Ger_CO,
     key="gir"
     )
 Standard_Overrides[Gir_CO.key] = Gir_CO
+
+#TODO is it just -egir verbs or do we allow for consonents between the e and the -gir? 
+E_Gir_CO = ConjugationOverride(inf_match=re.compile(u'e[^aiou]*gir$'),
+    parents="e:i",
+    key=u"e_gir",
+    examples=[u'elegir', u'corregir'],
+    documentation="gir verbs that have a last stem vowel of e are stem changers ( so exigir is *not* a stem changer)"
+)
+Standard_Overrides[E_Gir_CO.key] = E_Gir_CO
 
 Car_CO = ConjugationOverride(inf_match=re.compile(six.u('car$')), 
     key='car',
@@ -346,13 +369,22 @@ LL_N_CO.override_tense_ending(Tenses.gerund, u'endo')
 Standard_Overrides[LL_N_CO.key]=LL_N_CO
 
 # These endings must be explicitly added
+def __accent_stem_last(self, stem, **kwargs):
+    return stem + u'\u0301'
 
 Iar_CO = ConjugationOverride(inf_match=re.compile(u'iar$', re.IGNORECASE+re.UNICODE),
     auto_match=False,
     key=u'iar',
-    documentation=u'some iar verbs accent the i so that it is not weak in the yo form')
-Iar_CO.override_tense_ending(Tenses.present_tense, u'\u0301' + Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_tense][Persons.first_person_singular], Persons.first_person_singular)
+    documentation=u'some iar verbs accent the i so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-iar-with-i-ii.htm')
+Iar_CO.override_present_stem_changers(__accent_stem_last)
 Standard_Overrides[Iar_CO.key] = Iar_CO
+
+Uar_CO = ConjugationOverride(inf_match=re.compile(u'[^g]uar$', re.IGNORECASE+re.UNICODE),
+    auto_match=False,
+    key=u'uar',
+    documentation=u'some uar verbs accent the u so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-uar-with-u-uu.htm')
+Uar_CO.override_present_stem_changers(__accent_stem_last)
+Standard_Overrides[Uar_CO.key] = Uar_CO
 
 Go_CO = ConjugationOverride(key=u'go', documentation="go verbs")
 Go_CO.override_tense_ending(Tenses.present_tense, u"go", Persons.first_person_singular, documentation="go verb")

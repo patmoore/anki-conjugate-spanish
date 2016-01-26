@@ -16,6 +16,7 @@ from constants import *
 # UTF8Writer = codecs.getwriter('utf8')
 # sys.stdout = UTF8Writer(sys.stdout)
 from standard_endings import Standard_Conjugation_Endings
+from inspect import isfunction
 
 def make_unicode(inputStr):
     if inputStr is None:
@@ -89,8 +90,6 @@ class Verb():
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self.doNotApply = []
         self.appliedOverrides = []
-        self.overridesMap = []
-        self.conjugation_overrides =conjugation_overrides
                         
         if conjugation_overrides is not None:
             for conjugation_override in get_iterable(conjugation_overrides):
@@ -98,6 +97,10 @@ class Verb():
                  
         # look for default overrides - apply to end so that user could explicitly turn off the override
         for conjugation_override in Standard_Overrides.itervalues():
+            if conjugation_override.auto_match != False and conjugation_override.is_match(self):
+                self.__process_conjugation_override(conjugation_override)
+                
+        for conjugation_override in Dependent_Standard_Overrides.itervalues():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
                 self.__process_conjugation_override(conjugation_override)
                 
@@ -344,16 +347,7 @@ class Verb():
                 boundfunc = six.create_bound_method(override, self)
                 return boundfunc                
             else:
-                return override                        
-           
-        if persons is None:
-            _persons = Persons
-        elif isinstance(persons, six.integer_types):
-            _persons = [ persons ]
-        elif isinstance(persons, list):
-            _persons = persons
-        else:
-            raise Exception("persons must be None, integer or list of integers")
+                return override                                   
             
         if not hasattr(self, attr_name):
             self_overrides = [ None ] * len(Tenses)
@@ -362,16 +356,26 @@ class Verb():
             self_overrides = getattr(self, attr_name)
             
         if tense in Tenses.Person_Agnostic:
-            if isinstance(overrides, six.string_types) or inspect.isfunction(overrides) or inspect.ismethod(overrides):
-                self_overrides[tense] = overrides
+            if inspect.isfunction(overrides):
+                self_overrides[tense] = [ __convert_to_self_function(overrides) ]
+            elif isinstance(overrides, six.string_types):
+                self_overrides[tense] = [ overrides ]
             elif len(overrides) == 1:
-                self_overrides[tense] = overrides[0]
+                self_overrides[tense] = overrides
             elif len(overrides) ==0:
                 pass
             else:
                 raise Exception(self.inf_verb_string+":Tense is person agnostic so only 1 override is allowed")
             return
         
+        if persons is None:
+            _persons = Persons
+        elif isinstance(persons, six.integer_types):
+            _persons = [ persons ]
+        elif isinstance(persons, list):
+            _persons = persons
+        else:
+            raise Exception("persons must be None, integer or list of integers")
         if self_overrides[tense] is None:
             self_overrides[tense] = [None] * len(Persons)
             
@@ -435,5 +439,4 @@ class Verb():
             #No override or blank
             return
         if override.key not in self.doNotApply and override.key not in self.appliedOverrides:
-            override.apply(self)
-            self.appliedOverrides.append(override.key)            
+            override.apply(self)        

@@ -27,10 +27,11 @@ class Tenses_(list):
     past_participle = 10
     Person_Agnostic = [ gerund, past_participle ]
     
+# names also used in manually defined override files
 Tenses = Tenses_([
     u'present',
-    ur'incomplete past',
-    ur'past',
+    u'incomplete past',
+    u'past',
     u'future',
     u'conditional',
     u'present subjective',

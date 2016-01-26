@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 from conjugate_spanish import * 
-# from conjugate_spanish.conjugation_override import *
-# from conjugate_spanish.standard_endings import Standard_Conjugation_Endings 
-# from conjugate_spanish.verb_dictionary import Verb_Dictionary
 import six
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_add
 # from conjugate_spanish.verb import Verb
