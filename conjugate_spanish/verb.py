@@ -429,7 +429,12 @@ class Verb():
             override = conjugation_override            
         elif len(conjugation_override) > 1:
             lookup_key = conjugation_override if conjugation_override[0] != '-' else conjugation_override[1:]
-            override = Standard_Overrides[lookup_key]
+            if lookup_key in Standard_Overrides:
+                override = Standard_Overrides[lookup_key]
+            elif lookup_key in Dependent_Standard_Overrides:
+                override = Dependent_Standard_Overrides[lookup_key]
+            else:
+                raise Exception(lookup_key+": override is not one of "+repr(Standard_Overrides.keys())+" or "+repr(Dependent_Standard_Overrides.keys()))
             if override is None:
                 raise Exception("no override with key ", lookup_key)
             if conjugation_override[0] == '-':

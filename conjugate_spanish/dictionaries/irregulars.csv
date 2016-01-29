@@ -1,0 +1,11 @@
+"inf_ending","definition","conjugation_overrides","prefix","manual_overrides"
+"abrir","to open",,,"{""conjugations"":{""past participle"":""abierto""}}"
+"andar","to walk",,,"{""stems"":{""past"":""anduv""}}"
+"oler","to hear","pres_sub_inf",,"{""stems"":{""present"":[""huel"",""huel"",""huel"",null,null,""huel""]}}"
+"poder","to be able to","o:ue,r_only,stem_changing_ir_o:ue",,
+"querer","to want, love","e:ie,r_only",,"{""stems"":{""past"":""quis""}}"
+"saber","to know",,,"{""stems"":{""past"":""sup""}}"
+"satisfacer","to satisfy",,,"{""stems"":{""past"":""satisfic""}}"
+"traer","to bring",,"traer","{""stems"":{""past"":""traj""}}"
+"decir","to say, tell",,"decir","{""stems"":{""past"":""dij""}}"
+"venir", "to come",,"venir","{""stems"":{""past"":""vin""}}"

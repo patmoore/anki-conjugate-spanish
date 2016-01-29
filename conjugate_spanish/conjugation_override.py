@@ -16,7 +16,7 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides', 'Dependent_Standard_Over
 # TODO need a way of adding notes to overrides
 class ConjugationOverride():
     
-    def __init__(self, inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None):
+    def __init__(self, inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None):
         if parents is None:
             self.parent = None
         else:
@@ -30,8 +30,28 @@ class ConjugationOverride():
         if auto_match is None:
             self.auto_match = inf_match is not None
         else:
-            self.auto_match = auto_match        
-        
+            self.auto_match = auto_match  
+            
+        self.add_manual_overrides(manual_overrides)      
+            
+    def add_manual_overrides(self, manual_overrides):
+        if manual_overrides is None:
+            return
+        if 'stems' in manual_overrides and manual_overrides['stems'] is not None:                
+            for key, override in manual_overrides['stems'].iteritems():
+                tense = Tenses.index(key)
+                conjugation_override.override_tense_stem(tense, override)
+        if 'endings' in manual_overrides and manual_overrides['endings'] is not None:
+            for key, override in manual_overrides['endings'].iteritems():
+                tense = Tenses.index(key)
+                conjugation_override.override_tense_ending(tense, override)
+        if 'conjugations' in manual_overrides and manual_overrides['conjugations'] is not None:
+            for key, override in manual_overrides['conjugations'].iteritems():
+                tense = Tenses.index(key)
+                conjugation_override.override_tense_ending(tense, override)
+                
+            
+
     def __overrides(self, tense, overrides, attr_name, persons):
         if not hasattr(self, attr_name):
             self_overrides = [ None ] * len(Tenses)
@@ -407,12 +427,17 @@ Infinitive_Stems_E2D.override_tense_stem(Tenses.future_tense, lambda self, stem,
 Infinitive_Stems_E2D.override_tense_stem(Tenses.conditional_tense, lambda self, stem, **kwargs: stem[:-2] + u'dr')
 Standard_Overrides[Infinitive_Stems_E2D.key]=Infinitive_Stems_E2D
 
-Infinitive_Stems_R_Only = ConjugationOverride(key=u'ronly', documentation="Future Tense/Conditional Tense:Some verbs remove the vowel in the infinitive ending to a r",
+Infinitive_Stems_R_Only = ConjugationOverride(key=u'r_only', documentation="Future Tense/Conditional Tense:Some verbs remove the vowel in the infinitive ending to a r",
         examples=[u'haber'])
 Infinitive_Stems_R_Only.override_tense_stem(Tenses.future_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
 Infinitive_Stems_R_Only.override_tense_stem(Tenses.conditional_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
 Standard_Overrides[Infinitive_Stems_R_Only.key]=Infinitive_Stems_R_Only
 
+Present_Subjective_Infinitive = ConjugationOverride(key='pres_sub_inf',
+     documentation="Some verbs use the infinitive stem as the present subjective stem for nosotros/vosotros",
+     examples=[u"querer", u"oler"])
+Present_Subjective_Infinitive.override_tense_stem(Tenses.present_subjective_tense, lambda self, **kwargs: self.stem, Persons.all_except(Persons.Present_Tense_Stem_Changing_Persons))
+Standard_Overrides[Present_Subjective_Infinitive.key] = Present_Subjective_Infinitive
 
 # Third person only conjugations
 

@@ -4,7 +4,7 @@ from conjugate_spanish.constants import Tenses, Persons, Infinitive_Endings
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_add
 from conjugate_spanish.standard_endings import Standard_Conjugation_Endings
 
-_conjugation_overrides = ConjugationOverride(parents=[u'ronly', u'e_and_o'])
+_conjugation_overrides = ConjugationOverride(parents=[u'r_only', u'e_and_o'])
 
 # all except 2nd person plural have just h as a stem
 _conjugation_overrides.override_tense_stem(Tenses.present_tense, u'h', Persons.all_except(Persons.second_person_plural))
