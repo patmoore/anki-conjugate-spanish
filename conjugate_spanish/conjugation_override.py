@@ -331,12 +331,12 @@ Cir_After_Const_CO = __make_std_override(inf_match=re.compile(six.u('[^aeiouáé
 
 I2Y_PastTense_CO = __make_std_override(
     key=u'i2y',
-    documentation="uir verbs and eer verbs"
+    documentation="uir verbs and eer verbs (triple vowels)"
 )
 I2Y_PastTense_CO.override_tense_ending(Tenses.past_tense, u'yó', Persons.third_person_singular)
 I2Y_PastTense_CO.override_tense_ending(Tenses.past_tense, u'yeron', Persons.third_person_plural)
     
-Uir_CO = __make_std_override(inf_match=re.compile(six.u('[^qg]uir$'), re.I),
+Uir_CO = __make_std_override(inf_match=re.compile(six.u('[^qg]uir$'), re.IGNORECASE+re.UNICODE),
     parents=I2Y_PastTense_CO,
     key="uir",
     documentation='-uir but NOT quir nor guir verbs. Add a y before inflection except 1st/2nd plurals',
@@ -344,14 +344,14 @@ Uir_CO = __make_std_override(inf_match=re.compile(six.u('[^qg]uir$'), re.I),
     )
 Uir_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: stem + u'y', Persons.Present_Tense_Stem_Changing_Persons)
 
-Guir_CO = __make_std_override(inf_match=re.compile(six.u('guir$'), re.I),
+Guir_CO = __make_std_override(inf_match=re.compile(six.u('guir$'), re.IGNORECASE+re.UNICODE),
     key='guir'
     )
 # drop u in 1st person present
 Guir_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs:_replace_last_letter_of_stem(stem,u'u'), Persons.first_person_singular)
 
 Past_Yo_Ud_Irr_CO = __make_std_override(key=u'e_and_o', 
-    documentation=u"Some irregular verbs have past tense changes yo: 'e' and usted has 'o' (this includes -ducir verbs)",
+    documentation=u"Some irregular verbs have past tense changes yo: 'e' and usted has 'o' (no accent) (this includes -ducir verbs)",
     examples=[u'estar', u'tener', u'traducir'])
 Past_Yo_Ud_Irr_CO.override_tense_ending(Tenses.past_tense, u'e', Persons.first_person_singular)
 Past_Yo_Ud_Irr_CO.override_tense_ending(Tenses.past_tense, u'o', Persons.third_person_singular)
@@ -365,7 +365,7 @@ Ducir_CO = __make_std_override(inf_match=re.compile(u'd[úu]cir$', re.IGNORECASE
 Ducir_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'c', u'j'), documentation=u'past tense is special case c-> j')
 Ducir_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_plural, documentation=u'normally ieron')
 
-Eir_CO = __make_std_override(inf_match=re.compile(u'eír$'),
+Eir_CO = __make_std_override(inf_match=re.compile(u'eír$', re.IGNORECASE+re.UNICODE),
     #pattern does not include the unaccented i.
     key=u"eír",
     documentation=u"eír verbs have accent on i in the infinitive",
@@ -389,10 +389,17 @@ Eer_CO = __make_std_override(inf_match=re.compile(u'eer$'),
     examples = [u'creer']
     )
 
+"""
+http://www.spanish411.net/Spanish-Preterite-Tense.asp
+"-ñir" or "-llir" use "-ó" and "-eron" endings instead of "-ió" and "-ieron" because they already have a "y" sound in their stems:
+"""
 LL_N_CO = __make_std_override(inf_match=re.compile(u'(ll|ñ)[eií]r$'),
     key=u"ll_ñ",
+    examples=[u'tañer', u'reñir'],
     documentation=u"If the stem of -er or -ir verbs ends in ll or ñ, -iendo changes to -endo. (Since ll and ñ already have an i sound in them, it is not necessary to add it to the gerund ending.)")
 LL_N_CO.override_tense_ending(Tenses.gerund, u'endo')
+LL_N_CO.override_tense_ending(Tenses.past_tense, u'ó', Persons.third_person_singular, documentation="Note that this o is accented (other std overrides use an unaccented o")
+LL_N_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_plural, documentation="Note that this o is accented (other std overrides use an unaccented o")
 
 def __accent_stem_last(self, stem, **kwargs):
     return stem + u'\u0301'
@@ -408,6 +415,13 @@ Uar_CO = __make_std_override(inf_match=re.compile(u'[^g]uar$', re.IGNORECASE+re.
     key=u'uar',
     documentation=u'some uar verbs accent the u so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-uar-with-u-uu.htm')
 Uar_CO.override_present_stem_changers(__accent_stem_last)
+
+Guar_CO = __make_std_override(inf_match=re.compile(u'guar$', re.IGNORECASE+re.UNICODE),
+    key=u'guar',
+    examples=[u'averiguar'],
+    documentation=u'guar verbs need a umlaut/dieresis ü to keep the u sound so we pronounce gu like gw which keeps it consistent with the infinitive sound http://www.spanish411.net/Spanish-Preterite-Tense.asp')
+Guar_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'u', u'ü'), Persons.first_person_singular,
+    documentation="preserves sound in infinitive")
 
 Go_CO = __make_std_override(key=u'go', documentation="go verbs")
 Go_CO.override_tense_ending(Tenses.present_tense, u"go", Persons.first_person_singular, documentation="go verb")
