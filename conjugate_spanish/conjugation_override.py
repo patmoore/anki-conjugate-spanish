@@ -17,6 +17,10 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides', 'Dependent_Standard_Over
 class ConjugationOverride():
     
     def __init__(self, inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None):
+        """
+        :manual_overrides dict with conjugation_stems, conjugation_endings, conjugations key. values are dicts: tense names as keys; values are arrays or strings
+        special case: tense name of 'present_except_nosvos' means present tense overriding just yo, tu, usted, ustedes
+        """
         if parents is None:
             self.parent = None
         else:
@@ -37,30 +41,35 @@ class ConjugationOverride():
     def add_manual_overrides(self, manual_overrides):
         if manual_overrides is None:
             return
-        if 'stems' in manual_overrides and manual_overrides['stems'] is not None:                
-            for key, override in manual_overrides['stems'].iteritems():
-                tense = Tenses.index(key)
-                conjugation_override.override_tense_stem(tense, override)
-        if 'endings' in manual_overrides and manual_overrides['endings'] is not None:
-            for key, override in manual_overrides['endings'].iteritems():
-                tense = Tenses.index(key)
-                conjugation_override.override_tense_ending(tense, override)
-        if 'conjugations' in manual_overrides and manual_overrides['conjugations'] is not None:
-            for key, override in manual_overrides['conjugations'].iteritems():
-                tense = Tenses.index(key)
-                conjugation_override.override_tense_ending(tense, override)
-                
-            
+        for applies in ['conjugations', 'conjugation_stems', 'conjugation_endings']:
+            if applies in manual_overrides:
+                overrides = manual_overrides[applies]
+                if overrides != None:
+                    for tenseStr, conjugation_override in overrides.iteritems():
+                        if tenseStr == u'present_except_nosvos':
+                            tense = Tenses.present_tense
+                            persons = Persons.Present_Tense_Stem_Changing_Persons
+                        else:
+                            tense = Tenses.index(tenseStr)
+                            persons = None
+                        if conjugation_override is not None:
+                            self._overrides(tense, conjugation_override, applies, persons)
 
-    def __overrides(self, tense, overrides, attr_name, persons):
+    def _overrides(self, tense, overrides, attr_name, persons=None):
+        if overrides is None:
+            # Not allowed to replace previous overrides
+            return
         if not hasattr(self, attr_name):
             self_overrides = [ None ] * len(Tenses)
             setattr(self, attr_name, self_overrides) 
         else:
             self_overrides = getattr(self, attr_name)
             
-        if overrides is None or isinstance(overrides, six.string_types) or inspect.isfunction(overrides):
-            if persons is not None:
+        if isinstance(overrides, six.string_types) or inspect.isfunction(overrides):
+            if tense in Tenses.Person_Agnostic:
+                # person is not relevant for gerund and past participle
+                self_overrides[tense] = overrides
+            elif persons is not None:
                 if self_overrides[tense] is None:
                     self_overrides[tense] = [None] * len(Persons)
                     
@@ -70,9 +79,6 @@ class ConjugationOverride():
                 else:
                     for person in persons:
                         self_overrides[tense][person] = overrides
-            elif tense in Tenses.Person_Agnostic:
-                # person is not relevant for gerund and past participle
-                self_overrides[tense] = overrides
             else:
                 # a single stem for all persons of this tense
                 # expand it out to allow for later overrides of specific persons to be applied.
@@ -89,10 +95,10 @@ class ConjugationOverride():
                     self_overrides[tense][person] = override
                     
     def override_tense_stem(self, tense, overrides,persons=None, documentation=None):
-        self.__overrides(tense, overrides, 'conjugation_stems', persons)
+        self._overrides(tense, overrides, 'conjugation_stems', persons)
                     
     def override_tense_ending(self, tense, overrides,persons=None, documentation=None):
-        self.__overrides(tense, overrides, 'conjugation_endings',persons)
+        self._overrides(tense, overrides, 'conjugation_endings',persons)
         
     def override_present_stem_changers(self, overrides, documentation=None):
         """
@@ -112,7 +118,7 @@ class ConjugationOverride():
         """
         Used for case when the entire tense is very irregular
         """
-        self.__overrides(tense, overrides, 'conjugations',persons)
+        self._overrides(tense, overrides, 'conjugations',persons)
         
     def __get_override(self, tense, person, attr_name):
         overrides = []
