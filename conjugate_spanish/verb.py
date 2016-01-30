@@ -55,10 +55,10 @@ class Verb():
     verb conjugation
     '''
     
-    def __init__(self, verb_string, definition, conjugation_overrides=None, prefix=None, base_verb=None):
+    def __init__(self, verb_string, definition, conjugation_overrides=None, base_verb=None):
         '''
         Constructor
-        prefix - remove to find related word for conjugation.
+        base_verb - remove to find related word for conjugation.
         '''
         # when reading from a file or some other place - it may be a ascii string.
         # must be unicode for us reliably do things like [:-1] to peel off last character 
@@ -85,7 +85,10 @@ class Verb():
             self.stem = verb_string[:-2]
             self.verb_ending_index = Infinitive_Endings.index(self.inf_ending)
             
-        self.prefix = prefix
+        if base_verb is not None:
+            self.base_verb_str = base_verb
+            self.prefix = self.verb_string[:self.verb_string.index(self.base_verb_str)]
+            
         self.definition = definition
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self.doNotApply = []

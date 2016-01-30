@@ -10,7 +10,7 @@ from constants import Persons,Tenses, get_iterable
 from conjugation_override import ConjugationOverride
 
 Verb_Dictionary = {}
-def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,prefix=None, manual_overrides=None):
+def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None):
     if conjugation_overrides == u'':
         conjugation_overrides = None
     elif isinstance(conjugation_overrides, six.string_types):
