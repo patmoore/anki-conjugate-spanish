@@ -85,3 +85,11 @@ def get_iterable(x):
         return x
     else:
         return (x,)
+
+def make_list(list_or):
+    if list_or is None:
+        return []
+    elif isinstance(list_or, list):
+        return list_or
+    else:
+        return [ list_or ]

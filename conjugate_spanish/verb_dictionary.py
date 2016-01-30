@@ -6,7 +6,7 @@ import csv
 import six
 import json
 from verb import Verb
-from constants import Persons,Tenses, get_iterable
+from constants import Persons, Tenses, get_iterable
 from conjugation_override import ConjugationOverride
 
 Verb_Dictionary = {}
@@ -30,7 +30,7 @@ def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,base_
         else:
             conjugation_overrides.append(conjugation_override)
                                 
-    verb = Verb(inf_ending, definition,conjugation_overrides=conjugation_overrides)        
+    verb = Verb(inf_ending, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb)        
     Verb_Dictionary[inf_ending] = verb
 #     print "Adding "+verb.inf_verb_string
     return verb

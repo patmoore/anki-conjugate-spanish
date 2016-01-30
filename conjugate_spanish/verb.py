@@ -6,11 +6,10 @@
 from __future__ import print_function
 import inspect
 import re
-import six
 import sys
 from conjugation_override import *
-from conjugation_override import _replace_last_letter_of_stem
 from constants import *
+import conjugate_spanish
 
 
 # UTF8Writer = codecs.getwriter('utf8')

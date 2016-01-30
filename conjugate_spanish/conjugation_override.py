@@ -28,8 +28,10 @@ class ConjugationOverride():
             self.parent = [ Standard_Overrides[parent] if isinstance(parent, six.string_types) else parent for parent in _parents] 
         
         self.inf_match = inf_match
-        self.documentation = documentation
-        self.examples=examples
+        self.documentation = []
+        self.documentation.extend(make_list(documentation))
+        self.examples=[]
+        self.examples.extend(make_list(examples))
         self.key= key if key is not None else inf_match
         if auto_match is None:
             self.auto_match = inf_match is not None
@@ -96,9 +98,11 @@ class ConjugationOverride():
                     
     def override_tense_stem(self, tense, overrides,persons=None, documentation=None):
         self._overrides(tense, overrides, 'conjugation_stems', persons)
+        self.documentation.extend(make_list(documentation))            
                     
     def override_tense_ending(self, tense, overrides,persons=None, documentation=None):
         self._overrides(tense, overrides, 'conjugation_endings',persons)
+        self.documentation.extend(make_list(documentation))      
         
     def override_present_stem_changers(self, overrides, documentation=None):
         """
@@ -119,6 +123,7 @@ class ConjugationOverride():
         Used for case when the entire tense is very irregular
         """
         self._overrides(tense, overrides, 'conjugations',persons)
+        self.documentation.extend(make_list(documentation))      
         
     def __get_override(self, tense, person, attr_name):
         overrides = []
