@@ -105,17 +105,51 @@ class Verb():
                 self.__process_conjugation_override(conjugation_override)
                 
     def print_all_tenses(self):
-        c= self.conjugate_all_tenses()
-        for tense in range(len(Tenses)):
-            print( Tenses[tense])
-            if tense in Tenses.Person_Agnostic:
-                print(c[tense])
-            else:
-                for person in range(len(Persons)):
-                    if c[tense][person] is not None:
-                        print( Persons[person]+" "+c[tense][person], end="; ") 
-            print()
+        conjugations= self.conjugate_all_tenses()
+        self._print_conjugations(conjugations)
+    
+    def print_irregular_tenses(self):
+        conjugations = self.conjugate_irregular_tenses()
+        self._print_conjugations(conjugations)
+        
+    def _print_conjugations(self, conjugations):
+        if conjugations is not None:        
+            for tense in range(len(Tenses)):
+                if conjugations[tense] is None:
+                    continue
+                
+                print("  "+ Tenses[tense], end=": ")
+                if tense in Tenses.Person_Agnostic:
+                    print(conjugations[tense])
+                else:
+                    for person in range(len(Persons)):
+                        if conjugations[tense][person] is not None:
+                            print( Persons[person]+" "+conjugations[tense][person], end="; ") 
+                    print()
 
+    def conjugate_irregular_tenses(self):        
+        conjugations = [ None ] * len(Tenses)
+        overrides = [ override_attribute for override_attribute in ['conjugations', 'conjugation_stems', 'conjugation_endings'] if hasattr(self, override_attribute)]
+        if len(overrides) == 0:
+            return None
+        
+        for attr_name in overrides:
+            for tense in range(len(Tenses)):
+                override = getattr(self, attr_name)
+                if override[tense] is None:
+                    continue
+                
+                if tense in Tenses.Person_Agnostic:
+                    if conjugations[tense] is None:
+                        conjugations[tense] = self.conjugate_tense(tense)
+                else:
+                    for person in range(len(Persons)):
+                        if override[tense][person] is not None:
+                            if conjugations[tense] is None:
+                                conjugations[tense] = [ None ] * len(Persons)
+                            if conjugations[tense][person] is None:
+                                conjugations[tense][person] = self.conjugate(tense, person)
+        return conjugations
     
     def conjugate_all_tenses(self):
         # present to imperative
@@ -406,11 +440,6 @@ class Verb():
         }
         
     def __get_override(self, tense, person, attr_name):
-        """
-        TODO return just the function to allow the stem as it currently is in progress, 
-        this will allow multiple stem changing to be handled
-        return string corresponding override.
-        """
         if hasattr(self, attr_name):
             self_overrides = getattr(self, attr_name)
             if self_overrides[tense] is not None:

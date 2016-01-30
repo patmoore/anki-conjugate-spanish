@@ -1,5 +1,6 @@
 "inf_ending","definition","conjugation_overrides","prefix","manual_overrides"
 "abrir","to open",,,"{""conjugations"":{""past participle"":""abierto""}}"
+"absolver","to absolve, to acquit","o:ue",,"{""conjugations"":{""past participle"":""absuelto""}}"
 "andar","to walk",,,"{""conjugation_stems"":{""past"":""anduv""}}"
 "oler","to hear","pres_sub_inf",,"{""conjugation_stems"":{""present_except_nosvos"":""huel""}}"
 "poder","to be able to","o:ue,r_only,stem_changing_ir_o:ue",,

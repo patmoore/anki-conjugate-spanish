@@ -23,7 +23,7 @@ def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,prefi
             print "while parsing json manual_overrides to verb_dictionary", repr(e)
             return
         
-        conjugation_override = ConjugationOverride(manual_overrides=manual_overrides)
+        conjugation_override = ConjugationOverride(key=inf_ending+"_irregular",manual_overrides=manual_overrides)
     
         if conjugation_overrides is None:
             conjugation_overrides = [conjugation_override]
@@ -32,7 +32,7 @@ def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,prefi
                                 
     verb = Verb(inf_ending, definition,conjugation_overrides=conjugation_overrides)        
     Verb_Dictionary[inf_ending] = verb
-    print "Adding "+verb.inf_verb_string
+#     print "Adding "+verb.inf_verb_string
     return verb
 
 def Verb_Dictionary_get(inf_ending):

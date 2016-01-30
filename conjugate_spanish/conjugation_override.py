@@ -221,16 +221,17 @@ for vowel_from, present_vowels_to, past_vowels_to, gerund_vowel in radical_stem_
 
     radical_prstem_call = __make_radical_call(vowel_from, present_vowels_to)
     conjugation_override.override_tense_stem(Tenses.present_tense, __make_radical_call(vowel_from, present_vowels_to), Persons.Present_Tense_Stem_Changing_Persons)
-    conjugation_override.override_tense_stem(Tenses.past_tense, __make_radical_call(vowel_from, past_vowels_to), Persons.Past_Tense_Stem_Changing_Persons)        
     Standard_Overrides[key] = conjugation_override
     if gerund_vowel is not None:
         # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
+        # but for example, absolver o:ue does not have past tense stem changing
         stem_changing_ir_gerund = ConjugationOverride(key=u"stem_changing_ir_"+key,
             auto_match=True,
+            examples=[u'dormir'],
             documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
         )
         stem_changing_ir_gerund.override_tense_stem(Tenses.gerund, __make_radical_call(vowel_from, gerund_vowel))
-
+        stem_changing_ir_gerund.override_tense_stem(Tenses.past_tense, __make_radical_call(vowel_from, past_vowels_to), Persons.Past_Tense_Stem_Changing_Persons)        
         stem_changing_ir_gerund.is_match  = six.create_bound_method(__make_check_stem_ir(key), stem_changing_ir_gerund)
         Dependent_Standard_Overrides[stem_changing_ir_gerund.key] = stem_changing_ir_gerund 
     
