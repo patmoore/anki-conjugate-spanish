@@ -82,8 +82,10 @@ class Verb():
             self.stem = verb_string[:-2]
             self.verb_ending_index = Infinitive_Endings.index(self.inf_ending)
             
-        if base_verb is not None:
-            self.base_verb_str = base_verb
+        self.base_verb_str = base_verb if base_verb != u'' else None
+        if self.base_verb_str is not None:            
+            # Now a bit of trickiness. Verbs that are based on the conjugation of another verb need to handle override conjugations or conjugation_stems
+            # We don't have it as a 'visible' override because that would make it harder to highlight how a verb is irregular.
             self.prefix = self.verb_string[:self.verb_string.index(self.base_verb_str)]
             
         self.definition = definition
@@ -125,31 +127,44 @@ class Verb():
                 else:
                     for person in range(len(Persons)):
                         if conjugations[tense][person] is not None:
-                            print( Persons[person]+" "+conjugations[tense][person], end="; ") 
+                            if not self.reflexive:
+                                print( Persons[person]+" "+conjugations[tense][person], end="; ")
+                            elif tense not in [ Tenses.imperative_negative, Tenses.imperative_positive ]:
+                                print( Persons_Indirect[person]+" "+conjugations[tense][person], end="; ")
+                            else:
+                                print(conjugations[tense][person])
+                                 
                     print()
 
     def conjugate_irregular_tenses(self):        
+        """
+        Look for just the tenses and persons that are different than than completely regular conjugation rules
+        """
         conjugations = [ None ] * len(Tenses)
-        overrides = [ override_attribute for override_attribute in ['conjugations', 'conjugation_stems', 'conjugation_endings'] if hasattr(self, override_attribute)]
-        if len(overrides) == 0:
-            return None
-        
-        for attr_name in overrides:
-            for tense in range(len(Tenses)):
-                override = getattr(self, attr_name)
-                if override[tense] is None:
-                    continue
-                
-                if tense in Tenses.Person_Agnostic:
-                    if conjugations[tense] is None:
-                        conjugations[tense] = self.conjugate_tense(tense)
-                else:
-                    for person in range(len(Persons)):
-                        if override[tense][person] is not None:
-                            if conjugations[tense] is None:
-                                conjugations[tense] = [ None ] * len(Persons)
-                            if conjugations[tense][person] is None:
-                                conjugations[tense][person] = self.conjugate(tense, person)
+        def __look_for_overrides(verb):            
+            overrides = [ override_attribute for override_attribute in ['conjugations', 'conjugation_stems', 'conjugation_endings'] if hasattr(verb, override_attribute)]
+            if len(overrides) == 0:
+                return None
+            
+            for attr_name in overrides:
+                for tense in range(len(Tenses)):
+                    override = getattr(verb, attr_name)
+                    if override[tense] is None:
+                        continue
+                    
+                    if tense in Tenses.Person_Agnostic:
+                        if conjugations[tense] is None:
+                            conjugations[tense] = self.conjugate_tense(tense)
+                    else:
+                        for person in range(len(Persons)):
+                            if override[tense][person] is not None:
+                                if conjugations[tense] is None:
+                                    conjugations[tense] = [ None ] * len(Persons)
+                                if conjugations[tense][person] is None:
+                                    conjugations[tense][person] = self.conjugate(tense, person)
+        __look_for_overrides(self)
+        if self.base_verb_str is not None:
+            __look_for_overrides(self.base_verb)
         return conjugations
     
     def conjugate_all_tenses(self):
