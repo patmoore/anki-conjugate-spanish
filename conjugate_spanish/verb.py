@@ -172,36 +172,62 @@ class Verb():
         return [ self.conjugate_tense(tense) for tense in range(len(Tenses)) ]
         
     def conjugate_tense(self, tense):
+        """
+        conjugate all persons for given tense
+        """
         if tense in Tenses.Person_Agnostic:
             results = self.conjugate(tense=tense, person=None)
         else:
             results = [ self.conjugate(tense=tense, person=person) for person in range(len(Persons)) ]
         return results
             
-    def conjugate(self, tense, person):
-        conjugation_overrides = self.__get_override(tense, person, 'conjugations')
-        if conjugation_overrides is not None:
-            for conjugation_override in conjugation_overrides:
-                if isinstance(conjugation_override, six.string_types):
-                    conjugation = conjugation_override
-                elif conjugation_override is not None:
-                    try:
-                        conjugation = conjugation_override(tense, person)
-                    except Exception as e:
-                        extype, ex, traceback = sys.exc_info()
-#                         formatted = traceback.format_exception_only(extype, ex)[-1]
-                        message = "%s: Trying to conjugate irregular=%d person=%d; %s" % self.inf_verb_string, tense, person, ex.message
-                        raise RuntimeError, message, traceback
-        elif tense in [Tenses.imperative_positive, Tenses.imperative_negative]:
-            conjugation = self.__conjugation_imperative(tense, person)
+    def conjugate(self, tense, person, child_verb=None):
+        """
+        :child_verb: - when a verb is being conjugate depends on another verb. It calls the base_verb with itself
+        :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
+        """        
+        if self.base_verb_str is not None:            
+            base_verb_conjugation = self.base_verb.conjugate(tense, person, child_verb=self)
+            index = base_verb_conjugation.find(" ")
+            if index > -1:
+                conjugation = base_verb_conjugation[:index+1] + self.prefix+ base_verb_conjugation[index+1:]
+            else:
+                conjugation = self.prefix + base_verb_conjugation
         else:
-            current_conjugation_ending = self.conjugate_ending(tense, person)
-            conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
-        
+            conjugation_overrides = self.__get_override(tense, person, 'conjugations')
+            
+            if conjugation_overrides is not None:
+                for conjugation_override in conjugation_overrides:
+                    if isinstance(conjugation_override, six.string_types):
+                        conjugation = conjugation_override
+                    elif conjugation_override is not None:
+                        try:
+                            conjugation = conjugation_override(tense, person)
+                        except Exception as e:
+                            extype, ex, traceback_ = sys.exc_info()
+                            formatted = traceback.format_exception_only(traceback_,extype, ex)[-1]
+                            message = "%s: Trying to conjugate irregular=%d person=%d; %s %s" % self.inf_verb_string, tense, person, ex.message, formatted
+                            raise RuntimeError, message, traceback_
+            elif tense not in [Tenses.imperative_positive, Tenses.imperative_negative]:
+                current_conjugation_ending = self.conjugate_ending(tense, person)
+                conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
+            else:
+                conjugation = None
+                
+            if tense in [Tenses.imperative_positive, Tenses.imperative_negative]:
+                if conjugation is None:
+                    conjugation = self.__conjugation_imperative(tense, person, conjugation, child_verb)
+                elif child_verb is not None and child_verb.reflexive:
+                    # needed in imperative to correctly add in the reflexive pronoun 
+                    conjugation = self.__conjugation_imperative(tense, person, conjugation)
+            
         _check_for_multiple_accents(conjugation)
         return conjugation
     
     def conjugate_stem(self, tense, person, current_conjugation_ending):
+        """
+        :current_conjugation_ending - important because some rules only apply if the conjugation ending starts with an o or e
+        """         
         def __check_override(stem_override, current_conjugation_stem):
             if isinstance(stem_override, six.string_types):
                 current_conjugation_stem = stem_override
@@ -300,19 +326,19 @@ class Verb():
                             vowel_skip -=1
                             continue
                         else:
-                            result = conjugation_string[:index+1] + u'\u0301' + conjugation_string[index+1:]
+                            result = accent_at(conjugation_string,index+1)
                     elif conjugation_string[index] in _weak_vowel:
                         #weak vowel                                   
                         if vowel_skip > 0:
                             vowel_skip -=1
                             continue
                         elif index-1 >= 0 and conjugation_string[index-1] in _strong_vowel:
-                            # accent should be on strong vowel immediately before the weak vowel                            
+                            # accent should be on strong vowel immediately before the weak vowel (so skip the current weak vowel)                           
                             continue
                         else:
                             # for two weak vowels the accent is on the second one (i.e. this one) 
                             # or if there is any other letter or this is the beginning of the word
-                            result = conjugation_string[:index+1] + u'\u0301' + conjugation_string[index+1:]
+                            result = accent_at(conjugation_string,index+1)
                             
             return result
     
