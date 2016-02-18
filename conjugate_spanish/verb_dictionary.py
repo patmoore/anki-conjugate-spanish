@@ -38,35 +38,36 @@ def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,base_
 def Verb_Dictionary_get(inf_ending):
     return Verb_Dictionary.get(inf_ending)
 
-import special_cases
-
-for fileName in ['irregulars','dictionary']:
-    csvfile = codecs.open('./conjugate_spanish/dictionaries/'+fileName+'.csv', mode='r' )
-    reader = csv.DictReader(csvfile, skipinitialspace=True)
-    try:
-        for line in reader:
-            try:
-                verb = Verb_Dictionary_add(**line)
-    #             print repr(c).decode("unicode-escape")
-            except Exception as e:
-                print "error reading "+fileName+".csv: ", line, e            
-    except Exception as e:
-        print "error reading "+fileName+".csv: ", e
+def Verb_Dictionary_load():
+    import special_cases
     
-for fileName, conjugation_override in six.iteritems({u"e2i":u"e:i", u"o2ue": u"o:ue", u"e2ie":u"e:ie"}):
-    csvfile = codecs.open('./conjugate_spanish/dictionaries/'+fileName+".csv", mode='r' )
-    reader = csv.DictReader(csvfile, delimiter=',', quotechar='"',skipinitialspace=True)
-    try:
-        for line in reader:
-            try:
-                if 'conjugation_overrides' in line and line['conjugation_overrides'] is not None and len(line['conjugation_overrides']) > 0:
-                    line['conjugation_overrides'].append(conjugation_override)
-                else:
-                    line['conjugation_overrides'] = [ conjugation_override ]
-                     
-                verb = Verb_Dictionary_add(**line)
-    #             print repr(c).decode("unicode-escape")
-            except Exception as e:
-                print e,":error reading ", line            
-    except Exception as e:
-        print "error reading dictionary.csv"
+    for fileName in ['irregulars','dictionary']:
+        csvfile = codecs.open('./conjugate_spanish/dictionaries/'+fileName+'.csv', mode='r' )
+        reader = csv.DictReader(csvfile, skipinitialspace=True)
+        try:
+            for line in reader:
+                try:
+                    verb = Verb_Dictionary_add(**line)
+        #             print repr(c).decode("unicode-escape")
+                except Exception as e:
+                    print "error reading "+fileName+".csv: ", line, e            
+        except Exception as e:
+            print "error reading "+fileName+".csv: ", e
+        
+    for fileName, conjugation_override in six.iteritems({u"e2i":u"e:i", u"o2ue": u"o:ue", u"e2ie":u"e:ie"}):
+        csvfile = codecs.open('./conjugate_spanish/dictionaries/'+fileName+".csv", mode='r' )
+        reader = csv.DictReader(csvfile, delimiter=',', quotechar='"',skipinitialspace=True)
+        try:
+            for line in reader:
+                try:
+                    if 'conjugation_overrides' in line and line['conjugation_overrides'] is not None and len(line['conjugation_overrides']) > 0:
+                        line['conjugation_overrides'].append(conjugation_override)
+                    else:
+                        line['conjugation_overrides'] = [ conjugation_override ]
+                         
+                    verb = Verb_Dictionary_add(**line)
+        #             print repr(c).decode("unicode-escape")
+                except Exception as e:
+                    print e,":error reading ", line            
+        except Exception as e:
+            print "error reading dictionary.csv"
