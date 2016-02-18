@@ -483,3 +483,14 @@ class Verb():
             return
         if override.key not in self.doNotApply and override.key not in self.appliedOverrides:
             override.apply(self)        
+            
+    @property
+    def base_verb(self):
+        if self.base_verb_str is None:
+            return self
+        elif not hasattr(self, '_base_verb'):
+            # some verbs are based off of others (tener)
+            # TODO: maldecir has different tu affirmative than decir        
+            from verb_dictionary import Verb_Dictionary_get
+            self._base_verb = Verb_Dictionary_get(self.base_verb_str)
+        return self._base_verb
