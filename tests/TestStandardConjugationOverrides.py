@@ -58,7 +58,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         """
         decir is a go verb which must override the default -cir behavior of changing c-> zc
         """
-        decir = Verb_Dictionary_add("decir","to say, tell","go,e:i,-v_cir","decir",'{"conjugation_stems":{"present":["di"],"past":"dij","future":"dir","conditional":"dir"},"conjugations":{"imperative positive":[null, "di"]}}')
+        decir = Verb_Dictionary_add("decir","to say, tell","go,e:i,-v_cir",None,'{"conjugation_stems":{"present":["di"],"past":"dij","future":"dir","conditional":"dir"},"conjugations":{"imperative positive":[null, "di"]}}')
         conjugations = decir.conjugate_all_tenses()
         self.assertEqual(conjugations[Tenses.imperative_positive][Persons.second_person_singular], u'di', "problems with loading manual overrides of imperative")
         self.assertEqual(conjugations[Tenses.imperative_positive][Persons.third_person_singular], u'diga', "problems with loading manual overrides of imperative")

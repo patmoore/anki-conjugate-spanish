@@ -17,20 +17,16 @@ import conjugate_spanish
 from standard_endings import Standard_Conjugation_Endings
 from inspect import isfunction
 
-def make_unicode(inputStr):
-    if inputStr is None:
-        return None
-    elif type(inputStr) != unicode:
-        inputStr = inputStr.decode('utf-8')
-        return inputStr
-    else:
-        return inputStr
-    
-_vowel_check = re.compile(six.u('[aeiou]$'), re.UNICODE)
-_accented_vowels = re.compile(u'[áéíóú]')
+_ending_vowel_check = re.compile(u'['+Vowels+u']$', re.IGNORECASE+re.UNICODE)
+_accented_vowel_check = re.compile(u'['+AccentedVowels+u']', re.IGNORECASE+re.UNICODE)
+# check for word with only a single vowel ( used in imperative conjugation )
+_single_vowel_re = re.compile(u'^([^'+AllVowels+']*['+AllVowels+u'])([^'+AllVowels+']*)$', re.IGNORECASE+re.UNICODE)
 def _check_for_multiple_accents(conjugation):
+    """
+    Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
+    """
     if conjugation is not None:
-        accented = _accented_vowels.findall(conjugation)
+        accented = _accented_vowel_check.findall(conjugation)
         if len(accented) > 1:
             raise Exception("Too many accents in "+conjugation)
 
@@ -57,7 +53,7 @@ class Verb():
     def __init__(self, verb_string, definition, conjugation_overrides=None, base_verb=None):
         '''
         Constructor
-        base_verb - remove to find related word for conjugation.
+        :base_verb used as base verb for conjugation
         '''
         # when reading from a file or some other place - it may be a ascii string.
         # must be unicode for us reliably do things like [:-1] to peel off last character 
@@ -105,6 +101,7 @@ class Verb():
         for conjugation_override in Dependent_Standard_Overrides.itervalues():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
                 self.__process_conjugation_override(conjugation_override)
+                
                 
     def print_all_tenses(self):
         conjugations= self.conjugate_all_tenses()
@@ -217,7 +214,7 @@ class Verb():
         elif tense == Tenses.past_subjective_tense:
             current_conjugation_stem = self.__conjugation_past_subjective_stem(tense, person)
         else:
-            pass
+            raise Exception(Tenses[tense]+": Can't be handle")
         
         stem_overrides = self.__get_override(tense, person, 'conjugation_stems')
         for stem_override in get_iterable(stem_overrides):
@@ -227,7 +224,7 @@ class Verb():
             raise Exception(self.inf_verb_string+": no stem created tense="+tense+" person="+person)
         
         # if the ending has an accent then we remove the accent on the stem
-        if _accented_vowels.search(current_conjugation_stem) and _accented_vowels.search(current_conjugation_ending):
+        if _accented_vowel_check.search(current_conjugation_stem) and _accented_vowel_check.search(current_conjugation_ending):
             current_conjugation_stem = _remove_accent(current_conjugation_stem)
             
         return current_conjugation_stem
@@ -241,10 +238,10 @@ class Verb():
                 try:
                     current_conjugation_ending = ending_override(**override_call)
                 except Exception as e:
-                    extype, ex, traceback = sys.exc_info()
-#                         formatted = traceback.format_exception_only(extype, ex)[-1]
+                    extype, ex, traceback_ = sys.exc_info()
+#                         formatted = traceback_.format_exception_only(extype, ex)[-1]
                     message = "%s: Trying to conjugate ending=%d person=%d; %s" % self.inf_verb_string, tense, person, ex.message
-                    raise RuntimeError, message, traceback
+                    raise RuntimeError, message, traceback_
             return current_conjugation_ending
         
         if tense in Tenses.Person_Agnostic:
@@ -262,11 +259,14 @@ class Verb():
     
     def __explicit_accent(self, conjugation_string):
         """
-        look for vowel to accent.
+        Accent a vowel explicitly UNLESS there is an accent already
+        The rules on accenting in spanish is the last vowel if the word ends in a consonent other than n or s
+        Otherwise the second to last vowel.
+        If the vowel to be accented is a strong-weak (au,ai,ei,... ) or a weak-strong pair (ua,ia, ... ) the strong vowel of the pair gets the accent
         """
         _strong_vowel = [u'a', u'e', u'o']
         _weak_vowel = [u'i', u'u']
-        if _accented_vowels.search(conjugation_string):
+        if _accented_vowel_check.search(conjugation_string):
             return conjugation_string
         else:            
             if conjugation_string[-1] in [u'n', u's'] or conjugation_string[-1] in _strong_vowel or conjugation_string[-1] in _weak_vowel:
@@ -359,12 +359,15 @@ class Verb():
         return conjugation_stem
 
     def __conjugation_past_subjective_stem(self, tense, person):
+        """
+        in First person plural, accent if third person plural ends in a vowel after dropping -ron        
+        """
         third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural)
         if third_person_plural_conjugation[-3:] == u'ron':
             conjugation_stem = third_person_plural_conjugation[:-3]
             if person == Persons.first_person_plural:
                 # accent on last vowel                                
-                if _vowel_check.search(conjugation_stem):
+                if _ending_vowel_check.search(conjugation_stem):
                     conjugation_stem += u'\u0301'
                 else:
                     # assuming last stem character is a vowel
@@ -438,10 +441,14 @@ class Verb():
                     
     def overrides_applied(self):
         return {u'applied' : self.appliedOverrides,
-            u'excluded': self.doNotApply
+            u'excluded': self.doNotApply,
+            u'base_verb': self.base_verb_str
         }
         
     def __get_override(self, tense, person, attr_name):
+        """
+        :return a list of the overrides for this tense/person ( list because a series of overrides can be applied) 
+        """
         if hasattr(self, attr_name):
             self_overrides = getattr(self, attr_name)
             if self_overrides[tense] is not None:
