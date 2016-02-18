@@ -8,7 +8,9 @@ import inspect
 import re
 import sys
 from conjugation_override import *
+from conjugation_override import _replace_last_letter_of_stem
 from constants import *
+import traceback
 import conjugate_spanish
 
 
@@ -193,16 +195,14 @@ class Verb():
                 try:
                     current_conjugation_stem = stem_override(**override_call)
                 except Exception as e:
-                    extype, ex, traceback = sys.exc_info()
-                    print( ex.message)
-#                         formatted = traceback.format_exception_only(extype, ex)[-1]
-#                         message = "%s: Trying to conjugate stem tense=%d person=%d" % self.inf_verb_string, tense, person, ex.message
-#                         raise RuntimeError, message, traceback
+                    extype, ex, tb = sys.exc_info()
+                    traceback.print_tb(tb)
+                    formatted = traceback.format_exception(extype, ex, tb)[-1]
+                    message = "%s: Trying to conjugate stem tense=%d person=%d" % self.inf_verb_string, tense, person, formatted
+                    raise RuntimeError, message, tb
             return current_conjugation_stem
         
-        """
-        :current_conjugation_ending - important because some rule only apply if the conjugation ending starts with an o or e
-        """         
+
         if tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense]:
             current_conjugation_stem = self.stem
         elif tense in Tenses.Person_Agnostic:
