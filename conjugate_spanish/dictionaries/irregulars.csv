@@ -1,7 +1,7 @@
 "inf_ending","definition","conjugation_overrides","base_verb","manual_overrides"
 "abrir","to open",,,"{""conjugations"":{""past participle"":""abierto""}}"
 "absolver","to absolve, to acquit","o:ue",,"{""conjugations"":{""past participle"":""absuelto""}}"
-"abtenerse","to abstain",,"tener"
+"abstenerse","to abstain",,"tener"
 "andar","to walk",,,"{""conjugation_stems"":{""past"":""anduv""}}"
 "dormir","to sleep","o:ue"
 "oler","to hear","pres_sub_inf",,"{""conjugation_stems"":{""present_except_nosvos"":""huel""}}"

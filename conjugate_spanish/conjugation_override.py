@@ -167,14 +167,23 @@ class ConjugationOverride():
                     if conjugation_override is not None:
                         verb._overrides(tense, conjugation_override, applies)
     
+__find_last_vowel_re = re.compile(u'^(.*)(['+AllVowels+'])([^'+AllVowels+']*)', re.UNICODE+re.IGNORECASE)
 def __radical_stem_change(stem, vowel_change, vowels_to):
     # pick off last instance of the vowel.
     # for example:  'elegir' we need to change the last e to an i. 
     # the stem would be 'elej'
-    index = stem.rindex(vowel_change)
-    if index < 0:
-        raise Exception("vowel missing :"+vowel_change)
-    changed_stem = stem[:index] + vowels_to + stem[index+1:]
+    match_ = __find_last_vowel_re.match(stem)
+    if match_ is None:
+        raise Exception("No vowel at all in stem="+stem)
+    elif match_.group(2) == vowel_change:
+        changed_stem = match_.group(1)+vowels_to+match_.group(3)
+    elif match_.group(2) == vowels_to:
+        # some other rule resulted in this change already being applied.
+        changed_stem = stem
+    else:
+        # TODO - if another override was applied we shouldn't raise the exception.
+        raise Exception(stem+":vowel missing :"+vowel_change)
+    
     return changed_stem
 
 def __make_radical_call(vowel_from, vowels_to):

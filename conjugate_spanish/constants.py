@@ -93,3 +93,21 @@ def make_list(list_or):
         return list_or
     else:
         return [ list_or ]
+    
+def make_unicode(inputStr):
+    if inputStr is None:
+        return None
+    elif type(inputStr) != unicode:
+        inputStr = inputStr.decode('utf-8')
+        return inputStr
+    else:
+        return inputStr
+    
+## for convenience with creating strings
+Vowels = u'aeiou'
+AccentedVowels = u'áéíóú'
+AllVowels = Vowels+AccentedVowels
+CombiningAccent = u'\u0301'
+def accent_at(string_, index_):
+    result = string_[:index_] + CombiningAccent + string_[index_:]
+    return result
