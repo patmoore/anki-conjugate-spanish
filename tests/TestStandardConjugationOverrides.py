@@ -3,7 +3,7 @@ import unittest
 import inspect
 from conjugate_spanish import Tenses, Persons, Verb
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add
-from conjugate_spanish.conjugation_override import Standard_Overrides, Dependent_Standard_Overrides
+from conjugate_spanish.conjugation_override import Dependent_Standard_Overrides
 
 class TestStandardConjugationOverrides(unittest.TestCase):
     def test_gerund_override(self):
@@ -62,4 +62,3 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         conjugations = decir.conjugate_all_tenses()
         self.assertEqual(conjugations[Tenses.imperative_positive][Persons.second_person_singular], u'di', "problems with loading manual overrides of imperative")
         self.assertEqual(conjugations[Tenses.imperative_positive][Persons.third_person_singular], u'diga', "problems with loading manual overrides of imperative")
-   

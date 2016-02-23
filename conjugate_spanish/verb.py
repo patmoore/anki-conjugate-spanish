@@ -172,12 +172,7 @@ class Verb():
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
         """        
         if self.base_verb_str is not None:            
-            base_verb_conjugation = self.base_verb.conjugate(tense, person, child_verb=self)
-            index = base_verb_conjugation.find(" ")
-            if index > -1:
-                conjugation = base_verb_conjugation[:index+1] + self.prefix+ base_verb_conjugation[index+1:]
-            else:
-                conjugation = self.prefix + base_verb_conjugation
+            conjugation = self.__derived_conjugation(tense, person, child_verb)
         else:
             conjugation_overrides = self.__get_override(tense, person, 'conjugations')
             
@@ -193,22 +188,53 @@ class Verb():
                             formatted = traceback.format_exception_only(traceback_,extype, ex)[-1]
                             message = "%s: Trying to conjugate irregular=%d person=%d; %s %s" % self.inf_verb_string, tense, person, ex.message, formatted
                             raise RuntimeError, message, traceback_
-            elif tense not in [Tenses.imperative_positive, Tenses.imperative_negative]:
+            elif tense not in Tenses.imperative:
                 current_conjugation_ending = self.conjugate_ending(tense, person)
                 conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
             else:
                 conjugation = None
                 
-            if tense in [Tenses.imperative_positive, Tenses.imperative_negative]:
+            # need to handle reflexive pronouns even if we have a override on the verb itself.
+            if tense in Tenses.imperative:
                 if conjugation is None:
                     conjugation = self.__conjugation_imperative(tense, person, conjugation, child_verb)
-                elif child_verb is not None and child_verb.reflexive:
+                elif self.reflexive:
                     # needed in imperative to correctly add in the reflexive pronoun 
-                    conjugation = self.__conjugation_imperative(tense, person, conjugation)
+                    conjugation = self.__conjugation_imperative_reflexive(tense, person, conjugation)
             
         _check_for_multiple_accents(conjugation)
         return conjugation
     
+    def __derived_conjugation(self, tense, person, child_verb=None):
+        # This verb is based on another verb: example: abstenerse is based on tener
+        # these base verbs are not allowed to be reflexive verbs (I haven't found any examples yet where this is an issue)
+        base_verb_conjugation = self.base_verb.conjugate(tense, person, child_verb)
+        single_vowel_match = _single_vowel_re.match(base_verb_conjugation)
+        if tense == Tenses.imperative_positive and person == Persons.second_person_singular:
+            #
+            # Accent a single vowel base verb conjugation
+            # 
+            # TODO this may occur in other special cases but if so I have not found them.
+            # parent ( self ) needs to be conjugated to determine special accent case.
+            # example tener(self) and obtener ( child_verb) 
+            # second person singular for tener is (ten), and obtener (obtén) - so accent is on the vowel that 
+            # would be accented in the base verb case.
+            # abstenerse does not need this special case because the reflexive pronoun will be added to the end ( so 'ten' syllable will be the second to last)
+            # but not no always decir  ( di ) but maldecir ( maldice )
+            # TODO accenting ( obtén - for example )
+            # reflexive verbs are going to get 'te' at the end, so no need for an accent.
+            if single_vowel_match is not None and not self.reflexive:
+                _conjugation = self.prefix + single_vowel_match.group(1) + single_vowel_match.group(2) + CombiningAccent + single_vowel_match.group(3)
+            else:
+                _conjugation = self.prefix + base_verb_conjugation
+        elif single_vowel_match is not None:
+            raise Exception(self.inf_verb_string+":Single vowel case in tense "+Tenses[tense]+" Person "+Persons[person])
+        else:
+            _conjugation = self.prefix + base_verb_conjugation
+            
+        returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation)
+        return returned_conjugation
+        
     def conjugate_stem(self, tense, person, current_conjugation_ending):
         """
         :current_conjugation_ending - important because some rules only apply if the conjugation ending starts with an o or e
@@ -327,50 +353,144 @@ class Verb():
                             
             return result
     
-    def __conjugation_imperative(self, tense, person):
+    def __conjugation_imperative(self, tense, person, conjugation, child_verb=None):
         """
+        :child_verb - the verb actually being conjugated. ( self is the parent verb )
+        :conjugation: - the overridden conjugation
+        
+        non-reflexive:
+        positive
+        2nd person -- third person present tense
+        2nd person plural - infinitive drop last r replace with d
+        all others present subjective
+        
+        negative
+        present subjective
+        
+        reflexive:
+        
+        Imperative is a bit tricky.
+        1. If there is a conjugation
         TODO: placement of lo. examples:
             no me lo dé - don't give it to me
             Démelo - give it to me
             
-        TODO: (reflexive) apply accent to vowel that was originally accented
+        2. TODO: (reflexive) apply accent to vowel that was originally accented
         when appending reflexive pronoun 
+        3. TODO: handle verbs that have base verbs
+        4. imperatives rarely? ever override a stem for entire imperative
+        5. positive v negative conjugation
+        """
+        """
+        Handle the very odd cases first
         """        
         if person == Persons.first_person_singular:
             # no such conjugation
             return None
-        elif person == Persons.first_person_plural:
-            conjugation = self.conjugate(Tenses.present_subjective_tense, person)
-            if self.reflexive:
-                conjugation = _replace_last_letter_of_stem(self.__explicit_accent(conjugation), u's', Persons_Indirect[Persons.first_person_plural])
-                
-        elif person == Persons.second_person_singular and tense == Tenses.imperative_positive:
-            conjugation = self.conjugate(Tenses.present_tense, Persons.third_person_singular)
-            if self.reflexive:
-                conjugation = self.__explicit_accent(conjugation) + Persons_Indirect[person]
-        elif person == Persons.second_person_plural and tense == Tenses.imperative_positive:
-            if not self.reflexive:
-                # xxxv rule j: drop 'r' in infinitive and replace with 'd' in non-reflexive cases 
-                conjugation = _replace_last_letter_of_stem(self.inf_verb_string, u'r', u'd')
-            elif self.verb_ending_index == Infinitive_Endings.ir_verb:
-                # ir verbs need the i accented rule k and l
-                # example ¡Vestíos! - Get Dressed!
-                # what about verbs that already have explicit accent?
-                conjugation = _remove_accent(self.stem) + u'í' + Persons_Indirect[Persons.second_person_plural]
+        
+        if child_verb is None:
+            verb = self
+        else: 
+            verb = child_verb
+        
+        # Step #1 - for verbs with no override conjugation - get the conjugation        
+        if conjugation is None:
+            # For most persons the conjugation is the present_subjective ( because imperative is a "mood" - enhancement to the present_subjective )
+            if tense == Tenses.imperative_negative or person not in Persons.second_person:
+                # all negative imperatives use the present_subjective AND all positives EXCEPT second person
+                _conjugation = verb.conjugate(Tenses.present_subjective_tense, person)
+#                 if person == Persons.first_person_plural and verb.reflexive:
+#                     # properly prepare the verb by removing the trailing 's'
+#                     # TODO: notice we don't handle a case of irregular nosotros - that does not have a trailing 's'
+#                     # this seems to not be a problem for anything - but we will raise an exception if it is
+#                     # this seems to only be a problem for irse
+#                     _conjugation = _replace_last_letter_of_stem(_conjugation, u's', u'')
+            elif person == Persons.second_person_singular and tense == Tenses.imperative_positive:
+                # positive tu form uses present tense usted                
+                _conjugation = verb.conjugate(Tenses.present_tense, Persons.third_person_singular)
+            elif person == Persons.second_person_plural and tense == Tenses.imperative_positive:                
+                # remove 'r' from infinitive - and replace it with 'd'
+                _conjugation = _replace_last_letter_of_stem(verb.inf_verb_string, u'r', u'd')
             else:
-                # ex: ¡Sentaos! - Sit down!
-                conjugation = _replace_last_letter_of_stem(self.__explicit_accent(self.inf_verb_string), u'r', Persons_Indirect[Persons.second_person_plural])                
-        elif person in [Persons.second_person_singular, Persons.second_person_plural] and tense == Tenses.imperative_negative:
-            conjugation = u"no "
-            if self.reflexive:
-                conjugation += Persons_Indirect[person] + " "
-            conjugation += self.conjugate(Tenses.present_subjective_tense, person)                   
-        elif person in [Persons.third_person_singular, Persons.third_person_plural]:
-            conjugation = self.conjugate(Tenses.present_subjective_tense, person)
+                raise Exception("Missed case"+tense+" "+person)  
         else:
-            raise Exception("Person value is out of range person="+str(person))                                                
-        return conjugation
-            
+            _conjugation = conjugation                      
+        
+        returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation)
+        return returned_conjugation
+    
+    def __apply_imperative_reflexive_pronoun(self, tense, person, conjugation):
+        # Step 3 - handle the placement of the indirect pronoun for reflexive verbs.  
+        # The important issue here is the effect on the accent.      
+        if self.reflexive:
+            #Now apply the reflexive pronoun rules.
+            if person in Persons.third_person:
+                # simple!
+                returned_conjugation = self.__explicit_accent(conjugation) + Persons_Indirect[person]
+            elif person == Persons.first_person_plural:
+                # mostly simple (same as third person except trailing 's' is dropped before adding the indirect pronoun
+                returned_conjugation = _replace_last_letter_of_stem(self.__explicit_accent(conjugation), u's', Persons_Indirect[person])
+            elif tense == Tenses.imperative_negative:
+                # second person negative : simple as well!
+                # reflexive pronoun is a separate word in front of the verb. (i.e. 'no te abstengas')
+                # notice that the second person cases negative do not have any accent issues.
+                returned_conjugation = Persons_Indirect[person]+ " " + conjugation
+            elif person == Persons.second_person_singular: # (imperative positive) 
+                # Need to put explicit accent in SOME cases for example: quitarse ( quítate ) but not in all: abstener ( abstente )
+                # ( could it be that 'ten' is a single vowel word and retains the accent on the ten - even with the prefix? )
+                # ensure that there is an accent somewhere (note that in abstenerse case the accent should already be on the abs-tén 
+                returned_conjugation = self.__explicit_accent(conjugation) + Persons_Indirect[person]
+            elif person == Persons.second_person_plural:  # (imperative positive) 
+                # TODO look for single vowel in conjugation for model verb.
+                # TODO : Would like to make this a conjugation override
+                if self.verb_ending_index == Infinitive_Endings.ir_verb:
+                    # ir verbs need the i (in ir) accented rule k and l
+                    # this makes sense because otherwise the os would be accented.
+                    # example ¡Vestíos! - Get Dressed!
+                    # what about verbs that already have explicit accent?
+#                     returned_conjugation = remove_accent(conjugation) + u'í' + Persons_Indirect[Persons.second_person_plural]
+                    accentless = remove_accent(conjugation)
+                    returned_conjugation = _replace_last_letter_of_stem(accentless, 'd', CombiningAccent + Persons_Indirect[Persons.second_person_plural])
+                else:
+                    # ex: ¡Sentaos! - Sit down! ( the spoken accent will be on the ending a )
+                    returned_conjugation = _replace_last_letter_of_stem(remove_accent(conjugation), u'd', Persons_Indirect[Persons.second_person_plural])
+        else:
+            returned_conjugation = conjugation
+        return returned_conjugation
+    
+#     def __old_conjugate_imperative(self, tense, person, conjugation, child_verb=None):
+#         if person == Persons.second_person_singular:
+#             if self.reflexive:
+#                 if tense == Tenses.imperative_positive: 
+#                     conjugation = self.__explicit_accent(conjugation) + Persons_Indirect[person]
+#         elif person == Persons.second_person_plural and tense == Tenses.imperative_positive:
+#             if not self.reflexive:
+#                 # xxxv rule j: drop 'r' in infinitive and replace with 'd' in non-reflexive cases 
+#                 conjugation = _replace_last_letter_of_stem(self.inf_verb_string, u'r', u'd')
+#             elif self.verb_ending_index == Infinitive_Endings.ir_verb:
+#                 # ir verbs need the i accented rule k and l
+#                 # example ¡Vestíos! - Get Dressed!
+#                 # what about verbs that already have explicit accent?
+#                 conjugation = remove_accent(self.stem) + u'í' + Persons_Indirect[Persons.second_person_plural]
+#             else:
+#                 # ex: ¡Sentaos! - Sit down!
+#                 conjugation = _replace_last_letter_of_stem(self.__explicit_accent(self.inf_verb_string), u'r', Persons_Indirect[Persons.second_person_plural])
+#         elif person == Persons.first_person_plural:
+#             if conjugation is None:
+#                 pass
+#             if self.reflexive:
+#                 conjugation = _replace_last_letter_of_stem(self.__explicit_accent(conjugation), u's', Persons_Indirect[Persons.first_person_plural])
+#                  
+#         elif person in [Persons.second_person_singular, Persons.second_person_plural] and tense == Tenses.imperative_negative:
+#             if self.reflexive:
+#                 conjugation += Persons_Indirect[person] + " "
+#             conjugation += self.conjugate(Tenses.present_subjective_tense, person)                   
+#         elif person in [Persons.third_person_singular, Persons.third_person_plural]:
+#             conjugation = self.conjugate(Tenses.present_subjective_tense, person)
+#         else:
+#             raise Exception("Person value is out of range person="+str(person))                                                
+#         return conjugation
+#             
     def __conjugation_present_subjective_stem(self, tense, person):
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular)
         if first_person_conjugation[-1:] ==u'o':
