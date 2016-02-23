@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import collections
 import six
+import re
 
 class Infinitive_Endings_(list):
     ar_verb = 0
@@ -26,6 +27,7 @@ class Tenses_(list):
     gerund = 9
     past_participle = 10
     Person_Agnostic = [ gerund, past_participle ]
+    imperative = [ imperative_negative, imperative_positive ]
     
 # names also used in manually defined override files
 Tenses = Tenses_([
@@ -56,6 +58,9 @@ class Persons_(list):
      
     Present_Tense_Stem_Changing_Persons = [first_person_singular, second_person_singular, third_person_singular, third_person_plural]
     Past_Tense_Stem_Changing_Persons = [third_person_singular, third_person_plural]
+    first_person = [ first_person_singular, first_person_plural ]
+    second_person = [ second_person_singular, second_person_plural ]
+    third_person = [ third_person_singular, third_person_plural]
 
 Persons = Persons_([
     u'yo',
@@ -108,6 +113,22 @@ Vowels = u'aeiou'
 AccentedVowels = u'áéíóú'
 AllVowels = Vowels+AccentedVowels
 CombiningAccent = u'\u0301'
-def accent_at(string_, index_):
-    result = string_[:index_] + CombiningAccent + string_[index_:]
+def accent_at(string_, index_=None):
+    if index_ is None:
+        result = string_ + CombiningAccent
+    else:
+        result = string_[:index_] + CombiningAccent + string_[index_:]
+    return result
+
+_replace_accents = [
+    [ re.compile(u'á'), u'a' ],
+    [ re.compile(u'é'), u'e' ],
+    [ re.compile(u'í'), u'i' ],
+    [ re.compile(u'ó'), u'o' ],
+    [ re.compile(u'ú'), u'u' ]
+]    
+def remove_accent(string_):       
+    result = string_ 
+    for regex, replace in _replace_accents:
+        result = regex.sub(replace, result)
     return result

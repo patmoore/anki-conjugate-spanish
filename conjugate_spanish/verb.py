@@ -32,21 +32,6 @@ def _check_for_multiple_accents(conjugation):
         if len(accented) > 1:
             raise Exception("Too many accents in "+conjugation)
 
-            
-def _remove_accent(string_):       
-    result = string_ 
-    for regex, replace in _replace_accents:
-        result = regex.sub(replace, result)
-    return result
-
-_replace_accents = [
-    [ re.compile(u'á'), u'a' ],
-    [ re.compile(u'é'), u'e' ],
-    [ re.compile(u'í'), u'i' ],
-    [ re.compile(u'ó'), u'o' ],
-    [ re.compile(u'ú'), u'u' ]
-]    
-
 class Verb():
     '''
     verb conjugation
@@ -249,7 +234,7 @@ class Verb():
         elif tense in Tenses.Person_Agnostic:
             current_conjugation_stem = self.stem
         elif tense in [ Tenses.future_tense, Tenses.conditional_tense]:
-            current_conjugation_stem = _remove_accent(self.verb_string)
+            current_conjugation_stem = remove_accent(self.verb_string)
         elif tense == Tenses.present_subjective_tense:
             current_conjugation_stem = self.__conjugation_present_subjective_stem(tense, person)
         elif tense == Tenses.past_subjective_tense:
@@ -266,7 +251,7 @@ class Verb():
         
         # if the ending has an accent then we remove the accent on the stem
         if _accented_vowel_check.search(current_conjugation_stem) and _accented_vowel_check.search(current_conjugation_ending):
-            current_conjugation_stem = _remove_accent(current_conjugation_stem)
+            current_conjugation_stem = remove_accent(current_conjugation_stem)
             
         return current_conjugation_stem
         
@@ -275,7 +260,7 @@ class Verb():
             if isinstance(ending_override, six.string_types):
                 current_conjugation_ending = ending_override
             else:
-                override_call = { 'tense': tense, 'person': person, 'ending' : current_conjugation_ending }
+                override_call = { 'tense': tense, 'person': person, 'stem': self.stem, 'ending' : current_conjugation_ending }
                 try:
                     current_conjugation_ending = ending_override(**override_call)
                 except Exception as e:
