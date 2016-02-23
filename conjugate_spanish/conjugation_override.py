@@ -14,8 +14,15 @@ http://www.intro2spanish.com/verbs/listas/master-zco.htm
 __all__ = ['ConjugationOverride', 'Standard_Overrides', 'Dependent_Standard_Overrides']
 
 # TODO need a way of adding notes to overrides
+
 class ConjugationOverride():
+    """
+    overrides are functions that are bound to the specific verb ( so become instance methods ) 
+    They are called:
+    { 'tense': tense, 'person': person, 'stem': current_conjugation_stem, 'ending' : current_conjugation_ending }
+    overall overrides are called first, then ending overrides, then stem overrides
     
+    """    
     def __init__(self, inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None):
         """
         :manual_overrides dict with conjugation_stems, conjugation_endings, conjugations key. values are dicts: tense names as keys; values are arrays or strings
@@ -97,6 +104,9 @@ class ConjugationOverride():
                     self_overrides[tense][person] = override
                     
     def override_tense_stem(self, tense, overrides,persons=None, documentation=None):
+        """
+        :overrides:
+        """
         self._overrides(tense, overrides, 'conjugation_stems', persons)
         self.documentation.extend(make_list(documentation))            
                     
@@ -459,5 +469,13 @@ Present_Subjective_Infinitive = __make_std_override(key='pres_sub_inf',
      examples=[u"querer", u"oler"])
 Present_Subjective_Infinitive.override_tense_stem(Tenses.present_subjective_tense, lambda self, **kwargs: self.stem, Persons.all_except(Persons.Present_Tense_Stem_Changing_Persons))
 
+# TODO: Need to check for reflexive verb
+# Ir_Reflexive_Accent_I_CO = __make_std_override(u'[ií]r$', key="imp_accent_i", 
+#     documentation="Second person plural, reflexive positive, ir verbs accent the i: Vestíos! (get dressed!) ",
+#     examples=[u'vestirse'])
+# Ir_Reflexive_Accent_I_CO.override_tense_stem(Tenses.imperative_positive, persons=Persons.second_person_plural,
+#     documentation="Second person plural, reflexive positive, ir verbs accent the i: Vestíos! (get dressed!) ",
+#     overrides=lambda self, **kwargs: remove_accent(self.stem) + u'ír'
+#     )
 # Third person only conjugations
 
