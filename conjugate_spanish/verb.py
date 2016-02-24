@@ -190,7 +190,7 @@ class Verb():
         """        
         if tense in Tenses.imperative and person == Persons.first_person_singular:
             return None
-        if self.base_verb_str is not None:            
+        if self.base_verb is not None:            
             conjugation = self.__derived_conjugation(tense, person)
         else:
             conjugation_overrides = self.__get_override(tense, person, 'conjugations')
@@ -659,14 +659,40 @@ class Verb():
     @property
     def base_verb(self):
         if self.base_verb_str is None:
-            return self
+            return None
         elif not hasattr(self, '_base_verb'):
             # some verbs are based off of others (tener)
             # TODO: maldecir has different tu affirmative than decir        
             from verb_dictionary import Verb_Dictionary_get
-            self._base_verb = Verb_Dictionary_get(self.base_verb_str)
+            _base_verb = Verb_Dictionary_get(self.base_verb_str)
+            if _base_verb is None:
+                # TODO - may not be in dictionary yet?
+                return None 
+            else:
+                self._base_verb = _base_verb
+                
         return self._base_verb
     
-    def __raise(self, msg, tense=None, person=None):
+    @property
+    def full_prefix(self):
+        if self.base_verb is not None and self.prefix is not None:
+            return self.prefix + self.base_verb.full_prefix
+        elif self.base_verb is not None:
+            return self.base_verb.full_prefix
+        elif self.prefix is not None:
+            return self.prefix
+        else:
+            return None            
+    
+    def is_child(self, ancestor_verb):
+        if self.base_verb == None or ancestor_verb is None:
+            return False
+        elif self.base_verb.inf_verb_string == ancestor_verb.inf_verb_string:
+            return True
+        else:
+            # multiple derived verb levels
+            return self.base_verb.is_child(ancestor_verb)
+    
+    def __raise(self, msg, tense=None, person=None, traceback_=None):
         msg_ = "%s: (tense=%s,person=%s): %s" % self.inf_verb_string, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg
-        raise Exception(msg_)
+        raise Exception, msg_, traceback_
