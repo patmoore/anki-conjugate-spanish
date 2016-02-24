@@ -483,40 +483,7 @@ class Verb():
         else:
             returned_conjugation = conjugation
         return returned_conjugation
-    
-#     def __old_conjugate_imperative(self, tense, person, conjugation, child_verb=None):
-#         if person == Persons.second_person_singular:
-#             if self.reflexive:
-#                 if tense == Tenses.imperative_positive: 
-#                     conjugation = self.__explicit_accent(conjugation) + Persons_Indirect[person]
-#         elif person == Persons.second_person_plural and tense == Tenses.imperative_positive:
-#             if not self.reflexive:
-#                 # xxxv rule j: drop 'r' in infinitive and replace with 'd' in non-reflexive cases 
-#                 conjugation = _replace_last_letter_of_stem(self.inf_verb_string, u'r', u'd')
-#             elif self.verb_ending_index == Infinitive_Endings.ir_verb:
-#                 # ir verbs need the i accented rule k and l
-#                 # example ¡Vestíos! - Get Dressed!
-#                 # what about verbs that already have explicit accent?
-#                 conjugation = remove_accent(self.stem) + u'í' + Persons_Indirect[Persons.second_person_plural]
-#             else:
-#                 # ex: ¡Sentaos! - Sit down!
-#                 conjugation = _replace_last_letter_of_stem(self.__explicit_accent(self.inf_verb_string), u'r', Persons_Indirect[Persons.second_person_plural])
-#         elif person == Persons.first_person_plural:
-#             if conjugation is None:
-#                 pass
-#             if self.reflexive:
-#                 conjugation = _replace_last_letter_of_stem(self.__explicit_accent(conjugation), u's', Persons_Indirect[Persons.first_person_plural])
-#                  
-#         elif person in [Persons.second_person_singular, Persons.second_person_plural] and tense == Tenses.imperative_negative:
-#             if self.reflexive:
-#                 conjugation += Persons_Indirect[person] + " "
-#             conjugation += self.conjugate(Tenses.present_subjective_tense, person)                   
-#         elif person in [Persons.third_person_singular, Persons.third_person_plural]:
-#             conjugation = self.conjugate(Tenses.present_subjective_tense, person)
-#         else:
-#             self.__raise("Person value is out of range person="+str(person))                                                
-#         return conjugation
-#             
+             
     def __conjugation_present_subjective_stem(self, tense, person):
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular)
         if first_person_conjugation[-1:] ==u'o':
