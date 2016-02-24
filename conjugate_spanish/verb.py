@@ -33,37 +33,59 @@ class Verb():
     verb conjugation
     '''
     
-    def __init__(self, verb_string, definition, conjugation_overrides=None, base_verb=None):
+    def __init__(self, verb_string, definition, conjugation_overrides=None, base_verb=None, **kwargs):
         '''
         Constructor
-        :base_verb used as base verb for conjugation
+        :param verb_string:
+        :param base_verb: used as base verb for conjugation
         '''
         # when reading from a file or some other place - it may be a ascii string.
         # must be unicode for us reliably do things like [:-1] to peel off last character 
-        verb_string = make_unicode(verb_string)
-        self.inf_verb_string = verb_string
-        if verb_string[-2:] == 'se':
-            self.reflexive = True
-            verb_string = verb_string[:-2] 
+        _verb_string = make_unicode(verb_string)        
+        
+        self.inf_verb_string = _verb_string
+        # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
+        suffix_words_index = _verb_string.find('/')
+        if suffix_words_index > 0:
+            self.suffix_words = _verb_string[suffix_words_index:]
+            _verb_string = _verb_string[:suffix_words_index]
         else:
-            self.reflexive = False                   
+            self.suffix_words = None
             
-        self.verb_string = verb_string
-        self.inf_ending = verb_string[-2:]
+        if _verb_string[-2:] == 'se':
+            self.reflexive = True
+            _verb_string = _verb_string[:-2] 
+        else:
+            self.reflexive = False
+        
+        if base_verb is None and (self.suffix_words is not None or self.reflexive):
+            # verb_string has been stripped down - possible base_verb default
+            base_verb = _verb_string
+            
+        self.verb_string = _verb_string
+        self.inf_ending = _verb_string[-2:]
         # special casing for eír verbs which have accented i
-        if verb_string == u'ir': 
+        if _verb_string == u'ir': 
             # ir special case
-            self.stem = verb_string
+            self.stem = _verb_string
             self.verb_ending_index = Infinitive_Endings.ir_verb
         elif self.inf_ending == u'ír':
             self.inf_ending = u'ir'
-            self.stem = verb_string[:-2]
+            self.stem = _verb_string[:-2]
             self.verb_ending_index = Infinitive_Endings.ir_verb
         else:
-            self.stem = verb_string[:-2]
+            self.stem = _verb_string[:-2]
             self.verb_ending_index = Infinitive_Endings.index(self.inf_ending)
             
-        self.base_verb_str = base_verb if base_verb != u'' else None
+        if isinstance(base_verb, Verb):
+            self._base_verb = base_verb
+            self.base_verb_str = base_verb.inf_verb_string
+        elif isinstance(base_verb, six.string_types) and base_verb != u'':
+            # TODO strip leading/trailing white space
+            self.base_verb_str = base_verb
+        else:
+            self.base_verb_str = None
+            
         if self.base_verb_str is not None:            
             # Now a bit of trickiness. Verbs that are based on the conjugation of another verb need to handle override conjugations or conjugation_stems
             # We don't have it as a 'visible' override because that would make it harder to highlight how a verb is irregular.
@@ -144,7 +166,7 @@ class Verb():
                                 if conjugations[tense][person] is None:
                                     conjugations[tense][person] = self.conjugate(tense, person)
         __look_for_overrides(self)
-        if self.base_verb_str is not None:
+        if self.base_verb is not None:
             __look_for_overrides(self.base_verb)
         return conjugations
     
