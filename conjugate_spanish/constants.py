@@ -28,6 +28,14 @@ class Tenses_(list):
     past_participle = 10
     Person_Agnostic = [ gerund, past_participle ]
     imperative = [ imperative_negative, imperative_positive ]
+
+    @property
+    def all(self):
+        return range(len(self))
+    def all_except(self, _except):
+        if not isinstance(_except, list):
+            _except = [ _except ]
+        return [index for index in self.all if index not in _except]
     
 # names also used in manually defined override files
 Tenses = Tenses_([
@@ -51,16 +59,19 @@ class Persons_(list):
     first_person_plural = 3
     second_person_plural = 4
     third_person_plural = 5
-    @staticmethod
-    def all_except(except_persons):
-        _except_persons = except_persons if isinstance(except_persons, list) else [ except_persons ]
-        return [person for person in range(len(Persons)) if person not in _except_persons]
-     
+        
     Present_Tense_Stem_Changing_Persons = [first_person_singular, second_person_singular, third_person_singular, third_person_plural]
     Past_Tense_Stem_Changing_Persons = [third_person_singular, third_person_plural]
     first_person = [ first_person_singular, first_person_plural ]
     second_person = [ second_person_singular, second_person_plural ]
     third_person = [ third_person_singular, third_person_plural]
+    @property
+    def all(self):
+        return range(len(self))
+    def all_except(self, _except):
+        if not isinstance(_except, list):
+            _except = [ _except ]
+        return [index for index in self.all if index not in _except]
 
 Persons = Persons_([
     u'yo',

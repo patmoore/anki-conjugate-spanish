@@ -154,7 +154,7 @@ class Verb():
     
     def conjugate_all_tenses(self):
         # present to imperative
-        return [ self.conjugate_tense(tense) for tense in range(len(Tenses)) ]
+        return [ self.conjugate_tense(tense) for tense in Tenses.all ]
         
     def conjugate_tense(self, tense):
         """
@@ -163,7 +163,7 @@ class Verb():
         if tense in Tenses.Person_Agnostic:
             results = self.conjugate(tense=tense, person=None)
         else:
-            results = [ self.conjugate(tense=tense, person=person) for person in range(len(Persons)) ]
+            results = [ self.conjugate(tense=tense, person=person) for person in Persons.all ]
         return results
             
     def conjugate(self, tense, person, child_verb=None):
