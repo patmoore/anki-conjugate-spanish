@@ -166,13 +166,12 @@ class Verb():
             results = [ self.conjugate(tense=tense, person=person) for person in Persons.all ]
         return results
             
-    def conjugate(self, tense, person, child_verb=None):
+    def conjugate(self, tense, person):
         """
-        :child_verb: - when a verb is being conjugate depends on another verb. It calls the base_verb with itself
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
         """        
         if self.base_verb_str is not None:            
-            conjugation = self.__derived_conjugation(tense, person, child_verb)
+            conjugation = self.__derived_conjugation(tense, person)
         else:
             conjugation_overrides = self.__get_override(tense, person, 'conjugations')
             
@@ -192,23 +191,19 @@ class Verb():
                 current_conjugation_ending = self.conjugate_ending(tense, person)
                 conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
             else:
-                conjugation = None
-                
-            # need to handle reflexive pronouns even if we have a override on the verb itself.
-            if tense in Tenses.imperative:
-                if conjugation is None:
-                    conjugation = self.__conjugation_imperative(tense, person, conjugation, child_verb)
-                elif self.reflexive:
-                    # needed in imperative to correctly add in the reflexive pronoun 
-                    conjugation = self.__conjugation_imperative_reflexive(tense, person, conjugation)
+                conjugation = self.__conjugation_imperative(tense, person)
             
         _check_for_multiple_accents(conjugation)
         return conjugation
     
-    def __derived_conjugation(self, tense, person, child_verb=None):
+    def __derived_conjugation(self, tense, person):
         # This verb is based on another verb: example: abstenerse is based on tener
         # these base verbs are not allowed to be reflexive verbs (I haven't found any examples yet where this is an issue)
-        base_verb_conjugation = self.base_verb.conjugate(tense, person, child_verb)
+        base_verb_conjugation = self.base_verb.conjugate(tense, person)
+        if base_verb_conjugation is None:
+            # imperative, third-person only verbs
+            return None
+        
         single_vowel_match = _single_vowel_re.match(base_verb_conjugation)
         if tense == Tenses.imperative_positive and person == Persons.second_person_singular:
             #
@@ -353,9 +348,8 @@ class Verb():
                             
             return result
     
-    def __conjugation_imperative(self, tense, person, conjugation, child_verb=None):
+    def __conjugation_imperative(self, tense, person, conjugation=None):
         """
-        :child_verb - the verb actually being conjugated. ( self is the parent verb )
         :conjugation: - the overridden conjugation
         
         non-reflexive:
@@ -388,17 +382,12 @@ class Verb():
             # no such conjugation
             return None
         
-        if child_verb is None:
-            verb = self
-        else: 
-            verb = child_verb
-        
         # Step #1 - for verbs with no override conjugation - get the conjugation        
         if conjugation is None:
             # For most persons the conjugation is the present_subjective ( because imperative is a "mood" - enhancement to the present_subjective )
             if tense == Tenses.imperative_negative or person not in Persons.second_person:
                 # all negative imperatives use the present_subjective AND all positives EXCEPT second person
-                _conjugation = verb.conjugate(Tenses.present_subjective_tense, person)
+                _conjugation = self.conjugate(Tenses.present_subjective_tense, person)
 #                 if person == Persons.first_person_plural and verb.reflexive:
 #                     # properly prepare the verb by removing the trailing 's'
 #                     # TODO: notice we don't handle a case of irregular nosotros - that does not have a trailing 's'
@@ -407,10 +396,10 @@ class Verb():
 #                     _conjugation = _replace_last_letter_of_stem(_conjugation, u's', u'')
             elif person == Persons.second_person_singular and tense == Tenses.imperative_positive:
                 # positive tu form uses present tense usted                
-                _conjugation = verb.conjugate(Tenses.present_tense, Persons.third_person_singular)
+                _conjugation = self.conjugate(Tenses.present_tense, Persons.third_person_singular)
             elif person == Persons.second_person_plural and tense == Tenses.imperative_positive:                
                 # remove 'r' from infinitive - and replace it with 'd'
-                _conjugation = _replace_last_letter_of_stem(verb.inf_verb_string, u'r', u'd')
+                _conjugation = _replace_last_letter_of_stem(self.verb_string, u'r', u'd')
             else:
                 self.__raise("Missed case"+tense+" "+person)  
         else:
