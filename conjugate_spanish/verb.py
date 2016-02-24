@@ -170,6 +170,8 @@ class Verb():
         """
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
         """        
+        if tense in Tenses.imperative and person == Persons.first_person_singular:
+            return None
         if self.base_verb_str is not None:            
             conjugation = self.__derived_conjugation(tense, person)
         else:
@@ -187,6 +189,9 @@ class Verb():
                             formatted = traceback.format_exception_only(traceback_,extype, ex)[-1]
                             message = "%s: Trying to conjugate irregular=%d person=%d; %s %s" % self.inf_verb_string, tense, person, ex.message, formatted
                             raise RuntimeError, message, traceback_
+                if self.reflexive:
+                    # needed in imperative to correctly add in the reflexive pronoun 
+                    conjugation = self.__conjugation_imperative_reflexive(tense, person, conjugation)
             elif tense not in Tenses.imperative:
                 current_conjugation_ending = self.conjugate_ending(tense, person)
                 conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
