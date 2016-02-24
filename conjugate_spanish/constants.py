@@ -128,7 +128,7 @@ def accent_at(string_, index_=None):
     if index_ is None:
         result = string_ + CombiningAccent
     else:
-        result = string_[:index_] + CombiningAccent + string_[index_:]
+        result = string_[:index_+1] + CombiningAccent + string_[index_+1:]
     return result
 
 _replace_accents = [

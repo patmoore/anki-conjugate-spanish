@@ -22,7 +22,7 @@ from inspect import isfunction
 _ending_vowel_check = re.compile(u'['+Vowels+u']$', re.IGNORECASE+re.UNICODE)
 _accented_vowel_check = re.compile(u'['+AccentedVowels+u']', re.IGNORECASE+re.UNICODE)
 # check for word with only a single vowel ( used in imperative conjugation )
-_single_vowel_re = re.compile(u'^([^'+AllVowels+']*['+AllVowels+u'])([^'+AllVowels+']*)$', re.IGNORECASE+re.UNICODE)
+_single_vowel_re = re.compile(u'^([^'+AllVowels+u']*)(['+AllVowels+u'])([^'+AllVowels+u']*)$', re.IGNORECASE+re.UNICODE)
 def _check_for_multiple_accents(conjugation):
     """
     Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
@@ -224,7 +224,7 @@ class Verb():
             # TODO accenting ( obtén - for example )
             # reflexive verbs are going to get 'te' at the end, so no need for an accent.
             if single_vowel_match is not None and not self.reflexive:
-                _conjugation = self.prefix + single_vowel_match.group(1) + single_vowel_match.group(2) + CombiningAccent + single_vowel_match.group(3)
+                _conjugation = self.prefix + accent_at(base_verb_conjugation, single_vowel_match.start(2))
             else:
                 _conjugation = self.prefix + base_verb_conjugation
         elif single_vowel_match is not None:
@@ -337,7 +337,7 @@ class Verb():
                             vowel_skip -=1
                             continue
                         else:
-                            result = accent_at(conjugation_string,index+1)
+                            result = accent_at(conjugation_string,index)
                     elif conjugation_string[index] in _weak_vowel:
                         #weak vowel                                   
                         if vowel_skip > 0:
@@ -349,7 +349,7 @@ class Verb():
                         else:
                             # for two weak vowels the accent is on the second one (i.e. this one) 
                             # or if there is any other letter or this is the beginning of the word
-                            result = accent_at(conjugation_string,index+1)
+                            result = accent_at(conjugation_string,index)
                             
             return result
     
@@ -514,7 +514,7 @@ class Verb():
             if person == Persons.first_person_plural:
                 # accent on last vowel                                
                 if _ending_vowel_check.search(conjugation_stem):
-                    conjugation_stem += u'\u0301'
+                    conjugation_stem = accent_at(conjugation_stem)
                 else:
                     # assuming last stem character is a vowel
                     # and assuming already accented for some reason
