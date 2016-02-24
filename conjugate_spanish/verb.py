@@ -209,6 +209,7 @@ class Verb():
             # imperative, third-person only verbs
             return None
         
+        no_explicit_accent = False
         single_vowel_match = _single_vowel_re.match(base_verb_conjugation)
         if tense == Tenses.imperative_positive and person == Persons.second_person_singular:
             #
@@ -223,8 +224,12 @@ class Verb():
             # but not no always decir  ( di ) but maldecir ( maldice )
             # TODO accenting ( obtén - for example )
             # reflexive verbs are going to get 'te' at the end, so no need for an accent.
-            if single_vowel_match is not None and not self.reflexive:
-                _conjugation = self.prefix + accent_at(base_verb_conjugation, single_vowel_match.start(2))
+            if single_vowel_match is not None:
+                no_explicit_accent = True
+                if not self.reflexive:
+                    _conjugation = self.prefix + accent_at(base_verb_conjugation, single_vowel_match.start(2))
+                else:
+                    _conjugation = self.prefix + base_verb_conjugation                
             else:
                 _conjugation = self.prefix + base_verb_conjugation
         elif single_vowel_match is not None:
@@ -232,7 +237,12 @@ class Verb():
         else:
             _conjugation = self.prefix + base_verb_conjugation
             
-        returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation)
+        if tense in Tenses.imperative:
+            returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation, no_explicit_accent)                        
+        elif self.reflexive and tense not in Tenses.Person_Agnostic:
+            returned_conjugation = Persons_Indirect[person] +" "+ _conjugation
+        else:
+            returned_conjugation = _conjugation
         return returned_conjugation
         
     def conjugate_stem(self, tense, person, current_conjugation_ending):
@@ -335,14 +345,13 @@ class Verb():
                         #strong vowel                        
                         if vowel_skip > 0:
                             vowel_skip -=1
-                            continue
                         else:
                             result = accent_at(conjugation_string,index)
+                            break
                     elif conjugation_string[index] in _weak_vowel:
                         #weak vowel                                   
                         if vowel_skip > 0:
                             vowel_skip -=1
-                            continue
                         elif index-1 >= 0 and conjugation_string[index-1] in _strong_vowel:
                             # accent should be on strong vowel immediately before the weak vowel (so skip the current weak vowel)                           
                             continue
@@ -350,6 +359,7 @@ class Verb():
                             # for two weak vowels the accent is on the second one (i.e. this one) 
                             # or if there is any other letter or this is the beginning of the word
                             result = accent_at(conjugation_string,index)
+                            break
                             
             return result
     
@@ -413,17 +423,22 @@ class Verb():
         returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation)
         return returned_conjugation
     
-    def __apply_imperative_reflexive_pronoun(self, tense, person, conjugation):
+    def __apply_imperative_reflexive_pronoun(self, tense, person, conjugation, no_explicit_accent=False):
         # Step 3 - handle the placement of the indirect pronoun for reflexive verbs.  
         # The important issue here is the effect on the accent.      
+        def handle_explicit_accent_():
+            if no_explicit_accent:
+                return conjugation
+            else:
+                return self.__explicit_accent(conjugation)
         if self.reflexive:
             #Now apply the reflexive pronoun rules.
             if person in Persons.third_person:
                 # simple!
-                returned_conjugation = self.__explicit_accent(conjugation) + Persons_Indirect[person]
+                returned_conjugation = handle_explicit_accent_() + Persons_Indirect[person]
             elif person == Persons.first_person_plural:
                 # mostly simple (same as third person except trailing 's' is dropped before adding the indirect pronoun
-                returned_conjugation = _replace_last_letter_of_stem(self.__explicit_accent(conjugation), u's', Persons_Indirect[person])
+                returned_conjugation = _replace_last_letter_of_stem(handle_explicit_accent_(), u's', Persons_Indirect[person])
             elif tense == Tenses.imperative_negative:
                 # second person negative : simple as well!
                 # reflexive pronoun is a separate word in front of the verb. (i.e. 'no te abstengas')
@@ -433,7 +448,7 @@ class Verb():
                 # Need to put explicit accent in SOME cases for example: quitarse ( quítate ) but not in all: abstener ( abstente )
                 # ( could it be that 'ten' is a single vowel word and retains the accent on the ten - even with the prefix? )
                 # ensure that there is an accent somewhere (note that in abstenerse case the accent should already be on the abs-tén 
-                returned_conjugation = self.__explicit_accent(conjugation) + Persons_Indirect[person]
+                returned_conjugation = handle_explicit_accent_() + Persons_Indirect[person]
             elif person == Persons.second_person_plural:  # (imperative positive) 
                 # TODO look for single vowel in conjugation for model verb.
                 # TODO : Would like to make this a conjugation override
