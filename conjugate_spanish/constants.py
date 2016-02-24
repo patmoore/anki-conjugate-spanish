@@ -126,9 +126,19 @@ AllVowels = Vowels+AccentedVowels
 CombiningAccent = u'\u0301'
 def accent_at(string_, index_=None):
     if index_ is None:
-        result = string_ + CombiningAccent
-    else:
-        result = string_[:index_+1] + CombiningAccent + string_[index_+1:]
+        index_ = len(string_)-1
+    
+    vowel = string_[index_]
+    vindex = Vowels.find(vowel)
+    if vindex < 0:
+        accented = AccentedVowels.find(vowel)
+        if accented < 0:
+            raise Exception(string_+" at index="+index_+" there is no vowel.")
+        else:
+            return string_
+    
+    accented = AccentedVowels[vindex]
+    result = string_[:index_] + accented + string_[index_+1:]
     return result
 
 _replace_accents = [

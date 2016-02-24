@@ -437,14 +437,13 @@ class Verb():
             elif person == Persons.second_person_plural:  # (imperative positive) 
                 # TODO look for single vowel in conjugation for model verb.
                 # TODO : Would like to make this a conjugation override
-                if self.verb_ending_index == Infinitive_Endings.ir_verb:
+                if self.verb_ending_index == Infinitive_Endings.ir_verb and conjugation[-2:] == u'ir':
                     # ir verbs need the i (in ir) accented rule k and l
                     # this makes sense because otherwise the os would be accented.
                     # example ¡Vestíos! - Get Dressed!
+                    # we don't need to worry about accenting the -ir verbs that already have the i accented ( example reírse )
                     # what about verbs that already have explicit accent?
-#                     returned_conjugation = remove_accent(conjugation) + u'í' + Persons_Indirect[Persons.second_person_plural]
-                    accentless = remove_accent(conjugation)
-                    returned_conjugation = _replace_last_letter_of_stem(accentless, 'd', CombiningAccent + Persons_Indirect[Persons.second_person_plural])
+                    returned_conjugation = remove_accent(conjugation) + u'í' + Persons_Indirect[Persons.second_person_plural]
                 else:
                     # ex: ¡Sentaos! - Sit down! ( the spoken accent will be on the ending a )
                     returned_conjugation = _replace_last_letter_of_stem(remove_accent(conjugation), u'd', Persons_Indirect[Persons.second_person_plural])

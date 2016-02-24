@@ -44,5 +44,5 @@ class TestDerivedVerb(unittest.TestCase):
                 self.assertEqual(tail, base, tail+" "+base+":tense="+Tenses[tense]+" person="+Persons[person])
                 
             tail = conjugations[Tenses.imperative_positive][Persons.second_person_singular][4:]
-            print repr(tail).decode("unicode-escape") 
+#             print repr(tail).decode("unicode-escape") 
             self.assertEqual(u"tén", tail)
