@@ -463,7 +463,7 @@ Infinitive_Stems_R_Only.override_tense_stem(Tenses.conditional_tense, lambda sel
 
 Present_Subjective_Infinitive = __make_std_override(key='pres_sub_inf',
      documentation="Some verbs use the infinitive stem as the present subjective stem for nosotros/vosotros",
-     examples=[u"querer", u"oler"])
+     examples=[u"querer", u"oler",u"acordar"])
 Present_Subjective_Infinitive.override_tense_stem(Tenses.present_subjective_tense, lambda self, **kwargs: self.stem, Persons.all_except(Persons.Present_Tense_Stem_Changing_Persons))
 
 # TODO: Need to check for reflexive verb
