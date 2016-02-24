@@ -478,4 +478,7 @@ Present_Subjective_Infinitive.override_tense_stem(Tenses.present_subjective_tens
 #     overrides=lambda self, **kwargs: remove_accent(self.stem) + u'ír'
 #     )
 # Third person only conjugations
+Third_Person_Only_CO = __make_std_override(key='3rd_only', examples=[u'gustar'])
+for tense in Tenses.all_except(Tenses.Person_Agnostic):
+    Third_Person_Only_CO.override_tense(tense=tense, overrides=lambda self, **kwargs: None, documentation="third person only verbs don't conjugate for any other person")
 
