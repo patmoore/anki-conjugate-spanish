@@ -426,20 +426,17 @@ LL_N_CO.override_tense_ending(Tenses.gerund, u'endo')
 LL_N_CO.override_tense_ending(Tenses.past_tense, u'ó', Persons.third_person_singular, documentation="Note that this o is accented (other std overrides use an unaccented o")
 LL_N_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_plural, documentation="Note that this o is accented (other std overrides use an unaccented o")
 
-def __accent_stem_last(self, stem, **kwargs):
-    return stem + u'\u0301'
-
 Iar_CO = __make_std_override(inf_match=re.compile(u'iar$', re.IGNORECASE+re.UNICODE),
     auto_match=False,
     key=u'iar',
     documentation=u'some iar verbs accent the i so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-iar-with-i-ii.htm')
-Iar_CO.override_present_stem_changers(__accent_stem_last)
+Iar_CO.override_present_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'i', u'í'))
 
 Uar_CO = __make_std_override(inf_match=re.compile(u'[^g]uar$', re.IGNORECASE+re.UNICODE),
     auto_match=False,
     key=u'uar',
     documentation=u'some uar verbs accent the u so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-uar-with-u-uu.htm')
-Uar_CO.override_present_stem_changers(__accent_stem_last)
+Uar_CO.override_present_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'u', u'ú'))
 
 Guar_CO = __make_std_override(inf_match=re.compile(u'guar$', re.IGNORECASE+re.UNICODE),
     key=u'guar',
