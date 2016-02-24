@@ -228,7 +228,7 @@ class Verb():
             else:
                 _conjugation = self.prefix + base_verb_conjugation
         elif single_vowel_match is not None:
-            raise Exception(self.inf_verb_string+":Single vowel case in tense "+Tenses[tense]+" Person "+Persons[person])
+            self.__raise("Single vowel case in tense", tense, person)
         else:
             _conjugation = self.prefix + base_verb_conjugation
             
@@ -266,14 +266,14 @@ class Verb():
         elif tense == Tenses.past_subjective_tense:
             current_conjugation_stem = self.__conjugation_past_subjective_stem(tense, person)
         else:
-            raise Exception(Tenses[tense]+": Can't be handle")
+            self.__raise(": Can't be handled", tense, person)
         
         stem_overrides = self.__get_override(tense, person, 'conjugation_stems')
         for stem_override in get_iterable(stem_overrides):
             current_conjugation_stem = __check_override(stem_override, current_conjugation_stem)
         
         if current_conjugation_stem is None:
-            raise Exception(self.inf_verb_string+": no stem created tense="+tense+" person="+person)
+            self.__raise("no stem created", tense, person)
         
         # if the ending has an accent then we remove the accent on the stem
         if _accented_vowel_check.search(current_conjugation_stem) and _accented_vowel_check.search(current_conjugation_ending):
@@ -412,7 +412,7 @@ class Verb():
                 # remove 'r' from infinitive - and replace it with 'd'
                 _conjugation = _replace_last_letter_of_stem(verb.inf_verb_string, u'r', u'd')
             else:
-                raise Exception("Missed case"+tense+" "+person)  
+                self.__raise("Missed case"+tense+" "+person)  
         else:
             _conjugation = conjugation                      
         
@@ -488,7 +488,7 @@ class Verb():
 #         elif person in [Persons.third_person_singular, Persons.third_person_plural]:
 #             conjugation = self.conjugate(Tenses.present_subjective_tense, person)
 #         else:
-#             raise Exception("Person value is out of range person="+str(person))                                                
+#             self.__raise("Person value is out of range person="+str(person))                                                
 #         return conjugation
 #             
     def __conjugation_present_subjective_stem(self, tense, person):
@@ -501,7 +501,7 @@ class Verb():
         else:
             # haber (he) is just such an example - but there better be an override available.
             return None
-#             raise Exception("First person conjugation does not end in 'o' = "+first_person_conjugation)
+#             self.__raise("First person conjugation does not end in 'o' = "+first_person_conjugation)
         return conjugation_stem
 
     def __conjugation_past_subjective_stem(self, tense, person):
@@ -518,10 +518,10 @@ class Verb():
                 else:
                     # assuming last stem character is a vowel
                     # and assuming already accented for some reason
-                    raise Exception("No ending vowel")
+                    self.__raise("No ending vowel", tense, person)
             return conjugation_stem
         else:
-            raise "Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation
+            self.__raise("Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation, tense, person)
             
     def _overrides(self, tense, overrides, attr_name,persons=None):
         """
@@ -550,7 +550,7 @@ class Verb():
             elif len(overrides) ==0:
                 pass
             else:
-                raise Exception(self.inf_verb_string+":Tense is person agnostic so only 1 override is allowed")
+                self.__raise("Tense is person agnostic so only 1 override is allowed", tense)
             return
         
         if persons is None:
@@ -560,7 +560,7 @@ class Verb():
         elif isinstance(persons, list):
             _persons = persons
         else:
-            raise Exception("persons must be None, integer or list of integers")
+            self.__raise("persons must be None, integer or list of integers")
         if self_overrides[tense] is None:
             self_overrides[tense] = [None] * len(Persons)
             
@@ -618,9 +618,9 @@ class Verb():
             elif lookup_key in Dependent_Standard_Overrides:
                 override = Dependent_Standard_Overrides[lookup_key]
             else:
-                raise Exception(lookup_key+": override is not one of "+repr(Standard_Overrides.keys())+" or "+repr(Dependent_Standard_Overrides.keys()))
+                self.__raise(lookup_key+": override is not one of "+repr(Standard_Overrides.keys())+" or "+repr(Dependent_Standard_Overrides.keys()))
             if override is None:
-                raise Exception("no override with key ", lookup_key)
+                self.__raise("no override with key ", lookup_key)
             if conjugation_override[0] == '-':
                 self.doNotApply.append(override.key)
                 return
@@ -640,3 +640,7 @@ class Verb():
             from verb_dictionary import Verb_Dictionary_get
             self._base_verb = Verb_Dictionary_get(self.base_verb_str)
         return self._base_verb
+    
+    def __raise(self, msg, tense=None, person=None):
+        msg_ = "%s: (tense=%s,person=%s): %s" % self.inf_verb_string, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg
+        raise Exception(msg_)
