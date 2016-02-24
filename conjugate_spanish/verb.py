@@ -205,8 +205,8 @@ class Verb():
                         except Exception as e:
                             extype, ex, traceback_ = sys.exc_info()
                             formatted = traceback.format_exception_only(traceback_,extype, ex)[-1]
-                            message = "%s: Trying to conjugate irregular=%d person=%d; %s %s" % self.inf_verb_string, tense, person, ex.message, formatted
-                            raise RuntimeError, message, traceback_
+                            message = "Trying to conjugate irregular:%s %s" % ex.message, formatted
+                            self.__raise(message, tense, person, traceback_)
                 if self.reflexive:
                     # needed in imperative to correctly add in the reflexive pronoun 
                     conjugation = self.__conjugation_imperative_reflexive(tense, person, conjugation)
@@ -278,8 +278,8 @@ class Verb():
                     extype, ex, tb = sys.exc_info()
                     traceback.print_tb(tb)
                     formatted = traceback.format_exception(extype, ex, tb)[-1]
-                    message = "%s: Trying to conjugate stem tense=%d person=%d" % self.inf_verb_string, tense, person, formatted
-                    raise RuntimeError, message, tb
+                    message = "Trying to conjugate stem " % formatted
+                    self.__raise(message, tense, person, tb)
             return current_conjugation_stem
         
 
@@ -320,8 +320,8 @@ class Verb():
                 except Exception as e:
                     extype, ex, traceback_ = sys.exc_info()
 #                         formatted = traceback_.format_exception_only(extype, ex)[-1]
-                    message = "%s: Trying to conjugate ending=%d person=%d; %s" % self.inf_verb_string, tense, person, ex.message
-                    raise RuntimeError, message, traceback_
+                    message = "Trying to conjugate ending; %s" % ex.message
+                    self.__raise(message, tense, person, traceback_)
             return current_conjugation_ending
         
         if tense in Tenses.Person_Agnostic:
