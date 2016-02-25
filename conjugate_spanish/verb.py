@@ -231,7 +231,7 @@ class Verb():
         1. in multiple level of ancestory: intermediate ancestor verbs are not allowed to apply their own overrides.
         2. child verbs cannot apply any conjugation overrides of their own ( maybe an issue with decir )
         
-        However, the resulting code is similiar. ( the issue is the accenting on the rare tener :2nd person singular imperative )
+        However, the resulting code is similar. ( the issue is the accenting on the rare tener :2nd person singular imperative )
         
         I would like to eliminate this code and go to a pure conjugation override model 
         """
