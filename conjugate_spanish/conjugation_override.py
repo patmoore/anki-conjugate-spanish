@@ -165,7 +165,7 @@ class ConjugationOverride():
     def apply(self, verb):
         if self.key:
             # Custom overrides do not always have keys
-            verb.appliedOverrides.append(self.key)
+            verb.add_applied_override(self.key)
         if self.parent is not None:
             for parent in self.parent:
                 parent.apply(verb)
@@ -210,6 +210,14 @@ def __make_std_override(inf_match=None, parents=None, documentation=None, exampl
     return conjugation_override
 
 Dependent_Standard_Overrides = {}
+def __make_dep_override(inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None):
+    conjugation_override = ConjugationOverride(inf_match, parents, documentation, examples, key, auto_match, manual_overrides)
+    if conjugation_override.key is not None:
+        if conjugation_override.key in Dependent_Standard_Overrides:
+            raise Exception("Dependent_Standard_Overrides already defined for "+conjugation_override.key)
+        else:
+            Dependent_Standard_Overrides[conjugation_override.key] = conjugation_override
+    return conjugation_override
 """
 RADICAL STEM CHANGE PATTERNS
 """
@@ -222,15 +230,10 @@ radical_stem_changes = [
 ]
 def __check_for_stem_ir(key, verb):
     if verb.verb_ending_index == Infinitive_Endings.ir_verb:        
-        for conjugation_override in get_iterable(verb.appliedOverrides):            
-            if isinstance(conjugation_override, ConjugationOverride):
-                _key = conjugation_override.key
-            else:
-                _key =conjugation_override
-            if _key is not None: # _key is None is always fail.
-                if _key == key:
-                    return True
-    return False
+        return verb.has_override_applied(key)
+    else:
+        return False
+    
 def __make_check_stem_ir(key):
     return lambda self, verb: __check_for_stem_ir(key, verb)
 
@@ -249,15 +252,15 @@ for vowel_from, present_vowels_to, past_vowels_to, gerund_vowel in radical_stem_
     if gerund_vowel is not None:
         # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
         # but for example, absolver o:ue does not have past tense stem changing
-        stem_changing_ir_gerund = ConjugationOverride(key=u"stem_changing_ir_"+key,
+        stem_changing_ir_gerund = __make_dep_override(key=u"stem_changing_ir_"+key,
             auto_match=True,
             examples=[u'dormir'],
             documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
         )
         stem_changing_ir_gerund.override_tense_stem(Tenses.gerund, __make_radical_call(vowel_from, gerund_vowel))
         stem_changing_ir_gerund.override_tense_stem(Tenses.past_tense, __make_radical_call(vowel_from, past_vowels_to), Persons.Past_Tense_Stem_Changing_Persons)        
-        stem_changing_ir_gerund.is_match  = six.create_bound_method(__make_check_stem_ir(key), stem_changing_ir_gerund)
-        Dependent_Standard_Overrides[stem_changing_ir_gerund.key] = stem_changing_ir_gerund 
+        stem_changing_ir_gerund.is_match = six.create_bound_method(__make_check_stem_ir(key), stem_changing_ir_gerund)
+        
     
 def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= None):
     truncated_stem = stem[:-1]
@@ -277,7 +280,7 @@ Whenever an unstressed i appears between two vowels, the spelling always changes
 Yendo_Gerund_CO = ConjugationOverride(
     inf_match=re.compile(u'[aeiouáéíóú][eéíi]r$', re.UNICODE+re.IGNORECASE),
     key=u'yendo',
-    documentation="-er or -er verbs that have a preceding vowel",
+    documentation=u"-er or -er verbs that have a preceding vowel",
     examples=[u'ir', u'poseer'])
 Yendo_Gerund_CO.override_tense_ending(Tenses.gerund, u'yendo')
 Standard_Overrides[Yendo_Gerund_CO.key] = Yendo_Gerund_CO
@@ -461,10 +464,20 @@ Infinitive_Stems_R_Only = __make_std_override(key=u'r_only', documentation="Futu
 Infinitive_Stems_R_Only.override_tense_stem(Tenses.future_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
 Infinitive_Stems_R_Only.override_tense_stem(Tenses.conditional_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
 
-Present_Subjective_Infinitive = __make_std_override(key='pres_sub_inf',
-     documentation="Some verbs use the infinitive stem as the present subjective stem for nosotros/vosotros",
+Present_Subjective_Infinitive = __make_dep_override(key='pres_sub_inf',
+     documentation="radical stem changing -ar,-er verbs use the infinitive stem as the present subjective stem for nosotros/vosotros",
+     auto_match=True,
      examples=[u"querer", u"oler",u"acordar"])
 Present_Subjective_Infinitive.override_tense_stem(Tenses.present_subjective_tense, lambda self, **kwargs: self.stem, Persons.all_except(Persons.Present_Tense_Stem_Changing_Persons))
+def __check_radical_stem_change_present_sub(self, verb):
+    if verb.verb_ending_index in [Infinitive_Endings.er_verb, Infinitive_Endings.ar_verb]:
+        applied = False
+        for key in [u'o:ue', u'e:ie', u'e:i']:
+            applied |= verb.has_override_applied(key)
+        return applied
+    else:
+        return False        
+Present_Subjective_Infinitive.is_match = six.create_bound_method(__check_radical_stem_change_present_sub, Present_Subjective_Infinitive)
 
 # TODO: Need to check for reflexive verb
 # Ir_Reflexive_Accent_I_CO = __make_std_override(u'[ií]r$', key="imp_accent_i", 

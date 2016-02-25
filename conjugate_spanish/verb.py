@@ -98,7 +98,7 @@ class Verb():
         self.definition = definition
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self.doNotApply = []
-        self.appliedOverrides = []
+        self._appliedOverrides = []
                         
         if conjugation_overrides is not None:
             for conjugation_override in get_iterable(conjugation_overrides):
@@ -679,6 +679,27 @@ class Verb():
         else:
             # multiple derived verb levels
             return self.base_verb.is_child(ancestor_verb)
+        
+    @property
+    def appliedOverrides(self):
+        appliedOverrides_ = list(self._appliedOverrides)
+        if self.base_verb is not None:
+            appliedOverrides_.extend(self.base_verb.appliedOverrides)
+        return appliedOverrides_
+    
+    def add_applied_override(self, applied):
+        self._appliedOverrides.append(applied)
+         
+    def has_override_applied(self, override_key):
+        for conjugation_override in get_iterable(self.appliedOverrides):            
+            if isinstance(conjugation_override, ConjugationOverride):
+                _key = conjugation_override.key
+            else:
+                _key =conjugation_override
+            if _key is not None: # _key is None is always fail.
+                if _key == override_key:
+                    return True
+        return False
     
     def __raise(self, msg, tense=None, person=None, traceback_=None):
         msg_ = "%s: (tense=%s,person=%s): %s" % self.inf_verb_string, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg

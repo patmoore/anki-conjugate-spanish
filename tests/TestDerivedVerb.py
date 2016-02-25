@@ -21,7 +21,7 @@ faketenerse = Verb_Dictionary_add(u'faketenerse', u"fake tener", base_verb=u'ten
 descfaketenerse = Verb_Dictionary_add(u'descfaketenerse', u"fake tener", base_verb=faketenerse)
 faketenerse_1 = Verb(u'faketenerse', u"fake tener", base_verb=faketener)
 
-fakeacordar = Verb_Dictionary_add(u"fakeacordar", u"fake acordar", "o:ue,pres_sub_inf")
+fakeacordar = Verb_Dictionary_add(u"fakeacordar", u"fake acordar", "o:ue")
 #derive just because of reflexive/non-reflexive
 fakeacordarse = Verb_Dictionary_add(u"fakeacordarse", u"fake acordarse")
 descfakeacordarse = Verb_Dictionary_add(u"descfakeacordarse", u"fake acordarse", base_verb=fakeacordarse)
