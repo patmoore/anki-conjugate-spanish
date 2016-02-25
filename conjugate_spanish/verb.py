@@ -97,21 +97,21 @@ class Verb():
             
         self.definition = definition
         # Some verbs don't follow the default rules for their ending> for example, mercer
-        self.doNotApply = []
+        self._doNotApply = []
         self._appliedOverrides = []
                         
         if conjugation_overrides is not None:
             for conjugation_override in get_iterable(conjugation_overrides):
-                self.__process_conjugation_override(conjugation_override)  
+                self.process_conjugation_override(conjugation_override)  
                  
         # look for default overrides - apply to end so that user could explicitly turn off the override
         for conjugation_override in Standard_Overrides.itervalues():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
-                self.__process_conjugation_override(conjugation_override)
+                self.process_conjugation_override(conjugation_override)
                 
         for conjugation_override in Dependent_Standard_Overrides.itervalues():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
-                self.__process_conjugation_override(conjugation_override)
+                self.process_conjugation_override(conjugation_override)
                 
                 
     def print_all_tenses(self):
@@ -137,7 +137,7 @@ class Verb():
                             if not self.reflexive:
                                 print( Persons[person]+" "+conjugations[tense][person], end="; ")
                             elif tense not in [ Tenses.imperative_negative, Tenses.imperative_positive ]:
-                                print( Persons_Indirect[person]+" "+conjugations[tense][person], end="; ")
+                                print( conjugations[tense][person], end="; ")
                             else:
                                 print(conjugations[tense][person])
                                  
@@ -611,7 +611,7 @@ class Verb():
                     return self_overrides[tense][person]
         return None
     
-    def __process_conjugation_override(self, conjugation_override):
+    def process_conjugation_override(self, conjugation_override):
         """
         Before applying the override first check to see if this verb says that it is a special case
         and the override should not be applied.
@@ -629,7 +629,7 @@ class Verb():
             if override is None:
                 self.__raise("no override with key ", lookup_key)
             if conjugation_override[0] == '-':
-                self.doNotApply.append(override.key)
+                self.add_doNotApply(override.key)
                 return
         else:
             #No override or blank
@@ -689,7 +689,17 @@ class Verb():
     
     def add_applied_override(self, applied):
         self._appliedOverrides.append(applied)
-         
+        
+    @property
+    def doNotApply(self):
+        doNotApply_ = list(self._doNotApply)
+        if self.base_verb is not None:
+            doNotApply_.extend(self.base_verb.doNotApply)
+        return doNotApply_
+    
+    def add_doNotApply(self, applied):
+        self._doNotApply.append(applied)
+                 
     def has_override_applied(self, override_key):
         for conjugation_override in get_iterable(self.appliedOverrides):            
             if isinstance(conjugation_override, ConjugationOverride):
@@ -702,5 +712,5 @@ class Verb():
         return False
     
     def __raise(self, msg, tense=None, person=None, traceback_=None):
-        msg_ = "%s: (tense=%s,person=%s): %s" % self.inf_verb_string, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg
+        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.inf_verb_string, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
         raise Exception, msg_, traceback_

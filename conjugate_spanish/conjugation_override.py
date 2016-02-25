@@ -168,7 +168,7 @@ class ConjugationOverride():
             verb.add_applied_override(self.key)
         if self.parent is not None:
             for parent in self.parent:
-                parent.apply(verb)
+                verb.process_conjugation_override(parent)
             
         for applies in ['conjugations', 'conjugation_stems', 'conjugation_endings']:
             overrides = getattr(self, applies, None)
