@@ -220,13 +220,20 @@ def __make_dep_override(inf_match=None, parents=None, documentation=None, exampl
     return conjugation_override
 """
 RADICAL STEM CHANGE PATTERNS
+http://www.spanishdict.com/topics/show/38
 """
 radical_stem_changes = [
     #including gir 
     [u'e', u'i', u'i', u'i'],
     [u'e', u'ie', u'ie', None],
     # dormir
-    [u'o', u'ue', u'u', u'u']
+    [u'o', u'ue', u'u', u'u'],
+    #adquirir - to acquire     inquirir - to inquire  : only 2 examples
+    [u'i', u'ie', None, None],
+    #jugar - only example
+    [u'u', u'ue', None, None],
+    # oler - only example
+    [u'o', u'hue', None, None]
 ]
 def __check_for_stem_ir(key, verb):
     if verb.verb_ending_index == Infinitive_Endings.ir_verb:        
