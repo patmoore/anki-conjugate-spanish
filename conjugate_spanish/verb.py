@@ -89,7 +89,11 @@ class Verb():
         if self.base_verb_str is not None:            
             # Now a bit of trickiness. Verbs that are based on the conjugation of another verb need to handle override conjugations or conjugation_stems
             # We don't have it as a 'visible' override because that would make it harder to highlight how a verb is irregular.
-            self.prefix = self.verb_string[:self.verb_string.index(self.base_verb_str)]
+            # (has to handle acordarse -> acordar and descacordarse -> acordarse )
+            # Note: that the prefix can be u'' - usually for reflexive verbs. 
+            self.prefix = self.inf_verb_string[:self.inf_verb_string.index(self.base_verb_str)]
+        else:
+            self.prefix = u''
             
         self.definition = definition
         # Some verbs don't follow the default rules for their ending> for example, mercer
@@ -220,15 +224,25 @@ class Verb():
         return conjugation
     
     def __derived_conjugation(self, tense, person):
-        # This verb is based on another verb: example: abstenerse is based on tener
-        # these base verbs are not allowed to be reflexive verbs (I haven't found any examples yet where this is an issue)
-        base_verb_conjugation = self.base_verb.conjugate(tense, person)
+        """ This verb is based on another verb: example: abstenerse is based on tener
+        these base verbs are not allowed to be reflexive verbs (I haven't found any examples yet where this is an issue)
+        
+        This is not "perfect" implementation because:
+        1. in multiple level of ancestory: intermediate ancestor verbs are not allowed to apply their own overrides.
+        2. child verbs cannot apply any conjugation overrides of their own ( maybe an issue with decir )
+        
+        However, the resulting code is similiar. ( the issue is the accenting on the rare tener :2nd person singular imperative )
+        
+        I would like to eliminate this code and go to a pure conjugation override model 
+        """
+        base_verb_conjugation = self.root_verb.conjugate(tense, person)
         if base_verb_conjugation is None:
             # imperative, third-person only verbs
             return None
         
         no_explicit_accent = False
-        single_vowel_match = _single_vowel_re.match(base_verb_conjugation)
+        single_vowel_match = _single_vowel_re.match(base_verb_conjugation)        
+        
         if tense == Tenses.imperative_positive and person == Persons.second_person_singular:
             #
             # Accent a single vowel base verb conjugation
@@ -245,15 +259,15 @@ class Verb():
             if single_vowel_match is not None:
                 no_explicit_accent = True
                 if not self.reflexive:
-                    _conjugation = self.prefix + accent_at(base_verb_conjugation, single_vowel_match.start(2))
+                    _conjugation = self.full_prefix + accent_at(base_verb_conjugation, single_vowel_match.start(2))
                 else:
-                    _conjugation = self.prefix + base_verb_conjugation                
+                    _conjugation = self.full_prefix + base_verb_conjugation                
             else:
-                _conjugation = self.prefix + base_verb_conjugation
+                _conjugation = self.full_prefix + base_verb_conjugation
         elif single_vowel_match is not None:
             self.__raise("Single vowel case in tense", tense, person)
         else:
-            _conjugation = self.prefix + base_verb_conjugation
+            _conjugation = self.full_prefix + base_verb_conjugation
             
         if tense in Tenses.imperative:
             returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation, no_explicit_accent)                        
@@ -622,6 +636,13 @@ class Verb():
             return
         if override.key not in self.doNotApply and override.key not in self.appliedOverrides:
             override.apply(self)        
+
+    @property
+    def root_verb(self):
+        if self.base_verb is None:
+            return self
+        else:
+            return self.base_verb.root_verb
             
     @property
     def base_verb(self):
@@ -642,14 +663,13 @@ class Verb():
     
     @property
     def full_prefix(self):
-        if self.base_verb is not None and self.prefix is not None:
-            return self.prefix + self.base_verb.full_prefix
-        elif self.base_verb is not None:
-            return self.base_verb.full_prefix
+        if self.base_verb is None:
+            return u''
         elif self.prefix is not None:
-            return self.prefix
+            return self.prefix + self.base_verb.full_prefix
         else:
-            return None            
+            # basically self is a reflexive verb with a base verb that adds a prefix
+            return self.base_verb.full_prefix
     
     def is_child(self, ancestor_verb):
         if self.base_verb == None or ancestor_verb is None:
