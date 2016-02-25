@@ -15,7 +15,7 @@ def find_print_verb(verb_inf, print_all=False):
         print repr(verb.overrides_applied()).decode("unicode-escape")
         print '----------------------'
     
-fivehundredone = [u'abatir', u'abrasar', u'abrazar', u'abrir', u'absolver', u'abstenerse', u'acabar/por']
+fivehundredone = [u'abatir', u'abrasar', u'abrazar', u'abrir', u'absolver', u'tener', u'abstenerse', u'acabar/por', u'advertir']
 verb_inf = fivehundredone[len(fivehundredone)-1]
 find_print_verb(verb_inf, True)
 
