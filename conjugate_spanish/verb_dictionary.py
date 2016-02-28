@@ -43,7 +43,7 @@ def Verb_Dictionary_get(inf_ending):
 def Verb_Dictionary_load():
     import special_cases
     
-    for fileNameBase in ['irregulars','dictionary']:
+    for fileNameBase in ['irregulars','501verbs','501extendedverbs']:
         fileName = './conjugate_spanish/dictionaries/'+fileNameBase+'.csv'
         print("reading "+fileName)
         csvfile = codecs.open(fileName, mode='r' )
@@ -56,4 +56,4 @@ def Verb_Dictionary_load():
                 except Exception as e:
                     print("error reading "+fileName+": "+ line+ e)            
         except Exception as e:
-            print("error reading "+fileName+": "+e.message+" line="+line)
+            print("error reading "+fileName+": "+e.message+" line="+repr(line))
