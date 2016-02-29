@@ -14,11 +14,29 @@ import traceback
 # UTF8Writer = codecs.getwriter('utf8')
 # sys.stdout = UTF8Writer(sys.stdout)
 from standard_endings import Standard_Conjugation_Endings
+from __builtin__ import None
 
 _ending_vowel_check = re.compile(u'['+Vowels+u']$', re.IGNORECASE+re.UNICODE)
 _accented_vowel_check = re.compile(u'['+AccentedVowels+u']', re.IGNORECASE+re.UNICODE)
 # check for word with only a single vowel ( used in imperative conjugation )
 _single_vowel_re = re.compile(u'^([^'+AllVowels+u']*)(['+AllVowels+u'])([^'+AllVowels+u']*)$', re.IGNORECASE+re.UNICODE)
+#
+# Parse up the infinitive string: 
+# group 1 = prefix words (if present)
+# group 2 = prefix characters (if present)
+# group 3 = core verb (note: special case of 'ir' and 'irse'
+# group 4 = infinitive ending ( -ir,-er,-ar )
+# group 5 = reflexive se or -se if present
+# group 6 = suffix words
+# use '-' to separate out the prefix from the base verb
+# use '/' to force the selection of the verb in complex cases or for cases where prefix words end in -ir,-ar,-er
+_phrase_parsing = re.compile(u'^([^/]*?)[ /]?([^/ -]*?)-?([^/ -]*)([iíae]r)(-?se)?[/ ]?(.*)$')
+PREFIX_WORDS = 1
+PREFIX_CHARS = 2
+CORE_VERB = 3
+INF_ENDING = 4
+REFLEXIVE_ENDING = 5
+SUFFIX_WORDS = 6
 def _check_for_multiple_accents(conjugation):
     """
     Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
@@ -31,6 +49,13 @@ def _check_for_multiple_accents(conjugation):
 class Verb():
     '''
     verb conjugation
+    instance properties:
+    full_phrase - <prefix words> infinitive <suffix words>
+    inf_verb_string - infinitive 
+    # Now a bit of trickiness. Verbs that are based on the conjugation of another verb need to handle override conjugations or conjugation_stems
+            # We don't have it as a 'visible' override because that would make it harder to highlight how a verb is irregular.
+            # (has to handle acordarse -> acordar and descacordarse -> acordarse )
+            # Note: that the prefix can be u'' - usually for reflexive verbs. 
     '''
     
     def __init__(self, verb_string, definition, conjugation_overrides=None, base_verb=None, **kwargs):
@@ -42,48 +67,57 @@ class Verb():
         # when reading from a file or some other place - it may be a ascii string.
         # must be unicode for us reliably do things like [:-1] to peel off last character 
         _verb_string = make_unicode(verb_string)        
+        derived_verb = base_verb is not None
         
-        self.inf_verb_string = _verb_string
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
-        suffix_words_index = _verb_string.find('/')
-        if suffix_words_index > 0:
-            self.suffix_words = _verb_string[suffix_words_index:]
-            _verb_string = _verb_string[:suffix_words_index]
-        else:
-            self.suffix_words = None
+        phrase_match = _phrase_parsing.match(_verb_string)
+        if phrase_match is None:
+            self.__raise(_verb_string+": does not appear to be a verb or phrase with verb infinitive in it.")            
+
+        self.prefix_words = phrase_match.group(PREFIX_WORDS)
+        self.prefix = phrase_match.group(PREFIX_CHARS)
+        self.core_characters = phrase_match.group(CORE_VERB)
+        self.inf_ending = phrase_match.group(INF_ENDING)
+        self.reflexive = phrase_match.group(REFLEXIVE_ENDING) != u''        
+        self.suffix_words = phrase_match.group(SUFFIX_WORDS)
+
+        # determine
+        if base_verb is not None:        
+            if isinstance(base_verb, Verb):
+                self._base_verb = base_verb
+                self.base_verb_str = base_verb.inf_verb_string
+            elif isinstance(base_verb, six.string_types) and base_verb != u'':
+                # TODO strip leading/trailing white space
+                self.base_verb_str = base_verb
+            else:
+                self.__raise("base_verb must be Verb or string")
             
-        if _verb_string[-2:] == 'se':
-            self.reflexive = True
-            _verb_string = _verb_string[:-2] 
-        else:
-            self.reflexive = False
+        el
         
-        if base_verb is None and (self.suffix_words is not None or self.reflexive):
-            # verb_string has been stripped down - possible base_verb default
-            base_verb = _verb_string
-            
-        self.verb_string = _verb_string
-        self.inf_ending = _verb_string[-2:]
-        # special casing for eír verbs which have accented i
-        if _verb_string == u'ir': 
-            # ir special case
-            self.stem = _verb_string
-            self.verb_ending_index = Infinitive_Endings.ir_verb
-        elif self.inf_ending == u'ír':
-            self.inf_ending = u'ir'
-            self.stem = _verb_string[:-2]
-            self.verb_ending_index = Infinitive_Endings.ir_verb
+        # should not have a base verb? or embedded base verbs
+        if self.is_phrase:
+            # a phrase means the base verb is the actual verb being conjugated.
+            self.base_verb_str = self.inf_verb_string
+        elif self.prefix != u'' or phrase_match.group(REFLEXIVE_ENDING) == '-se':
+            # explicit base verb formed by '-' embeded in the verb
+            self.base_verb_str = self.core_characters + self.inf_ending
+            if phrase_match.group(REFLEXIVE_ENDING) == 'se':
+                self.base_verb_str += 'se'
+        elif base_verb is not None:
+            pass
+        elif self.reflexive:
+            # base verb is without the 'se'
+            self.base_verb_str = self.core_characters + self.inf_ending
         else:
-            self.stem = _verb_string[:-2]
-            self.verb_ending_index = Infinitive_Endings.index(self.inf_ending)
-            
-        if isinstance(base_verb, Verb):
-            self._base_verb = base_verb
-            self.base_verb_str = base_verb.inf_verb_string
-        elif isinstance(base_verb, six.string_types) and base_verb != u'':
-            # TODO strip leading/trailing white space
-            self.base_verb_str = base_verb
-        else:
+            self.base_verb_str = None
+        
+        if self.reflexive:
+            # was 'se' or '-se'
+            self.verb_string += 'se'
+            derived_verb = True
+            if phrase_match.group(REFLEXIVE_ENDING) == u'se':                 
+                _base_verb_string += 'se'
+        
             self.base_verb_str = None
             
         if self.base_verb_str is not None:            
@@ -680,6 +714,39 @@ class Verb():
             # multiple derived verb levels
             return self.base_verb.is_child(ancestor_verb)
         
+    @property
+    def stem(self):
+        return self.prefix + self.core_characters
+    
+    @property
+    def inf_verb_string(self):
+        if self.reflexive:
+            return self.stem + self.inf_ending +u'se'
+        else:
+            return self.stem + self.inf_ending
+        
+    @property
+    def full_phrase(self):
+        if self.prefix_words != u'':
+            result = self.prefix_words + u' '
+        else:
+            result = u''
+        result += self.inf_verb_string
+        if self.suffix_words != u'':
+            result += u' ' + self.suffix_words
+        return result
+        
+    @property
+    def verb_ending_index(self):
+        if self.inf_ending == u'ír':
+            # special casing for eír verbs which have accented i
+            return Infinitive_Endings.ir_verb
+        else:
+            return Infinitive_Endings.index(self.inf_ending)
+           
+    def is_phrase(self):
+        return self.prefix_words != u'' or self.suffix_words != u''
+    
     @property
     def appliedOverrides(self):
         appliedOverrides_ = list(self._appliedOverrides)
