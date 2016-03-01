@@ -77,11 +77,11 @@ class Verb():
         self.prefix = phrase_match.group(PREFIX_CHARS)
         self.core_characters = phrase_match.group(CORE_VERB)
         self.inf_ending = phrase_match.group(INF_ENDING)
-        self.reflexive = phrase_match.group(REFLEXIVE_ENDING) != u''        
+        self.reflexive = phrase_match.group(REFLEXIVE_ENDING) is not None and phrase_match.group(REFLEXIVE_ENDING) != u''        
         self.suffix_words = phrase_match.group(SUFFIX_WORDS)
 
         # determine
-        if base_verb is not None:        
+        if base_verb is not None and base_verb != u'':        
             if isinstance(base_verb, Verb):
                 self._base_verb = base_verb
                 self.base_verb_str = base_verb.inf_verb_string
