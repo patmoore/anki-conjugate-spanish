@@ -335,7 +335,7 @@ class Verb():
         elif tense in Tenses.Person_Agnostic:
             current_conjugation_stem = self.stem
         elif tense in [ Tenses.future_tense, Tenses.conditional_tense]:
-            current_conjugation_stem = remove_accent(self.verb_string)
+            current_conjugation_stem = remove_accent(self.inf_verb_string)
         elif tense == Tenses.present_subjective_tense:
             current_conjugation_stem = self.__conjugation_present_subjective_stem(tense, person)
         elif tense == Tenses.past_subjective_tense:
@@ -479,7 +479,7 @@ class Verb():
                 _conjugation = self.conjugate(Tenses.present_tense, Persons.third_person_singular)
             elif person == Persons.second_person_plural and tense == Tenses.imperative_positive:                
                 # remove 'r' from infinitive - and replace it with 'd'
-                _conjugation = _replace_last_letter_of_stem(self.verb_string, u'r', u'd')
+                _conjugation = _replace_last_letter_of_stem(self.inf_verb_string, u'r', u'd')
             else:
                 self.__raise("Missed case"+tense+" "+person)  
         else:
@@ -743,6 +743,7 @@ class Verb():
         else:
             return Infinitive_Endings.index(self.inf_ending)
            
+    @property
     def is_phrase(self):
         return self.prefix_words != u'' or self.suffix_words != u''
     
