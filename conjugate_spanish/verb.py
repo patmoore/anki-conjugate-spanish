@@ -29,7 +29,7 @@ _single_vowel_re = re.compile(u'^([^'+AllVowels+u']*)(['+AllVowels+u'])([^'+AllV
 # group 6 = suffix words
 # use '-' to separate out the prefix from the base verb
 # use '/' to force the selection of the verb in complex cases or for cases where prefix words end in -ir,-ar,-er
-_phrase_parsing = re.compile(u'^([^/]*?)[ /]?([^/ -]*?)-?([^/ -]*)([iíae]r)(-?se)?[/ ]?(.*)$')
+_phrase_parsing = re.compile(u'^([^/]*?)[ /]*([^/ -]*?)-?([^/ -]*)([iíae]r)(-?se)?[/ ]*(.*)$')
 PREFIX_WORDS = 1
 PREFIX_CHARS = 2
 CORE_VERB = 3
