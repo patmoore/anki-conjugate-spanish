@@ -55,14 +55,18 @@ class ConjugationOverride():
                 overrides = manual_overrides[applies]
                 if overrides != None:
                     for tenseStr, conjugation_override in overrides.iteritems():
-                        if tenseStr == u'present_except_nosvos':
-                            tense = Tenses.present_tense
-                            persons = Persons.Present_Tense_Stem_Changing_Persons
-                        else:
-                            tense = Tenses.index(tenseStr)
-                            persons = None
                         if conjugation_override is not None:
-                            self._overrides(tense, conjugation_override, applies, persons)
+                            if tenseStr == u'present_except_nosvos':
+                                tense = Tenses.present_tense
+                                persons = Persons.Present_Tense_Stem_Changing_Persons
+                                self._overrides(tense, conjugation_override, applies, persons)
+                            elif tenseStr == u'future_cond':
+                                self._overrides(Tenses.future_tense, conjugation_override, applies)
+                                self._overrides(Tenses.conditional_tense, conjugation_override, applies)
+                            else:
+                                tense = Tenses.index(tenseStr)
+                                persons = None
+                                self._overrides(tense, conjugation_override, applies, persons)
 
     def _overrides(self, tense, overrides, attr_name, persons=None):
         if overrides is None:
