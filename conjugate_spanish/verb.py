@@ -29,7 +29,7 @@ _single_vowel_re = re.compile(u'^([^'+AllVowels+u']*)(['+AllVowels+u'])([^'+AllV
 # group 6 = suffix words
 # use '-' to separate out the prefix from the base verb
 # use '/' to force the selection of the verb in complex cases or for cases where prefix words end in -ir,-ar,-er
-_phrase_parsing = re.compile(u'^([^/]*?)[ /]*([^/ -]*?)-?([^/ -]*)([iíae]r)(-?se)?[/ ]*(.*)$')
+_phrase_parsing = re.compile(u'^\s*([^/]*?)[\s/]*([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?[/\s]*(.*?)\s*$', re.UNICODE)
 PREFIX_WORDS = 1
 PREFIX_CHARS = 2
 CORE_VERB = 3
@@ -63,11 +63,13 @@ class Verb():
         :param verb_string:
         :param base_verb: used as base verb for conjugation
         '''
-        # when reading from a file or some other place - it may be a ascii string.
-        # must be unicode for us reliably do things like [:-1] to peel off last character 
-        _verb_string = make_unicode(verb_string)        
-        derived_verb = base_verb is not None
-        
+        self.definition = make_unicode(definition)
+        # Some verbs don't follow the default rules for their ending> for example, mercer
+        self._doNotApply = []
+        self._appliedOverrides = []
+ 
+        _verb_string = make_unicode(verb_string)
+                            
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
         phrase_match = _phrase_parsing.match(_verb_string)
         if phrase_match is None:
@@ -80,58 +82,44 @@ class Verb():
         self.reflexive = phrase_match.group(REFLEXIVE_ENDING) is not None and phrase_match.group(REFLEXIVE_ENDING) != u''        
         self.suffix_words = phrase_match.group(SUFFIX_WORDS)
 
-        # determine
-        if base_verb is not None and base_verb != u'':        
-            if isinstance(base_verb, Verb):
-                self._base_verb = base_verb
-                self.base_verb_str = base_verb.inf_verb_string
-            elif isinstance(base_verb, six.string_types) and base_verb != u'':
+        _base_verb = make_unicode(base_verb)
+        if _base_verb == u'':
+            _base_verb = None
+        if _base_verb is not None:        
+            if isinstance(_base_verb, Verb):
+                self.base_verb = _base_verb
+                self.base_verb_str = _base_verb.inf_verb_string
+            elif isinstance(_base_verb, six.string_types) and _base_verb != u'':
                 # TODO strip leading/trailing white space
-                self.base_verb_str = base_verb
+                self.base_verb_str = _base_verb 
             else:
                 self.__raise("base_verb must be Verb or string")
-            
-        el
-        
-        # should not have a base verb? or embedded base verbs
-        if self.is_phrase:
+            # example abatir has base: batir
+            _base_verb_parse = _phrase_parsing.match(self.base_verb_str)
+            # "abat".find("bat")
+            base_verb_index = self.core_characters.find(_base_verb_parse.group(CORE_VERB))
+            if base_verb_index <0:
+                self.__raise(repr(self.base_verb_str)+ " is not in core characters"+repr(self.core_characters))
+            if self.prefix == u'' or self.prefix is None:
+                self.prefix = self.core_characters[:base_verb_index]
+                self.core_characters = self.core_characters[base_verb_index:]
+            elif base_verb_index != 0 and self.prefix != self.core_characters[:base_verb_index]:
+                self.__raise("prefix already="+self.prefix+" but should be "+self.core_characters[:base_verb_index])
+            elif self.core_characters != _base_verb_parse.group(CORE_VERB):
+                self.__raise("core_characters already="+self.core_characters+" but should be "+_base_verb_parse.group(CORE_VERB))
+        elif self.is_phrase:
             # a phrase means the base verb is the actual verb being conjugated.
             self.base_verb_str = self.inf_verb_string
         elif self.prefix != u'' or phrase_match.group(REFLEXIVE_ENDING) == '-se':
-            # explicit base verb formed by '-' embeded in the verb
+            # explicit base verb formed by '-' embedded in the verb
             self.base_verb_str = self.core_characters + self.inf_ending
             if phrase_match.group(REFLEXIVE_ENDING) == 'se':
                 self.base_verb_str += 'se'
-        elif base_verb is not None:
-            pass
         elif self.reflexive:
-            # base verb is without the 'se'
+            # base verb is without the 'se' ( no prefix)
             self.base_verb_str = self.core_characters + self.inf_ending
         else:
             self.base_verb_str = None
-        
-        if self.reflexive:
-            # was 'se' or '-se'
-            self.verb_string += 'se'
-            derived_verb = True
-            if phrase_match.group(REFLEXIVE_ENDING) == u'se':                 
-                _base_verb_string += 'se'
-        
-            self.base_verb_str = None
-            
-        if self.base_verb_str is not None:            
-            # Now a bit of trickiness. Verbs that are based on the conjugation of another verb need to handle override conjugations or conjugation_stems
-            # We don't have it as a 'visible' override because that would make it harder to highlight how a verb is irregular.
-            # (has to handle acordarse -> acordar and descacordarse -> acordarse )
-            # Note: that the prefix can be u'' - usually for reflexive verbs. 
-            self.prefix = self.inf_verb_string[:self.inf_verb_string.index(self.base_verb_str)]
-        else:
-            self.prefix = u''
-            
-        self.definition = definition
-        # Some verbs don't follow the default rules for their ending> for example, mercer
-        self._doNotApply = []
-        self._appliedOverrides = []
                         
         if conjugation_overrides is not None:
             for conjugation_override in get_iterable(conjugation_overrides):

@@ -12,6 +12,12 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.reflexive, reflexive)
         self.assertEqual(verb.suffix_words, suffix_words)
         self.assertEqual(verb.is_phrase, is_phrase)
+        if not is_phrase:
+            if reflexive:
+                self.assertEqual(verb.inf_verb_string, stem+inf_ending+u'se')
+            else:
+                self.assertEqual(verb.inf_verb_string, stem+inf_ending)
+            self.assertEqual(verb.inf_verb_string, verb.full_phrase)
         
     def test_self_reference(self):
         verb = Verb("faketer", "fake as always")
@@ -45,9 +51,7 @@ class TestBasic(unittest.TestCase):
     def test_phrase_parsing(self):
         # also test for excess spaces and leading spaces
         verb = Verb(u"  a  absfaketer  de {{inf}}  "," fake definition")
-        self.__check(verb, u"absfaket", u"er", prefix=u"", reflexive=False, prefix_words=u"a", suffix_words=u"de {{inf}}")
-        self.assertFalse(verb.reflexive)
-        self.assertTrue(verb.is_phrase)
+        self.__check(verb, u"absfaket", u"er", prefix=u"", reflexive=False, prefix_words=u"a", suffix_words=u"de {{inf}}", is_phrase=True)
         self.assertEqual(verb.base_verb_str, u"absfaketer")
-        self.assertEqual(verb.prefix, "")
         self.assertEqual(verb.inf_verb_string, u"absfaketer")
+        self.assertEqual(verb.full_phrase, u"a absfaketer de {{inf}}")

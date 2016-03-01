@@ -2,12 +2,13 @@
 from __future__ import print_function
 # These are the standard words (special case)
 import codecs
+import traceback
 import csv
 import six
 import json
 from verb import Verb
 
-from constants import Persons, Tenses, get_iterable
+from constants import make_unicode
 from conjugation_override import ConjugationOverride
 
 Verb_Dictionary = {}
@@ -50,10 +51,17 @@ def Verb_Dictionary_load():
         reader = csv.DictReader(csvfile, skipinitialspace=True)
         try:
             for line in reader:
+                definition = {u'definition':u''}
+                for key,value in line.iteritems():
+                    if value != u'':
+                        _value = make_unicode(value)
+                        definition[make_unicode(key)] = _value 
                 try:
-                    verb = Verb_Dictionary_add(**line)
+                    verb = Verb_Dictionary_add(**definition)
                     print (verb.inf_verb_string)
                 except Exception as e:
-                    print("error reading "+fileName+": "+ line, repr(e))            
+                    print("error reading "+fileName+": "+ repr(definition)+ repr(e))
+                    traceback.print_exc()            
         except Exception as e:
             print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
+            traceback.print_exc()
