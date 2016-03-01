@@ -7,5 +7,5 @@
 "saber","know",,,"{""conjugation_stems"":{""past"":""sup""}}"
 "satisfacer","satisfy",,,"{""conjugation_stems"":{""past"":""satisfic""}}"
 "traer","bring",,,"{""conjugation_stems"":{""past"":""traj""}}"
-"decir","say, tell","go,e:i,-v_cir",,"{""conjugation_stems"":{""present"":[""di""],""past"":""dij"",""future"":""dir"",""conditional"":""dir""},""conjugations"":{""imperative positive"":[null, ""di""]}}"
+"decir","say, tell","go,e:i,-v_cir",,"{""conjugation_stems"":{""present"":[""di""],""past"":""dij"",""future_cond"":""dir""},""conjugations"":{""imperative positive"":[null, ""di""]}}"
 "venir", "come",,,"{""conjugation_stems"":{""past"":""vin""}}"
