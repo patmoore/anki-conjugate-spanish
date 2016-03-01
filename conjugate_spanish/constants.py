@@ -2,6 +2,8 @@
 import collections
 import six
 import re
+import sys
+import traceback
 
 class Infinitive_Endings_(list):
     ar_verb = 0
@@ -111,11 +113,13 @@ def make_list(list_or):
         return [ list_or ]
     
 def make_unicode(inputStr):
-    if inputStr is None:
-        return None
-    elif type(inputStr) != unicode:
-        inputStr = inputStr.decode('utf-8')
-        return inputStr
+    """
+    :returns: original inputStr if inputStr is not a string or inputStr is already a unicode. This means None and random
+    objects can be passed
+    """
+    if isinstance(inputStr, six.string_types) and type(inputStr) != unicode:
+        result = inputStr.decode('utf-8')
+        return result
     else:
         return inputStr
     
@@ -153,3 +157,9 @@ def remove_accent(string_):
     for regex, replace in _replace_accents:
         result = regex.sub(replace, result)
     return result
+
+def dump_trace(e, message):
+    extype, ex, tb = sys.exc_info()
+    traceback.print_tb(tb)
+    formatted = traceback.format_exception(extype, ex, tb)[-1]
+    
