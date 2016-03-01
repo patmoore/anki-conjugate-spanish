@@ -14,7 +14,6 @@ import traceback
 # UTF8Writer = codecs.getwriter('utf8')
 # sys.stdout = UTF8Writer(sys.stdout)
 from standard_endings import Standard_Conjugation_Endings
-from __builtin__ import None
 
 _ending_vowel_check = re.compile(u'['+Vowels+u']$', re.IGNORECASE+re.UNICODE)
 _accented_vowel_check = re.compile(u'['+AccentedVowels+u']', re.IGNORECASE+re.UNICODE)
