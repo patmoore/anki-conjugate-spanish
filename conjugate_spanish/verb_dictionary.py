@@ -52,8 +52,8 @@ def Verb_Dictionary_load():
             for line in reader:
                 try:
                     verb = Verb_Dictionary_add(**line)
-        #             print repr(c).decode("unicode-escape")
+                    print (verb.inf_verb_string)
                 except Exception as e:
-                    print("error reading "+fileName+": "+ line+ e)            
+                    print("error reading "+fileName+": "+ line, repr(e))            
         except Exception as e:
-            print("error reading "+fileName+": "+e.message+" line="+repr(line))
+            print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
