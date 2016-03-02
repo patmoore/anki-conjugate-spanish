@@ -464,6 +464,7 @@ Guar_CO = __make_std_override(inf_match=re.compile(u'guar$', re.IGNORECASE+re.UN
 Guar_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'u', u'ü'), Persons.first_person_singular,
     documentation="preserves sound in infinitive")
 
+#>>>>>>> TODO: check to see of all -go verbs use just stem in imperative 2nd person, salir, tener,poner
 Go_CO = __make_std_override(key=u'go', documentation="go verbs")
 Go_CO.override_tense_ending(Tenses.present_tense, u"go", Persons.first_person_singular, documentation="go verb")
 
