@@ -53,8 +53,8 @@ def Verb_Dictionary_load():
             for line in reader:
                 definition = {u'definition':u''}
                 for key,value in line.iteritems():
-                    if value != u'':
-                        _value = make_unicode(value)
+                    _value = make_unicode(value)
+                    if _value != u'' and _value is not None:
                         definition[make_unicode(key)] = _value 
                 try:
                     verb = Verb_Dictionary_add(**definition)

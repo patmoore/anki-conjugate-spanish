@@ -1,11 +1,8 @@
 "inf_ending","definition","conjugation_overrides","base_verb","manual_overrides"
-"andar","walk",,,"{""conjugation_stems"":{""past"":""anduv""}}"
-"dormir","sleep","o:ue"
 "oler","hear","o:hue"
 "poder","be able to","o:ue,r_only,stem_changing_ir_o:ue",,
 "querer","want, love","e:ie,r_only",,"{""conjugation_stems"":{""past"":""quis""}}"
 "saber","know",,,"{""conjugation_stems"":{""past"":""sup""}}"
 "satisfacer","satisfy",,,"{""conjugation_stems"":{""past"":""satisfic""}}"
 "traer","bring",,,"{""conjugation_stems"":{""past"":""traj""}}"
-"decir","say, tell","go,e:i,-v_cir",,"{""conjugation_stems"":{""present"":[""di""],""past"":""dij"",""future_cond"":""dir""},""conjugations"":{""imperative positive"":[null, ""di""]}}"
 "venir", "come",,,"{""conjugation_stems"":{""past"":""vin""}}"
