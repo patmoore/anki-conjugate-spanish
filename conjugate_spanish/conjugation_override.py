@@ -63,6 +63,8 @@ class ConjugationOverride():
                             elif tenseStr == u'future_cond':
                                 self._overrides(Tenses.future_tense, conjugation_override, applies)
                                 self._overrides(Tenses.conditional_tense, conjugation_override, applies)
+                            elif tenseStr == u'third_past':
+                                self._overrides(Tenses.past_tense, conjugation_override, applies, Persons.third_person)
                             else:
                                 tense = Tenses.index(tenseStr)
                                 persons = None
@@ -443,7 +445,8 @@ LL_N_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_p
 Iar_CO = __make_std_override(inf_match=re.compile(u'iar$', re.IGNORECASE+re.UNICODE),
     auto_match=False,
     key=u'iar',
-    documentation=u'some iar verbs accent the i so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-iar-with-i-ii.htm')
+    documentation=u'some iar verbs accent the i so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-iar-with-i-ii.htm',
+    examples=[u'confiar',u'criar',u'desviar',u'enfriar',u'esquiar'])
 Iar_CO.override_present_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'i', u'í'))
 
 Uar_CO = __make_std_override(inf_match=re.compile(u'[^g]uar$', re.IGNORECASE+re.UNICODE),
@@ -501,5 +504,8 @@ Present_Subjective_Infinitive.is_match = six.create_bound_method(__check_radical
 # Third person only conjugations
 Third_Person_Only_CO = __make_std_override(key='3rd_only', examples=[u'gustar'])
 for tense in Tenses.all_except(Tenses.Person_Agnostic):
-    Third_Person_Only_CO.override_tense(tense=tense, overrides=lambda self, **kwargs: None, documentation="third person only verbs don't conjugate for any other person")
+    Third_Person_Only_CO.override_tense(tense=tense, overrides=lambda self, **kwargs: None, persons=Persons.all_except(Persons.third_person), documentation="third person only verbs don't conjugate for any other person")
 
+Third_Person_Singular_Only_CO = __make_std_override(key='3rd_sing_only', examples=[u'helar'])
+for tense in Tenses.all_except(Tenses.Person_Agnostic):
+    Third_Person_Singular_Only_CO.override_tense(tense=tense, overrides=lambda self, **kwargs: None, persons=Persons.all_except(Persons.third_person_singular), documentation="third person singular only verbs don't conjugate for any other person (weather)")
