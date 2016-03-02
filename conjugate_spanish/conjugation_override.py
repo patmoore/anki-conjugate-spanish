@@ -281,7 +281,7 @@ def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= No
     truncated_stem = stem[:-1]
     last_letter = stem[-1]
     if expected_last_letter is not None and expected_last_letter != last_letter:
-        raise Exception("wrong stem ending expected:"+expected_last_letter+" got "+last_letter)
+        raise Exception(stem+":wrong stem ending expected:"+expected_last_letter+" got "+last_letter)
     elif new_stem_ending is not None:
         return truncated_stem + new_stem_ending
     else:
@@ -303,7 +303,7 @@ Standard_Overrides[Yendo_Gerund_CO.key] = Yendo_Gerund_CO
 Zar_CO = __make_std_override(inf_match=re.compile(u'zar$'), 
     key='zar',
     documentation='verbs ending in -zar have z -> c before e',
-    examples=[six.u('comenzar'), six.u('lanzar')]
+    examples=[u'comenzar', u'lanzar']
     )
 Zar_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'z',u'c'), Persons.first_person_singular)
 Zar_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'z',u'c'))
@@ -311,7 +311,7 @@ Zar_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, *
 Gar_CO = __make_std_override(inf_match=re.compile(u'gar$'),
     key='gar', 
     documentation='verbs ending in -gar have g -> gu before e',
-    examples=[six.u('pagar')]
+    examples=[u'pagar']
     )
 Gar_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'g', u'gu'), Persons.first_person_singular)
 Gar_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'g',u'gu'))

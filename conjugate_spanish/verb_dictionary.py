@@ -12,6 +12,7 @@ from constants import make_unicode
 from conjugation_override import ConjugationOverride
 
 Verb_Dictionary = {}
+Verb_Dictionary_By = {}
 def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
     if conjugation_overrides == u'':
         conjugation_overrides = None
@@ -37,7 +38,7 @@ def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,base_
     if inf_ending in Verb_Dictionary:
         print(inf_ending+" already in dictionary")
     else:      
-        Verb_Dictionary[inf_ending] = verb
+        Verb_Dictionary[verb.full_phrase] = verb
 #     print "Adding "+verb.inf_verb_string
     return verb
 
@@ -49,6 +50,8 @@ def Verb_Dictionary_load():
     
     for fileNameBase in ['501verbs','501extendedverbs']:
         fileName = './conjugate_spanish/dictionaries/'+fileNameBase+'.csv'
+        verbs = {}
+        Verb_Dictionary_By[fileNameBase] = verbs
         print("reading "+fileName)
         csvfile = codecs.open(fileName, mode='r' )
         reader = csv.DictReader(csvfile, skipinitialspace=True)
@@ -61,6 +64,7 @@ def Verb_Dictionary_load():
                         definition[make_unicode(key)] = _value 
                 try:
                     verb = Verb_Dictionary_add(**definition)
+                    verbs[verb.inf_verb_string] = verb
                     print (verb.inf_verb_string)
                 except Exception as e:
                     print("error reading "+fileName+": "+ repr(definition)+ repr(e))
@@ -68,3 +72,13 @@ def Verb_Dictionary_load():
         except Exception as e:
             print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
             traceback.print_exc()
+        csvfile.close()
+        Verb_Dictionary_export(fileNameBase)
+
+def Verb_Dictionary_export(source):
+    f = open('./conjugate_spanish/expanded/'+source+"-expanded.csv","w")
+    for verb in Verb_Dictionary_By[source].itervalues():   
+        print("conjugating>>"+verb.inf_verb_string)     
+        f.write(repr(verb.conjugate_all_tenses()+"\n"))
+    
+    f.close()
