@@ -63,6 +63,8 @@ class ConjugationOverride():
                             elif tenseStr == u'future_cond':
                                 self._overrides(Tenses.future_tense, conjugation_override, applies)
                                 self._overrides(Tenses.conditional_tense, conjugation_override, applies)
+                            elif tenseStr == u'imperative_positive_second':
+                                self._overrides(Tenses.imperative_positive, conjugation_override, applies, Persons.second_person_singular)
                             elif tenseStr == u'third_past':
                                 self._overrides(Tenses.past_tense, conjugation_override, applies, Persons.third_person)
                             else:
