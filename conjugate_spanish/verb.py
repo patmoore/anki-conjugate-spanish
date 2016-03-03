@@ -522,7 +522,11 @@ class Verb():
              
     def __conjugation_present_subjective_stem(self, tense, person):
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular)
-        if first_person_conjugation[-1:] ==u'o':
+        if first_person_conjugation is None:
+            # for example some verbs only are third person only
+            current_conjugation_ending = self.conjugate_ending(Tenses.present_tense, Persons.third_person_singular)
+            conjugation_stem = self.conjugate_stem(Tenses.present_tense, Persons.third_person_singular, current_conjugation_ending)
+        elif first_person_conjugation[-1:] ==u'o':
             conjugation_stem = first_person_conjugation[:-1]            
         elif first_person_conjugation[-2:] == u'oy':
             # estoy, doy, voy, etc.
