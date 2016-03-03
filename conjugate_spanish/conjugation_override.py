@@ -447,7 +447,8 @@ LL_N_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_p
 Iar_CO = __make_std_override(inf_match=re.compile(u'iar$', re.IGNORECASE+re.UNICODE),
     auto_match=False,
     key=u'iar',
-    documentation=u'some iar verbs accent the i so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-iar-with-i-ii.htm',
+    documentation=u'some iar verbs accent the i so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-iar-with-i-ii.htm\
+     http://www.intro2spanish.com/verbs/listas/master-iar.htm',
     examples=[u'confiar',u'criar',u'desviar',u'enfriar',u'esquiar'])
 Iar_CO.override_present_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'i', u'í'))
 

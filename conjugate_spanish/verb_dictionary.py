@@ -13,7 +13,7 @@ from conjugation_override import ConjugationOverride
 
 Verb_Dictionary = {}
 Verb_Dictionary_By = {}
-def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
+def Verb_Dictionary_add(phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
     if conjugation_overrides == u'':
         conjugation_overrides = None
     elif isinstance(conjugation_overrides, six.string_types):
@@ -27,23 +27,23 @@ def Verb_Dictionary_add(inf_ending, definition, conjugation_overrides=None,base_
             print("manual_overrides="+manual_overrides)
             return
         
-        conjugation_override = ConjugationOverride(key=inf_ending+"_irregular",manual_overrides=manual_overrides)
+        conjugation_override = ConjugationOverride(key=phrase+"_irregular",manual_overrides=manual_overrides)
     
         if conjugation_overrides is None:
             conjugation_overrides = [conjugation_override]
         else:
             conjugation_overrides.append(conjugation_override)
                                 
-    verb = Verb(inf_ending, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb)  
-    if inf_ending in Verb_Dictionary:
-        print(inf_ending+" already in dictionary")
+    verb = Verb(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb)  
+    if phrase in Verb_Dictionary:
+        print(phrase+" already in dictionary")
     else:      
         Verb_Dictionary[verb.full_phrase] = verb
 #     print "Adding "+verb.inf_verb_string
     return verb
 
-def Verb_Dictionary_get(inf_ending):
-    return Verb_Dictionary.get(inf_ending)
+def Verb_Dictionary_get(phrase):
+    return Verb_Dictionary.get(phrase)
 
 def Verb_Dictionary_load():
     import special_cases
@@ -64,8 +64,8 @@ def Verb_Dictionary_load():
                         definition[make_unicode(key)] = _value 
                 try:
                     verb = Verb_Dictionary_add(**definition)
-                    verbs[verb.inf_verb_string] = verb
-                    print (verb.inf_verb_string)
+                    verbs[verb.full_phrase] = verb
+                    print (verb.full_phrase)
                 except Exception as e:
                     print("error reading "+fileName+": "+ repr(definition)+ repr(e))
                     traceback.print_exc()            
@@ -78,7 +78,7 @@ def Verb_Dictionary_load():
 def Verb_Dictionary_export(source):
     f = open('./conjugate_spanish/expanded/'+source+"-expanded.csv","w")
     for verb in Verb_Dictionary_By[source].itervalues():   
-        print("conjugating>>"+verb.inf_verb_string)     
-        f.write(repr(verb.conjugate_all_tenses()+"\n"))
+        print("conjugating>>"+verb.full_phrase)     
+        f.write(repr(verb.conjugate_all_tenses())+"\n")
     
     f.close()
