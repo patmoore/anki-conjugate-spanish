@@ -708,10 +708,7 @@ class Verb():
     
     @property
     def inf_verb_string(self):
-        if self.reflexive:
-            return self.stem + self.inf_ending +u'se'
-        else:
-            return self.stem + self.inf_ending
+        return self.stem + self.inf_ending
         
     @property
     def full_phrase(self):
@@ -720,6 +717,8 @@ class Verb():
         else:
             result = u''
         result += self.inf_verb_string
+        if self.reflexive:
+            result += u'se'
         if self.suffix_words != u'':
             result += u' ' + self.suffix_words
         return result
@@ -768,5 +767,5 @@ class Verb():
         return False
     
     def __raise(self, msg, tense=None, person=None, traceback_=None):
-        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.inf_verb_string, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
+        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
         raise Exception, msg_, traceback_
