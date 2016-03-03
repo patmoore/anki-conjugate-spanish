@@ -225,8 +225,9 @@ class Verb():
                     if isinstance(conjugation_override, six.string_types):
                         conjugation = conjugation_override
                     elif conjugation_override is not None:
+                        override_call = { 'tense': tense, 'person': person }
                         try:
-                            conjugation = conjugation_override(tense, person)
+                            conjugation = conjugation_override(**override_call)
                         except Exception as e:
                             extype, ex, traceback_ = sys.exc_info()
                             formatted = traceback.format_exception_only(traceback_,extype, ex)[-1]
