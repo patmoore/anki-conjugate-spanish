@@ -333,17 +333,15 @@ Gar_CO.override_tense_stem(Tenses.present_subjective_tense, lambda self, stem, *
 Ger_CO = __make_std_override(inf_match=re.compile(u'ger$'),
     key="ger"
     )
-Ger_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'g', u'j'), 
-    persons=Persons.first_person_singular,
-    documentation=u'g->j before o (present:first person singular) (present subjective) - preserves "g" sound')
-
 Gir_CO = __make_std_override(inf_match=re.compile(u'gir$'),
-    #TODO only if the -gir verb has 'e'
-    parents=Ger_CO,
     key="gir"
     )
+for co in [ Ger_CO, Gir_CO]:
+    co.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'g', u'j'), 
+        persons=Persons.first_person_singular,
+        documentation=u'g->j before o (present:first person singular) (present subjective) - preserves "g" sound')
 
-#TODO just -egir verbs
+# just -egir verbs
 E_Gir_CO = __make_std_override(inf_match=re.compile(u'egir$'),
     parents="e:i",
     key=u"e_gir",
@@ -365,24 +363,24 @@ Cer_After_Vowel_CO = __make_std_override(inf_match=re.compile(six.u('[aeiouáé�
     documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o',
     examples=[six.u('aparecer')]
     )
-Cer_After_Vowel_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'c',u'zc'), Persons.first_person_singular)
 Cir_After_Vowel_CO = __make_std_override(inf_match=re.compile(six.u('[aeiouáéíóú]cir$')),
     key='v_cir',
-    parents='v_cer',
     documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o')
+for co in [ Cer_After_Vowel_CO, Cir_After_Vowel_CO]:
+    co.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'c',u'zc'), Persons.first_person_singular)
 
 Cer_After_Const_CO = __make_std_override(inf_match=re.compile(six.u('[^aeiouáéíóú]cer$')),
     key='c_cer',
     documentation='verbs ending in -cer or -cir with a preceding constant have c -> z before o',
-    examples=[six.u('convencer')]
+    examples=[u'convencer']
     )
-Cer_After_Const_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem,u'c',u'z'), Persons.first_person_singular)
 Cir_After_Const_CO = __make_std_override(inf_match=re.compile(six.u('[^aeiouáéíóú]cir$')),
     key='c_cir',
-    parents='c_cer',
     documentation='verbs ending in -cer or -cir with a preceding constant have c -> z before o',
-    examples=[six.u('convencer')]
+    examples=[u'convencer']
     )
+for co in [ Cer_After_Const_CO, Cir_After_Const_CO ]:
+    co.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem,u'c',u'z'), Persons.first_person_singular)
 
 I2Y_PastTense_CO = __make_std_override(
     key=u'i2y',
