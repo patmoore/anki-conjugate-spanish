@@ -17,10 +17,10 @@ class TestImperativeConjugation(unittest.TestCase):
             fake = Verb(u'faket'+ending,"a fake verb")
             present_subjective_tense = fake.conjugate_tense(Tenses.present_subjective_tense)
             present_tense = fake.conjugate_tense(Tenses.present_tense)
-            conjugations = fake.conjugate_tense(Tenses.imperative_positive)
-            self.assertEqual(conjugations[person], present_tense[Persons.third_person_singular])
-            conjugations = fake.conjugate_tense(Tenses.imperative_negative)
-            self.assertEqual(conjugations[person], present_subjective_tense[person])
+            conjugation = fake.conjugate(Tenses.imperative_positive, person)
+            self.assertEqual(conjugation, present_tense[Persons.third_person_singular])
+            conjugation = fake.conjugate(Tenses.imperative_negative, person)
+            self.assertEqual(conjugation, present_subjective_tense[person])
             
     def test_second_person_plural(self):
         """
@@ -28,31 +28,31 @@ class TestImperativeConjugation(unittest.TestCase):
         person = Persons.second_person_plural
         for ending in All_Infinitive_Endings:
             fake = Verb(u'faket'+ending,"a fake verb")
-            present_subjective_tense = fake.conjugate_tense(Tenses.present_subjective_tense)
-            conjugations = fake.conjugate_tense(Tenses.imperative_positive)
-            self.assertEqual(conjugations[person], fake.inf_verb_string[:-1]+'d')
-            conjugations = fake.conjugate_tense(Tenses.imperative_negative)
-            self.assertEqual(conjugations[person], present_subjective_tense[person])
+            present_subjective_tense = fake.conjugate(Tenses.present_subjective_tense, person)
+            conjugation = fake.conjugate(Tenses.imperative_positive,person)
+            self.assertEqual(conjugation, fake.inf_verb_string[:-1]+'d')
+            conjugation = fake.conjugate(Tenses.imperative_negative,person)
+            self.assertEqual(conjugation, present_subjective_tense)
     
     def test_third_first_person(self):
         for person in [Persons.third_person_plural, Persons.third_person_singular, Persons.first_person_plural]:
             for ending in All_Infinitive_Endings:
                 fake = Verb(u'faket'+ending,"a fake verb")
-                present_subjective_tense = fake.conjugate_tense(Tenses.present_subjective_tense)
-                conjugations = fake.conjugate_tense(Tenses.imperative_positive)
-                self.assertEqual(conjugations[person], present_subjective_tense[person])
-                conjugations = fake.conjugate_tense(Tenses.imperative_negative)
-                self.assertEqual(conjugations[person], present_subjective_tense[person])
+                present_subjective_tense = fake.conjugate(Tenses.present_subjective_tense, person)
+                conjugation = fake.conjugate(Tenses.imperative_positive, person)
+                self.assertEqual(conjugation, present_subjective_tense)
+                conjugation = fake.conjugate(Tenses.imperative_negative,person)
+                self.assertEqual(conjugation, present_subjective_tense)
             
     
     def test_reflexive_third_person(self):        
         for person in Persons.third_person:
             for ending in All_Infinitive_Endings:
                 fake = Verb(u'faket'+ending+'se',"a fake verb")
-                present_subjective_tense = fake.conjugate_tense(Tenses.present_subjective_tense)
-                conjugations = fake.conjugate_tense(Tenses.imperative_positive)
-                self.assertEqual(conjugations[person], accent_at(present_subjective_tense[person], 1)+Persons_Indirect[person])
-                conjugations = fake.conjugate_tense(Tenses.imperative_negative)
-                self.assertEqual(conjugations[person], accent_at(present_subjective_tense[person], 1)+Persons_Indirect[person])
+                present_subjective_tense = fake.conjugate(Tenses.present_subjective_tense,person)
+                conjugation = fake.conjugate(Tenses.imperative_positive,person)
+                self.assertEqual(conjugation, accent_at(present_subjective_tense, 3)+Persons_Indirect[person])
+                conjugation = fake.conjugate(Tenses.imperative_negative,person)
+                self.assertEqual(conjugation, accent_at(present_subjective_tense, 3)+Persons_Indirect[person])
                 
         

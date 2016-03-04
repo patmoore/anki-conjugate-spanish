@@ -2,9 +2,9 @@
 import unittest
 import inspect
 from conjugate_spanish import Tenses, Persons, Verb
-from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add
+from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add, Verb_Dictionary_load
 from conjugate_spanish.conjugation_override import Dependent_Standard_Overrides
-
+Verb_Dictionary_load()
 class TestStandardConjugationOverrides(unittest.TestCase):
     def test_gerund_override(self):
         ir = Verb_Dictionary_get(u'ir')
@@ -49,7 +49,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         test to see if a manual override defined as a json object will be correctly applied.
         Make sure for a manual override with None in a override position does not remove a previous override.
         """
-        oler = Verb_Dictionary_add(u'oler',"to hear","pres_sub_inf",None,'{"conjugation_stems":{"present_except_nosvos":"huel"}}')
+        oler = Verb(u'oler',"to hear",["pres_sub_inf","o:hue"])
         conjugations = oler.conjugate_all_tenses()
         self.assertEqual(conjugations[Tenses.present_tense][Persons.first_person_singular], u'huelo', "problems with loading manual overrides ")
         self.assertEqual(conjugations[Tenses.present_subjective_tense][Persons.first_person_plural], u'olamos', "problems with using predefined overrides with manual overrides")

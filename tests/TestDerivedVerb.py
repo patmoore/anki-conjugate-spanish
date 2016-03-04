@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import unittest
 from conjugate_spanish import Tenses, Persons, Verb
-from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add
+from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add, Verb_Dictionary_load
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect
 
 All_Infinitive_Endings= list(Infinitive_Endings)
 All_Infinitive_Endings.append(u'ír')
-
+Verb_Dictionary_load()
 #
 # complex tener based derivations
 #
@@ -72,11 +72,18 @@ class TestDerivedVerb(unittest.TestCase):
                 tail = faketenerse_1.conjugate(tense,person).split(' ')[1][4:]
                 self.assertEqual(tail, tener_conjugations[tense][person], tail+":tense="+Tenses[tense]+" person="+Persons[person])
                 
-        for tense in Tenses.Person_Agnostic:
-            tail = faketenerse.conjugate_tense(tense)[4:]
-            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+Tenses[tense])
-            tail = faketenerse_1.conjugate_tense(tense)[4:]
-            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+Tenses[tense])
+        tense = Tenses.gerund             
+        tail = faketenerse.conjugate(tense)
+        self.assertEqual(u'faketeniéndose', tail, tail+":tense="+Tenses[tense])
+        tail = faketenerse_1.conjugate(tense)
+        self.assertEqual(u'faketeniéndose', tail, tail+":tense="+Tenses[tense])
+        
+        tense = Tenses.past_participle             
+        tail = faketenerse.conjugate_tense(tense)[4:]
+        self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+Tenses[tense])
+        tail = faketenerse_1.conjugate_tense(tense)[4:]
+        self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+Tenses[tense])
+
             
     def test_tener_imperatives_non_reflexive(self):
         tener_conjugations = tener.conjugate_all_tenses()

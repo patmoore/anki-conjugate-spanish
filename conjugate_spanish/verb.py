@@ -306,6 +306,8 @@ class Verb():
             returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation, no_explicit_accent)                        
         elif self.reflexive and tense not in Tenses.Person_Agnostic:
             returned_conjugation = Persons_Indirect[person] +" "+ _conjugation
+        elif _reflexive and tense == Tenses.gerund:
+            returned_conjugation = self.__explicit_accent(_conjugation)+u'se'
         else:
             returned_conjugation = _conjugation
         return returned_conjugation

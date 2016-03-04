@@ -14,10 +14,9 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.is_phrase, is_phrase)
         if not is_phrase:
             if reflexive:
-                self.assertEqual(verb.inf_verb_string, stem+inf_ending+u'se')
+                self.assertEqual(verb.full_phrase, stem+inf_ending+u'se')
             else:
-                self.assertEqual(verb.inf_verb_string, stem+inf_ending)
-            self.assertEqual(verb.inf_verb_string, verb.full_phrase)
+                self.assertEqual(verb.full_phrase, stem+inf_ending)
         
     def test_self_reference(self):
         verb = Verb("faketer", "fake as always")
@@ -45,7 +44,7 @@ class TestBasic(unittest.TestCase):
         verb = Verb(u"abs-faketer-se"," fake definition")
         self.__check(verb, u"absfaket", u"er", prefix=u"abs", reflexive=True)
         self.assertEqual(verb.base_verb_str, u"faketer")
-        self.assertEqual(verb.inf_verb_string, u"absfaketerse")
+        self.assertEqual(verb.inf_verb_string, u"absfaketer")
         self.assertEqual(verb.full_phrase, u"absfaketerse")
         
     def test_phrase_parsing(self):

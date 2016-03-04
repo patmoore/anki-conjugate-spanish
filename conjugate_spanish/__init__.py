@@ -14,5 +14,3 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides',
     'Verb_Dictionary_get',
     'get_iterable',
     'make_list']
-
-Verb_Dictionary_load()
