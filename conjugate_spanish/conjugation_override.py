@@ -55,7 +55,7 @@ class ConjugationOverride():
             except ValueError as e:
                 print("while parsing json manual_overrides to verb_dictionary", repr(e))
                 print("manual_overrides="+manual_overrides)        
-        conjugation_override = ConjugationOverride(key=key+"_irregular",manual_overrides=manual_overrides) 
+        conjugation_override = ConjugationOverride(key=key,manual_overrides=manual_overrides) 
         return conjugation_override   
             
     def add_manual_overrides(self, manual_overrides):

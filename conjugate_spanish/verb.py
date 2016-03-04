@@ -636,10 +636,14 @@ class Verb():
                         self_overrides[tense][person].append(fn)                    
                     
     def overrides_applied(self):
-        return {u'applied' : self.appliedOverrides,
-            u'excluded': self.doNotApply,
-            u'base_verb': self.base_verb_str
-        }
+        result = {}
+        if self.appliedOverrides is not None and self.appliedOverrides != []:
+            result[u'applied']= self.appliedOverrides
+        if self.doNotApply is not None and self.doNotApply != []:
+            result[u'excluded'] = self.doNotApply
+        if self.base_verb_str is not None:
+            result[u'base_verb'] = self.base_verb_str
+        return result
         
     def __get_override(self, tense, person, attr_name):
         """
