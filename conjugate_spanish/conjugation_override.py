@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import six
+import json
 import re
 import inspect
 from standard_endings import Standard_Conjugation_Endings
@@ -45,7 +45,18 @@ class ConjugationOverride():
         else:
             self.auto_match = auto_match  
             
-        self.add_manual_overrides(manual_overrides)      
+        self.add_manual_overrides(manual_overrides)  
+        
+    @staticmethod
+    def create_from_json(key, json_string):
+        if json_string is not None and json_string != u'':
+            try:
+                manual_overrides = json.loads(json_string, 'utf-8')
+            except ValueError as e:
+                print("while parsing json manual_overrides to verb_dictionary", repr(e))
+                print("manual_overrides="+manual_overrides)        
+        conjugation_override = ConjugationOverride(key=key+"_irregular",manual_overrides=manual_overrides) 
+        return conjugation_override   
             
     def add_manual_overrides(self, manual_overrides):
         if manual_overrides is None:
