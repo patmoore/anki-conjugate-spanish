@@ -236,7 +236,8 @@ class Verb():
                             formatted = traceback.format_exception_only(traceback_,extype, ex)[-1]
                             message = "Trying to conjugate irregular:%s %s" % ex.message, formatted
                             self.__raise(message, tense, person, traceback_)
-                if self.reflexive:
+                _reflexive = pick(options,'reflexive_override',self.reflexive)
+                if _reflexive:
                     # needed in imperative to correctly add in the reflexive pronoun 
                     conjugation = self.__conjugation_imperative_reflexive(tense, person, conjugation)
             else:
@@ -268,12 +269,17 @@ class Verb():
         
         I would like to eliminate this code and go to a pure conjugation override model 
         """
-        base_verb_conjugation = self.root_verb.conjugate(tense, person)
+        # we never want the base verb to apply the reflexive pronoun - irregardless of reflexive_override
+        _options = dict(options)
+        _options['reflexive_override'] = False
+        base_verb_conjugation = self.root_verb.conjugate(tense, person, _options)
         if base_verb_conjugation is None:
             # imperative, third-person only verbs
             return None
         
-        no_explicit_accent = False
+        # done because of multiple layers of derivation.
+        _reflexive = pick(options,'reflexive_override', self.reflexive)
+        explicit_accent_already_applied = False
         single_vowel_match = _single_vowel_re.match(base_verb_conjugation)        
         
         if tense == Tenses.imperative_positive and person == Persons.second_person_singular:
@@ -290,8 +296,8 @@ class Verb():
             # TODO accenting ( obtén - for example )
             # reflexive verbs are going to get 'te' at the end, so no need for an accent.
             if single_vowel_match is not None:
-                no_explicit_accent = True
-                if not self.reflexive:
+                explicit_accent_already_applied = True
+                if not _reflexive:
                     _conjugation = self.full_prefix + accent_at(base_verb_conjugation, single_vowel_match.start(2))
                 else:
                     _conjugation = self.full_prefix + base_verb_conjugation                
@@ -303,8 +309,8 @@ class Verb():
             _conjugation = self.full_prefix + base_verb_conjugation
             
         if tense in Tenses.imperative:
-            returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation, no_explicit_accent)                        
-        elif self.reflexive and tense not in Tenses.Person_Agnostic:
+            returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation, explicit_accent_already_applied)                        
+        elif _reflexive and tense not in Tenses.Person_Agnostic:
             returned_conjugation = Persons_Indirect[person] +" "+ _conjugation
         elif _reflexive and tense == Tenses.gerund:
             returned_conjugation = self.__explicit_accent(_conjugation)+u'se'
@@ -490,11 +496,11 @@ class Verb():
         returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation)
         return returned_conjugation
     
-    def __apply_imperative_reflexive_pronoun(self, tense, person, conjugation, no_explicit_accent=False):
+    def __apply_imperative_reflexive_pronoun(self, tense, person, conjugation, explicit_accent_already_applied=False):
         # Step 3 - handle the placement of the indirect pronoun for reflexive verbs.  
         # The important issue here is the effect on the accent.      
         def handle_explicit_accent_():
-            if no_explicit_accent:
+            if explicit_accent_already_applied:
                 return conjugation
             else:
                 return self.__explicit_accent(conjugation)
