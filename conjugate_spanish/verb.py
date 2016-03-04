@@ -333,7 +333,7 @@ class Verb():
                     extype, ex, tb = sys.exc_info()
                     traceback.print_tb(tb)
                     formatted = traceback.format_exception(extype, ex, tb)[-1]
-                    message = "Trying to conjugate stem " % formatted
+                    message = "Trying to conjugate stem " + formatted
                     self.__raise(message, tense, person, tb)
             return current_conjugation_stem
         

@@ -45,32 +45,31 @@ def Verb_Dictionary_load():
         verbs = []
         Verb_Dictionary_By[fileNameBase] = verbs
         print("reading "+fileName)
-        csvfile = codecs.open(fileName, mode='r' )
-        reader = csv.DictReader(csvfile, skipinitialspace=True)
-        try:
-            for line in reader:
-                definition = {u'definition':u''}
-                for key,value in line.iteritems():
-                    _value = make_unicode(value)
-                    if _value != u'' and _value is not None:
-                        definition[make_unicode(key)] = _value 
-                try:
-                    verb = Verb_Dictionary_add(**definition)
-                    verbs.append(verb.full_phrase)
-                    print (verb.full_phrase)
-                except Exception as e:
-                    print("error reading "+fileName+": "+ repr(definition)+ repr(e))
-                    traceback.print_exc()            
-        except Exception as e:
-            print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
-            traceback.print_exc()
-        csvfile.close()
+        with codecs.open(fileName, mode='r' ) as csvfile:
+            reader = csv.DictReader(csvfile, skipinitialspace=True)
+            try:
+                for line in reader:
+                    definition = {u'definition':u''}
+                    for key,value in line.iteritems():
+                        _value = make_unicode(value)
+                        if _value != u'' and _value is not None:
+                            definition[make_unicode(key)] = _value 
+                    try:
+                        verb = Verb_Dictionary_add(**definition)
+                        verbs.append(verb.full_phrase)
+                        print (verb.full_phrase)
+                    except Exception as e:
+                        print("error reading "+fileName+": "+ repr(definition)+ repr(e))
+                        traceback.print_exc()            
+            except Exception as e:
+                print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
+                traceback.print_exc()
 
 def Verb_Dictionary_export(source):
-    f = open('./conjugate_spanish/expanded/'+source+"-expanded.csv","w")
-    for phrase in Verb_Dictionary_By[source]:
-        verb = Verb_Dictionary_get(phrase)   
-        print("conjugating>>"+verb.full_phrase)     
-        f.write(repr(verb.conjugate_all_tenses())+"\n")
+    with codecs.open('./conjugate_spanish/expanded/'+source+"-expanded.csv", "w", "utf-8-sig") as f:
+        for phrase in Verb_Dictionary_By[source]:
+            verb = Verb_Dictionary_get(phrase)   
+            print("conjugating>>"+verb.full_phrase)     
+            f.write(verb.full_phrase+u":"+repr(verb.overrides_applied())+u":"+repr(verb.conjugate_all_tenses())+u"\n")
     
     f.close()

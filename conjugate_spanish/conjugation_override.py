@@ -196,7 +196,8 @@ class ConjugationOverride():
                     if conjugation_override is not None:
                         verb._overrides(tense, conjugation_override, applies)
     
-__find_last_vowel_re = re.compile(u'^(.*)(['+AllVowels+'])([^'+AllVowels+']*)', re.UNICODE+re.IGNORECASE)
+# -guir must not pick up a trailing 'u'
+__find_last_vowel_re = re.compile(u'^(.*?)(['+AllVowels+'])([^'+AllVowels+']*u?)$', re.UNICODE+re.IGNORECASE)
 def __radical_stem_change(stem, vowel_change, vowels_to):
     # pick off last instance of the vowel.
     # for example:  'elegir' we need to change the last e to an i. 
@@ -342,8 +343,8 @@ Gir_CO = __make_std_override(inf_match=re.compile(u'gir$'),
     key="gir"
     )
 
-#TODO is it just -egir verbs or do we allow for consonents between the e and the -gir? 
-E_Gir_CO = __make_std_override(inf_match=re.compile(u'e[^aiou]*gir$'),
+#TODO just -egir verbs
+E_Gir_CO = __make_std_override(inf_match=re.compile(u'egir$'),
     parents="e:i",
     key=u"e_gir",
     examples=[u'elegir', u'corregir'],
