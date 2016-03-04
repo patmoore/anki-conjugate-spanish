@@ -506,10 +506,19 @@ Present_Subjective_Infinitive.is_match = six.create_bound_method(__check_radical
 #     overrides=lambda self, **kwargs: remove_accent(self.stem) + u'ír'
 #     )
 # Third person only conjugations
+
+def __block_conjugation(self, options, **kwargs):
+    force_conjugation = pick(options, 'force_conjugation', False)
+    if force_conjugation:
+        conjugation = self._conjugate_stem_and_endings(options=options, **kwargs)
+        return conjugation
+    else:
+        return None
+    
 Third_Person_Only_CO = __make_std_override(key='3rd_only', examples=[u'gustar'])
 for tense in Tenses.all_except(Tenses.Person_Agnostic):
-    Third_Person_Only_CO.override_tense(tense=tense, overrides=lambda self, **kwargs: None, persons=Persons.all_except(Persons.third_person), documentation="third person only verbs don't conjugate for any other person")
+    Third_Person_Only_CO.override_tense(tense=tense, overrides=__block_conjugation, persons=Persons.all_except(Persons.third_person), documentation="third person only verbs don't conjugate for any other person")
 
 Third_Person_Singular_Only_CO = __make_std_override(key='3rd_sing_only', examples=[u'helar'])
 for tense in Tenses.all_except(Tenses.Person_Agnostic):
-    Third_Person_Singular_Only_CO.override_tense(tense=tense, overrides=lambda self, **kwargs: None, persons=Persons.all_except(Persons.third_person_singular), documentation="third person singular only verbs don't conjugate for any other person (weather)")
+    Third_Person_Singular_Only_CO.override_tense(tense=tense, overrides=__block_conjugation, persons=Persons.all_except(Persons.third_person_singular), documentation="third person singular only verbs don't conjugate for any other person (weather)")

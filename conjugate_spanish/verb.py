@@ -209,15 +209,18 @@ class Verb():
             results = [ self.conjugate(tense=tense, person=person) for person in Persons.all ]
         return results
             
-    def conjugate(self, tense, person):
+    def conjugate(self, tense, person=None, options={}):
         """
+        :param person: usually must be set but can be None if tense in Tenses.Person_Agnostic
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
-        """        
+        """                
         if tense in Tenses.imperative and person == Persons.first_person_singular:
-            return None
+            return None        
+        if tense not in Tenses.Person_Agnostic and person not in Persons.all:
+            self.__raise("Tense "+Tenses[tense]+" needs a person", tense, person)
         if self.base_verb is not None:            
-            conjugation = self.__derived_conjugation(tense, person)
-        else:
+            conjugation = self.__derived_conjugation(tense, person, options)
+        else:            
             conjugation_overrides = self.__get_override(tense, person, 'conjugations')
             
             if conjugation_overrides is not None:
@@ -225,7 +228,7 @@ class Verb():
                     if isinstance(conjugation_override, six.string_types):
                         conjugation = conjugation_override
                     elif conjugation_override is not None:
-                        override_call = { 'tense': tense, 'person': person }
+                        override_call = { 'tense': tense, 'person': person, "options":options }
                         try:
                             conjugation = conjugation_override(**override_call)
                         except Exception as e:
@@ -236,16 +239,24 @@ class Verb():
                 if self.reflexive:
                     # needed in imperative to correctly add in the reflexive pronoun 
                     conjugation = self.__conjugation_imperative_reflexive(tense, person, conjugation)
-            elif tense not in Tenses.imperative:
-                current_conjugation_ending = self.conjugate_ending(tense, person)
-                conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
             else:
-                conjugation = self.__conjugation_imperative(tense, person)
+                conjugation = self._conjugate_stem_and_endings(tense, person, options)
             
         _check_for_multiple_accents(conjugation)
         return conjugation
     
-    def __derived_conjugation(self, tense, person):
+    def _conjugate_stem_and_endings(self,tense, person,options):
+        """
+        exists so that third person verbs can decide to conjugate normally for present subjective and past subjective
+        """
+        if tense not in Tenses.imperative:
+            current_conjugation_ending = self.conjugate_ending(tense, person)
+            conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
+        else:
+            conjugation = self.__conjugation_imperative(tense, person)
+        return conjugation
+        
+    def __derived_conjugation(self, tense, person, options):
         """ This verb is based on another verb: example: abstenerse is based on tener
         these base verbs are not allowed to be reflexive verbs (I haven't found any examples yet where this is an issue)
         
@@ -521,12 +532,9 @@ class Verb():
         return returned_conjugation
              
     def __conjugation_present_subjective_stem(self, tense, person):
-        first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular)
-        if first_person_conjugation is None:
-            # for example some verbs only are third person only
-            current_conjugation_ending = self.conjugate_ending(Tenses.present_tense, Persons.third_person_singular)
-            conjugation_stem = self.conjugate_stem(Tenses.present_tense, Persons.third_person_singular, current_conjugation_ending)
-        elif first_person_conjugation[-1:] ==u'o':
+        options = { 'force_conjugation': True }
+        first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
+        if first_person_conjugation[-1:] ==u'o':
             conjugation_stem = first_person_conjugation[:-1]            
         elif first_person_conjugation[-2:] == u'oy':
             # estoy, doy, voy, etc.
@@ -541,7 +549,8 @@ class Verb():
         """
         in First person plural, accent if third person plural ends in a vowel after dropping -ron        
         """
-        third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural)
+        options = { 'force_conjugation': True }
+        third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options)
         if third_person_plural_conjugation[-3:] == u'ron':
             conjugation_stem = third_person_plural_conjugation[:-3]
             if person == Persons.first_person_plural:

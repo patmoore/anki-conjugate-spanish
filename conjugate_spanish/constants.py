@@ -123,6 +123,12 @@ def make_unicode(inputStr):
     else:
         return inputStr
     
+def pick(dictionary, key, default_value):
+    if dictionary is not None and key in dictionary and dictionary[key] is not None:
+        return dictionary[key]
+    else:
+        return default_value
+
 ## for convenience with creating strings
 Vowels = u'aeiou'
 AccentedVowels = u'áéíóú'
