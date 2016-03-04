@@ -130,10 +130,9 @@ def pick(dictionary, key, default_value):
         return default_value
 
 ## for convenience with creating strings
-Vowels = u'aeiou'
+Vowels = u'aeiouü'
 AccentedVowels = u'áéíóú'
 AllVowels = Vowels+AccentedVowels
-CombiningAccent = u'\u0301'
 def accent_at(string_, index_=None):
     """
     allow the vowel to already be accented
