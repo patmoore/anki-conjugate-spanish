@@ -135,6 +135,9 @@ AccentedVowels = u'áéíóú'
 AllVowels = Vowels+AccentedVowels
 CombiningAccent = u'\u0301'
 def accent_at(string_, index_=None):
+    """
+    allow the vowel to already be accented
+    """
     if index_ is None:
         index_ = len(string_)-1
     

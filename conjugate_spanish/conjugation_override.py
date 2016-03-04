@@ -384,10 +384,11 @@ for co in [ Cer_After_Const_CO, Cir_After_Const_CO ]:
 
 I2Y_PastTense_CO = __make_std_override(
     key=u'i2y',
-    documentation="uir verbs and eer verbs (triple vowels)"
+    documentation="uir verbs, -aer, -eer, -oír, and -oer verbs: past tense (accented i, third person i->y) (triple vowels) http://www.studyspanish.com/verbs/lessons/pretortho.htm"
 )
-I2Y_PastTense_CO.override_tense_ending(Tenses.past_tense, u'yó', Persons.third_person_singular)
-I2Y_PastTense_CO.override_tense_ending(Tenses.past_tense, u'yeron', Persons.third_person_plural)
+I2Y_PastTense_CO.override_tense_ending(Tenses.past_tense, lambda self, ending, **kwargs: accent_at(ending, 0), Persons.all_except(Persons.third_person))
+I2Y_PastTense_CO.override_tense_ending(Tenses.past_tense, lambda self, ending, **kwargs: u'y' + ending[1:], Persons.third_person,
+    documentation=u"change i to y")
     
 Uir_CO = __make_std_override(inf_match=re.compile(six.u('[^qg]uir$'), re.IGNORECASE+re.UNICODE),
     parents=I2Y_PastTense_CO,
@@ -433,14 +434,14 @@ Ei_r_CO = __make_std_override(inf_match=re.compile(u'eir$'),
     parents=Eir_CO,
     key=u'eir',
     documentation=u"eir ending usually has accent i but just in case, but separate than the 'correct' case")
-
-Eer_CO = __make_std_override(inf_match=re.compile(u'eer$'),
-    # the i2y pattern that can be automatically assigned to eer verbs
-    key=u"eer",
-    parents=[I2Y_PastTense_CO],
-    documentation=u"eer verbs",
-    examples = [u'creer']
-    )
+# -aer, -eer, -oír, and -oer
+for suffix in [ u'aer', u'eer', u'oír', u'oer'] :
+    co = __make_std_override(inf_match=re.compile(suffix+u'$'),
+        # the i2y pattern that can be automatically assigned to eer verbs
+        key=suffix,
+        parents=[I2Y_PastTense_CO],
+        documentation=suffix+u" verbs"
+        )
 
 """
 http://www.spanish411.net/Spanish-Preterite-Tense.asp
@@ -478,6 +479,8 @@ Guar_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _
 #>>>>>>> TODO: check to see of all -go verbs use just stem in imperative 2nd person, salir, tener,poner
 Go_CO = __make_std_override(key=u'go', documentation="go verbs")
 Go_CO.override_tense_ending(Tenses.present_tense, u"go", Persons.first_person_singular, documentation="go verb")
+IGo_CO = __make_std_override(key=u'igo', documentation="go verbs", examples=[u'caer'])
+IGo_CO.override_tense_ending(Tenses.present_tense, u"igo", Persons.first_person_singular, documentation="igo verb")
 
 Oy_CO = __make_std_override(key=u'oy', documentation="oy verbs")
 Oy_CO.override_tense_ending(Tenses.present_tense, u"oy", Persons.first_person_singular, documentation="oy verb")
