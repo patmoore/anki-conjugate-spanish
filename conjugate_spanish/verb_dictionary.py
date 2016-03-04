@@ -6,6 +6,7 @@ import traceback
 import csv
 import six
 from verb import Verb
+from constants import *
 
 from constants import make_unicode
 from conjugation_override import ConjugationOverride
@@ -67,9 +68,17 @@ def Verb_Dictionary_load():
 
 def Verb_Dictionary_export(source):
     with codecs.open('./conjugate_spanish/expanded/'+source+"-expanded.csv", "w", "utf-8-sig") as f:
+        f.write("full_phrase,appliedOverrides,doNotApply,base_verb,")
+        for tense in Tenses.all:
+            if tense in Tenses.Person_Agnostic:
+                f.write(Tenses[tense]+",")
+            else:
+                for person in Persons.all:
+                    f.write(Tenses[tense]+"_"+Persons[person]+",")
         for phrase in Verb_Dictionary_By[source]:
             verb = Verb_Dictionary_get(phrase)   
             print("conjugating>>"+verb.full_phrase)     
-            f.write(verb.full_phrase+u":"+repr(verb.overrides_applied())+u":"+repr(verb.conjugate_all_tenses())+u"\n")
+            f.write(verb.print_csv())
+            f.write("\n")
     
     f.close()

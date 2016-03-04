@@ -164,6 +164,30 @@ class Verb():
                                  
                     print()
 
+    def print_csv(self):
+        result = u'"'+self.full_phrase+u'",'
+        if len(self.appliedOverrides) > 0:
+            result+=u'"'+repr(self.appliedOverrides)+u'"'
+        result +=u','
+        if len(self.doNotApply) > 0:
+            result +=u'"'+repr(self.doNotApply)+u'"'
+        result +=u','
+        if self.base_verb_str is not None:
+            result += u'"'+self.base_verb_str+u'"'
+        
+        for tense in Tenses.all:
+            if tense in Tenses.Person_Agnostic:
+                conjugation = self.conjugate(tense)
+                result += u',"'+conjugation+u'"'
+            else:
+                for person in Persons.all:
+                    conjugation = self.conjugate(tense, person)
+                    if conjugation is None:
+                        result += u','
+                    else:
+                        result += u',"'+conjugation+u'"'
+        return result
+    
     def conjugate_irregular_tenses(self):        
         """
         Look for just the tenses and persons that are different than than completely regular conjugation rules
