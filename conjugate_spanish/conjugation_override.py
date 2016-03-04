@@ -48,7 +48,7 @@ class ConjugationOverride():
         self.add_manual_overrides(manual_overrides)  
         
     @staticmethod
-    def create_from_json(key, json_string):
+    def create_from_json(json_string, key=None):
         if json_string is not None and json_string != u'':
             try:
                 manual_overrides = json.loads(json_string, 'utf-8')

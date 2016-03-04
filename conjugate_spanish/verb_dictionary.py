@@ -20,7 +20,7 @@ def Verb_Dictionary_add(phrase, definition, conjugation_overrides=None,base_verb
         conjugation_overrides = conjugation_overrides.split(",")
             
     if manual_overrides is not None and manual_overrides != u'':        
-        conjugation_override = ConjugationOverride.create_from_json(phrase+"_irregular",manual_overrides)
+        conjugation_override = ConjugationOverride.create_from_json(manual_overrides, key=phrase+"_irregular")
     
         if conjugation_overrides is None:
             conjugation_overrides = [conjugation_override]
