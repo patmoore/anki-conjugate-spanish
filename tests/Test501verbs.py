@@ -9,7 +9,7 @@ def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     # csv.py doesn't do Unicode; encode temporarily as UTF-8:
     csv_reader = csv.DictReader(utf_8_encoder(unicode_csv_data),
                             dialect=dialect, **kwargs)
-#     return csv_reader
+
     for row in csv_reader:
         line = {}
         for key,value in row.iteritems():
@@ -24,29 +24,39 @@ def utf_8_encoder(unicode_csv_data):
         yield encoded
         
 class Test501verbs(unittest.TestCase):
-    def __check(self, verb, stem, inf_ending, prefix_words=u"", prefix=u"", reflexive=False, suffix_words=u"", is_phrase=False):
-        self.assertEqual(verb.prefix_words, prefix_words)
-        self.assertEqual(verb.prefix, prefix)
-        self.assertEqual(verb.stem, stem)
-        self.assertEqual(verb.inf_ending, inf_ending)
-        self.assertEqual(verb.reflexive, reflexive)
-        self.assertEqual(verb.suffix_words, suffix_words)
-        self.assertEqual(verb.is_phrase, is_phrase)
-        if not is_phrase:
-            if reflexive:
-                self.assertEqual(verb.full_phrase, stem+inf_ending+u'se')
+    def __check(self, verb_string, expected):
+        verb = Verb_Dictionary_get(verb_string)
+        errors = {}
+        for tense in [Tenses.past_tense]:
+            if tense in Tenses.Person_Agnostic:
+                key = Tenses[tense]
+                expected_conjugation = expected[key] if expected[key] != u'' else None
+                conjugation = verb.conjugate(tense)
+                if expected_conjugation != conjugation:
+                    errors[key] = {'expected':expected_conjugation, 'actual':conjugation}
             else:
-                self.assertEqual(verb.full_phrase, stem+inf_ending)
+                for person in [Persons.third_person_plural]:# Persons.all:
+                    key = Tenses[tense]+u'_'+Persons[person]
+                    expected_conjugation = expected[key] if expected[key] != u'' else None
+                    conjugation = verb.conjugate(tense,person)
+                    if expected_conjugation != conjugation:
+                        errors[key] = {'expected':expected_conjugation, 'actual':conjugation}
+        if len(errors) > 0:
+            self.assertFalse(True, verb.full_phrase+repr(errors))
         
-    def test_all_verbs(self):
+    def test_a_verb(self):
         source=u'501verbs'
-        with codecs.open('./conjugate_spanish/expanded/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
+        verb = u'traer'
+        with codecs.open('./tests/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
             reader = unicode_csv_reader(csvfile, skipinitialspace=True)
-            for line in reader:
-                verb = Verb_Dictionary_get(line['full_phrase'])
-                for tense in Tenses.all_except(Tenses.Person_Agnostic):
-                    for person in Persons.all:
-                        key = Tenses[tense]+u'_'+Persons[person]
-                        expected = line[key] if line[key] != u'' else None
-                        conjugation = verb.conjugate(tense,person)
-                        self.assertEqual(conjugation, expected)
+            for expected in reader:
+                if expected['full_phrase'] == verb:
+                    self.__check(expected['full_phrase'], expected)
+                    break
+                
+#     def test_all_verbs(self):
+#         source=u'501verbs'
+#         with codecs.open('./tests/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
+#             reader = unicode_csv_reader(csvfile, skipinitialspace=True)
+#             for expected in reader:
+#                 self.__check(expected['full_phrase'], expected)
