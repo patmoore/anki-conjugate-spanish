@@ -428,7 +428,11 @@ class Verb():
         if overrides is not None:
             for override in get_iterable(overrides):
                 [current_conjugation_stem, current_conjugation_ending]  = __check_override(override, current_conjugation_stem, current_conjugation_ending)
-                
+                if not isinstance(current_conjugation_stem, six.string_types):
+                    self.__raise("stem is not string", tense, person)
+                if not isinstance(current_conjugation_ending, six.string_types):
+                    self.__raise("ending is not string", tense, person) 
+ 
         return current_conjugation_stem+current_conjugation_ending
     
     def __explicit_accent(self, conjugation_string):

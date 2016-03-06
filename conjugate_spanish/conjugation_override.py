@@ -480,15 +480,15 @@ for co in [ Cer_After_Const_CO, Cir_After_Const_CO ]:
 # ========================================================================
 # http://www.studyspanish.com/verbs/lessons/pretortho.htm
 
-def __i2y1_check(self, stem, ending, **kwargs):
+def __i2y_past_3rd_i_check(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_VOWEL,
         STARTS_WITH_I, ending_beginning_replacement=u'y')
     if result[0] == stem and result[1] == ending:
         # if no change remore the i in the ending (traer)
-        result = _check_and_change(stem, ending, ending_re=STARTS_WITH_I)
+        result = _check_and_change(stem, ending, ending_re=STARTS_WITH_I,ending_beginning_replacement=u'')
     return result
 
-def __i2y2_check(self, stem, ending, **kwargs):
+def __i2y_past_accent_i_check(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_VOWEL,
         STARTS_WITH_I, ending_beginning_replacement=u'í')
     return result
@@ -501,8 +501,8 @@ I2Y_PastTense_CO = __make_std_override(
     IF the stem has been changed to a non-vowel ( traer ) then the i is dropped in third person\
     (triple vowels) http://www.studyspanish.com/verbs/lessons/pretortho.htm"
 )
-I2Y_PastTense_CO.override_tense_join(Tenses.past_tense, __i2y1_check, Persons.third_person, documentation=u"change i to y")
-I2Y_PastTense_CO.override_tense_join(Tenses.past_tense, __i2y2_check, Persons.all_except(Persons.third_person),
+I2Y_PastTense_CO.override_tense_join(Tenses.past_tense, __i2y_past_3rd_i_check, Persons.third_person, documentation=u"change i to y or remove i if stem doesn't end in vowel")
+I2Y_PastTense_CO.override_tense_join(Tenses.past_tense, __i2y_past_accent_i_check, Persons.all_except(Persons.third_person),
     documentation=u"change i to accented i")
     
 def _uir_present_check(self, stem, ending, **kwargs):
@@ -570,13 +570,18 @@ for suffix in [ u'aer', u'eer', u'oír', u'oer'] :
 http://www.spanish411.net/Spanish-Preterite-Tense.asp
 "-ñir" or "-llir" use "-ó" and "-eron" endings instead of "-ió" and "-ieron" because they already have a "y" sound in their stems:
 """
+ENDS_WITH_LL_N = re.compile("u'^(.*)(ll|ñ)", re.UNICODE+re.IGNORECASE)
+def _ll_n_check(self, stem, ending, ending_beginning_replacement=u'', **kwargs):
+    # remove the i if ends in ñ or ll (sound preservation)
+    result = _check_and_change(stem, ending, ENDS_WITH_LL_N, STARTS_WITH_I, ending_beginning_replacement=ending_beginning_replacement)
+    return result
 LL_N_CO = __make_std_override(inf_match=re.compile(u'(ll|ñ)[eií]r$'),
     key=u"ll_ñ",
     examples=[u'tañer', u'reñir'],
     documentation=u"If the stem of -er or -ir verbs ends in ll or ñ, -iendo changes to -endo. (Since ll and ñ already have an i sound in them, it is not necessary to add it to the gerund ending.)")
-LL_N_CO.override_tense_ending(Tenses.gerund, lambda self, ending, **kwargs: _replace_first_letter_of_ending(ending, 'i'))
-LL_N_CO.override_tense_ending(Tenses.past_tense, u'ó', Persons.third_person_singular, documentation="Note that this o is accented (other std overrides use an unaccented o")
-LL_N_CO.override_tense_ending(Tenses.past_tense, u'eron', Persons.third_person_plural, documentation="Note that this o is accented (other std overrides use an unaccented o")
+LL_N_CO.override_tense_ending(Tenses.gerund, _ll_n_check)
+LL_N_CO.override_tense_join(Tenses.past_tense, lambda self, stem, ending, **kwargs: _ll_n_check(self, stem, ending, ending_beginning_replacement=u'ó', **kwargs), Persons.third_person_singular, documentation="Note that this o is accented (other std overrides use an unaccented o")
+LL_N_CO.override_tense_join(Tenses.past_tense, _ll_n_check, Persons.third_person_plural, documentation="Note that this o is accented (other std overrides use an unaccented o")
 
 Iar_CO = __make_std_override(inf_match=re.compile(u'iar$', re.IGNORECASE+re.UNICODE),
     auto_match=False,
