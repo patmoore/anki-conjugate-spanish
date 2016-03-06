@@ -344,13 +344,14 @@ UniversalAccentFix.override_tense_join(Tenses.all, _universal_accent_correction,
 STARTS_WITH_E=re.compile(u'^([eé])(.*)$', re.UNICODE+re.IGNORECASE)
 STARTS_WITH_I=re.compile(u'^([ii])(.*)$', re.UNICODE+re.IGNORECASE)
 STARTS_WITH_O=re.compile(u'^([oó])(.*)$', re.UNICODE+re.IGNORECASE)
+ENDS_WITH_G = re.compile(u'^(.*)(g)$', re.UNICODE+re.IGNORECASE)
 ENDS_WITH_U=re.compile(u'^(.*[uúü])()$', re.IGNORECASE+re.UNICODE)
 ENDS_WITH_C = re.compile(u'^(.*)(c)$')
 ENDS_WITH_VOWEL = re.compile(u'^(.*?['+AllVowels+u'])()$', re.IGNORECASE+re.UNICODE)
 STARTS_WITH_NON_I_VOWEL=re.compile(u'^()([oe].*)$', re.IGNORECASE+re.UNICODE)
 def _check_and_change(stem, ending,
     stem_re=re.compile(u"^(.*)()$", re.UNICODE+re.IGNORECASE), ending_re=re.compile(u'^()(.*)$', re.UNICODE+re.IGNORECASE), 
-    stem_ending_replacement=u'', ending_beginning_replacement=u''):
+    stem_ending_replacement=None, ending_beginning_replacement=None):
     """
     replaces the stem ending or the ending beginning  if the stem_re.group(2) != u'' and ending_re.group(1) != u''
     otherwise return [stem, ending]
@@ -361,15 +362,14 @@ def _check_and_change(stem, ending,
     """
     stem_match = stem_re.match(stem)    
     ending_match = ending_re.match(ending)
+    result = [stem,ending]
         
     if stem_match is not None and ending_match is not None:
-        if stem_ending_replacement == u'.':
-            stem_ending_replacement = stem_match.group(2)
-        if ending_beginning_replacement == u'.':
-            ending_beginning_replacement = stem_match.group(1)
-        result = [stem_match.group(1)+stem_ending_replacement, ending_beginning_replacement+ending_match.group(2)] 
-    else:
-        result = [stem,ending]
+        if stem_ending_replacement is not None:
+            result[0] = stem_match.group(1)+stem_ending_replacement
+            
+        if ending_beginning_replacement is not None:
+            result[1] = ending_beginning_replacement+ending_match.group(2) 
     return result
 """
 ==================================================
@@ -385,7 +385,7 @@ Yendo_Gerund_CO.override_tense_ending(Tenses.gerund, u'yendo')
 Standard_Overrides[Yendo_Gerund_CO.key] = Yendo_Gerund_CO
 
 def _zar_check(self, stem, ending, **kwargs):
-    result = _check_and_change(stem, ending, re.compile(u'^(.*)(z)'),STARTS_WITH_E,u'c')
+    result = _check_and_change(stem, ending, re.compile(u'^(.*)(z)$'),STARTS_WITH_E,u'c')
     return result
 
 Zar_CO = __make_std_override(inf_match=re.compile(u'zar$'), 
@@ -397,7 +397,7 @@ Zar_CO.override_tense_join(Tenses.past_tense, _zar_check, Persons.first_person_s
 Zar_CO.override_tense_join(Tenses.present_subjective_tense, _zar_check)
 
 def _gar_check(self, stem, ending, **kwargs):
-    result = _check_and_change(stem, ending, re.compile(u'^(.*)(g)'),STARTS_WITH_E,u'gu')
+    result = _check_and_change(stem, ending, ENDS_WITH_G,STARTS_WITH_E,u'gu')
     return result
     
 Gar_CO = __make_std_override(inf_match=re.compile(u'gar$'),
@@ -411,7 +411,7 @@ Gar_CO.override_tense_join(Tenses.present_subjective_tense, _gar_check)
 #
 # -ger, -gir verbs change g-> j
 def _geir_check(self, stem, ending, **kwargs):
-    result = _check_and_change(stem, ending, re.compile(u'^(.*)(g)'),STARTS_WITH_O,u'j')
+    result = _check_and_change(stem, ending, ENDS_WITH_G,STARTS_WITH_O,u'j')
     return result
     
 Ger_CO = __make_std_override(inf_match=re.compile(u'ger$'),
@@ -435,7 +435,7 @@ E_Gir_CO = __make_std_override(inf_match=re.compile(u'egir$'),
 
 # ========================================================================
 def _car_check(self, stem, ending, **kwargs):
-    result = _check_and_change(stem, ending, ENDS_WITH_C,STARTS_WITH_E,u'qu', u'.')
+    result = _check_and_change(stem, ending, ENDS_WITH_C,STARTS_WITH_E,u'qu')
     return result
 
 Car_CO = __make_std_override(inf_match=re.compile(six.u('car$')), 
@@ -449,7 +449,7 @@ Car_CO.override_tense_join(Tenses.present_subjective_tense, _car_check)
 # ========================================================================
 # http://www.intro2spanish.com/verbs/listas/master-zco.htm
 def _v_ceir_check(self, stem, ending, **kwargs):
-    result = _check_and_change(stem, ending, re.compile(u'^(.*)(c)'),STARTS_WITH_O,u'zc')
+    result = _check_and_change(stem, ending, ENDS_WITH_C,STARTS_WITH_O,u'zc')
     return result    
 Cer_After_Vowel_CO = __make_std_override(inf_match=re.compile(u'['+AllVowels+u']cer$'),
     key='v_cer',
@@ -463,7 +463,7 @@ for co in [ Cer_After_Vowel_CO, Cir_After_Vowel_CO]:
     co.override_tense_join(Tenses.present_tense, _v_ceir_check, Persons.first_person_singular)
 
 def _c_ceir_check(self, stem, ending, **kwargs):
-    result = _check_and_change(stem, ending, re.compile(u'^(.*)(c)'),STARTS_WITH_O,u'z')
+    result = _check_and_change(stem, ending, ENDS_WITH_C,STARTS_WITH_O,u'z')
     return result    
 Cer_After_Const_CO = __make_std_override(inf_match=re.compile(u'[^'+AllVowels+u']cer$'),
     key='c_cer',
