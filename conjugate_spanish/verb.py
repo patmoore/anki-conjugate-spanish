@@ -7,7 +7,6 @@ from __future__ import print_function
 import inspect
 import sys
 from conjugation_override import *
-from conjugation_override import _replace_last_letter_of_stem
 from constants import *
 import traceback
 
@@ -16,7 +15,6 @@ import traceback
 from standard_endings import Standard_Conjugation_Endings
 
 _ending_vowel_check = re.compile(u'['+Vowels+u']$', re.IGNORECASE+re.UNICODE)
-_accented_vowel_check = re.compile(u'['+AccentedVowels+u']', re.IGNORECASE+re.UNICODE)
 # check for word with only a single vowel ( used in imperative conjugation )
 _single_vowel_re = re.compile(u'^([^'+AllVowels+u']*)(['+AllVowels+u'])([^'+AllVowels+u']*)$', re.IGNORECASE+re.UNICODE)
 #
@@ -41,7 +39,7 @@ def _check_for_multiple_accents(conjugation):
     Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
     """
     if conjugation is not None:
-        accented = _accented_vowel_check.findall(conjugation)
+        accented = accented_vowel_check.findall(conjugation)
         if len(accented) > 1:
             raise Exception("Too many accents in "+conjugation)
 
@@ -134,6 +132,8 @@ class Verb():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
                 self.process_conjugation_override(conjugation_override)
                 
+        self.process_conjugation_override(UniversalAccentFix)
+                
                 
     def print_all_tenses(self):
         conjugations= self.conjugate_all_tenses()
@@ -164,16 +164,15 @@ class Verb():
                                  
                     print()
 
-    def print_csv(self):
-        result = u'"'+self.full_phrase+u'",'
-        if len(self.appliedOverrides) > 0:
-            result+=u'"'+repr(self.appliedOverrides)+u'"'
-        result +=u','
-        if len(self.doNotApply) > 0:
-            result +=u'"'+repr(self.doNotApply)+u'"'
-        result +=u','
-        if self.base_verb_str is not None:
-            result += u'"'+self.base_verb_str+u'"'
+    def print_csv(self, full_info=True):
+        result = u'"'+self.full_phrase+u'"'
+        if full_info:
+            if len(self.appliedOverrides) > 0:
+                result+=u',"'+repr(self.appliedOverrides)+u'"'
+            if len(self.doNotApply) > 0:
+                result +=u',"'+repr(self.doNotApply)+u'"'
+            if self.base_verb_str is not None:
+                result += u',"'+self.base_verb_str+u'"'
         
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
@@ -275,8 +274,9 @@ class Verb():
         exists so that third person verbs can decide to conjugate normally for present subjective and past subjective
         """
         if tense not in Tenses.imperative:
-            current_conjugation_ending = self.conjugate_ending(tense, person)
-            conjugation = self.conjugate_stem(tense, person, current_conjugation_ending) + current_conjugation_ending
+            current_conjugation_ending = self.conjugate_ending(tense, person)            
+            current_conjugation_stem = self.conjugate_stem(tense, person, current_conjugation_ending)
+            conjugation = self.conjugation_joining(tense, person, current_conjugation_stem, current_conjugation_ending)
         else:
             conjugation = self.__conjugation_imperative(tense, person)
         return conjugation
@@ -327,8 +327,10 @@ class Verb():
                     _conjugation = self.full_prefix + base_verb_conjugation                
             else:
                 _conjugation = self.full_prefix + base_verb_conjugation
-        elif single_vowel_match is not None:
-            self.__raise("Single vowel case in tense", tense, person)
+#         elif single_vowel_match is not None:
+            # leave comment in so that i know this has been checked.
+            # traer and atraer -- this is fine : no accenting
+#             self.__raise("Single vowel case in tense", tense, person)
         else:
             _conjugation = self.full_prefix + base_verb_conjugation
             
@@ -342,26 +344,22 @@ class Verb():
             returned_conjugation = _conjugation
         return returned_conjugation
         
+        
     def conjugate_stem(self, tense, person, current_conjugation_ending):
-        """
-        :current_conjugation_ending - important because some rules only apply if the conjugation ending starts with an o or e
-        """         
-        def __check_override(stem_override, current_conjugation_stem):
-            if isinstance(stem_override, six.string_types):
-                current_conjugation_stem = stem_override
-            elif stem_override is not None:
+        def __check_override(override, current_conjugation_stem):
+            if isinstance(override, six.string_types):
+                current_conjugation_stem = override
+            elif override is not None:
                 override_call = { 'tense': tense, 'person': person, 'stem': current_conjugation_stem, 'ending' : current_conjugation_ending }
                 try:
-                    current_conjugation_stem = stem_override(**override_call)
+                    current_conjugation_stem = override(**override_call)
                 except Exception as e:
                     extype, ex, tb = sys.exc_info()
                     traceback.print_tb(tb)
                     formatted = traceback.format_exception(extype, ex, tb)[-1]
-                    message = "Trying to conjugate stem " + formatted
+                    message = "Trying to conjugate " + formatted
                     self.__raise(message, tense, person, tb)
             return current_conjugation_stem
-        
-
         if tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense]:
             current_conjugation_stem = self.stem
         elif tense in Tenses.Person_Agnostic:
@@ -374,28 +372,25 @@ class Verb():
             current_conjugation_stem = self.__conjugation_past_subjective_stem(tense, person)
         else:
             self.__raise(": Can't be handled", tense, person)
-        
-        stem_overrides = self.__get_override(tense, person, 'conjugation_stems')
-        for stem_override in get_iterable(stem_overrides):
-            current_conjugation_stem = __check_override(stem_override, current_conjugation_stem)
+            
+        overrides = self.__get_override(tense, person, 'conjugation_stems')
+        if overrides is not None:
+            for override in get_iterable(overrides):
+                current_conjugation_stem = __check_override(override, current_conjugation_stem)
         
         if current_conjugation_stem is None:
             self.__raise("no stem created", tense, person)
         
-        # if the ending has an accent then we remove the accent on the stem
-        if _accented_vowel_check.search(current_conjugation_stem) and _accented_vowel_check.search(current_conjugation_ending):
-            current_conjugation_stem = remove_accent(current_conjugation_stem)
-            
         return current_conjugation_stem
         
     def conjugate_ending(self, tense, person):
-        def __check_override(ending_override, current_conjugation_ending):
-            if isinstance(ending_override, six.string_types):
-                current_conjugation_ending = ending_override
-            else:
+        def __check_override(override, current_conjugation_ending):
+            if isinstance(override, six.string_types):
+                current_conjugation_ending = override
+            elif override:
                 override_call = { 'tense': tense, 'person': person, 'stem': self.stem, 'ending' : current_conjugation_ending }
                 try:
-                    current_conjugation_ending = ending_override(**override_call)
+                    current_conjugation_ending = override(**override_call)
                 except Exception as e:
                     extype, ex, traceback_ = sys.exc_info()
 #                         formatted = traceback_.format_exception_only(extype, ex)[-1]
@@ -408,13 +403,33 @@ class Verb():
         else:
             current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense][person]
             
-        ending_overrides = self.__get_override(tense, person, 'conjugation_endings')
-        if isinstance(ending_overrides, list):
-            for ending_override in ending_overrides:
-                current_conjugation_ending = __check_override(ending_override, current_conjugation_ending)
-        elif ending_overrides is not None:
-            current_conjugation_ending = __check_override(ending_overrides, current_conjugation_ending)
+        overrides = self.__get_override(tense, person, 'conjugation_endings')
+        if overrides is not None:
+            for override in get_iterable(overrides):
+                current_conjugation_ending = __check_override(override, current_conjugation_ending)
         return current_conjugation_ending
+    
+    def conjugation_joining(self, tense, person, current_conjugation_stem, current_conjugation_ending):
+        def __check_override(override, current_conjugation_stem, current_conjugation_ending):
+            if override is not None:
+                override_call = { 'tense': tense, 'person': person, 'stem': current_conjugation_stem, 'ending' : current_conjugation_ending }
+                try:
+                    results = override(**override_call)
+                except Exception as e:
+                    extype, ex, tb = sys.exc_info()
+                    traceback.print_tb(tb)
+                    formatted = traceback.format_exception(extype, ex, tb)[-1]
+                    message = "Trying to conjugate " + formatted
+                    self.__raise(message, tense, person, tb)
+            else:
+                results = [current_conjugation_stem, current_conjugation_ending]
+            return results
+        overrides = self.__get_override(tense, person, 'conjugation_joins')
+        if overrides is not None:
+            for override in get_iterable(overrides):
+                [current_conjugation_stem, current_conjugation_ending]  = __check_override(override, current_conjugation_stem, current_conjugation_ending)
+                
+        return current_conjugation_stem+current_conjugation_ending
     
     def __explicit_accent(self, conjugation_string):
         """
@@ -422,10 +437,13 @@ class Verb():
         The rules on accenting in spanish is the last vowel if the word ends in a consonent other than n or s
         Otherwise the second to last vowel.
         If the vowel to be accented is a strong-weak (au,ai,ei,... ) or a weak-strong pair (ua,ia, ... ) the strong vowel of the pair gets the accent
+        TODO: NOTE: an h between 2 vowels does not break the diphthong
+        https://en.wikipedia.org/wiki/Spanish_irregular_verbs
+        Remember that the presence of a silent h does not break a diphthong, so a written accent is needed anyway in rehúso.
         """
         _strong_vowel = [u'a', u'e', u'o']
         _weak_vowel = [u'i', u'u']
-        if _accented_vowel_check.search(conjugation_string):
+        if accented_vowel_check.search(conjugation_string):
             return conjugation_string
         else:            
             if conjugation_string[-1] in [u'n', u's'] or conjugation_string[-1] in _strong_vowel or conjugation_string[-1] in _weak_vowel:

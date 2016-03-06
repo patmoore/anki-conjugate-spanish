@@ -4,6 +4,9 @@ from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictiona
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect
 
 class TestBasic(unittest.TestCase):
+    """
+    Tests to make sure the parts of the verb are parsed out correctly
+    """
     def __check(self, verb, stem, inf_ending, prefix_words=u"", prefix=u"", reflexive=False, suffix_words=u"", is_phrase=False):
         self.assertEqual(verb.prefix_words, prefix_words)
         self.assertEqual(verb.prefix, prefix)

@@ -49,7 +49,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         test to see if a manual override defined as a json object will be correctly applied.
         Make sure for a manual override with None in a override position does not remove a previous override.
         """
-        oler = Verb(u'oler',"to hear",["pres_sub_inf","o:hue"])
+        oler = Verb(u'oler',"to hear",["pres_sub_inf","o:ue"])
         conjugations = oler.conjugate_all_tenses()
         self.assertEqual(conjugations[Tenses.present_tense][Persons.first_person_singular], u'huelo', "problems with loading manual overrides ")
         self.assertEqual(conjugations[Tenses.present_subjective_tense][Persons.first_person_plural], u'olamos', "problems with using predefined overrides with manual overrides")
@@ -59,8 +59,26 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         decir is a go verb which must override the default -cir behavior of changing c-> zc
         """
         decir = Verb("decir","to say, tell",["go","e:i","-v_cir",
-            ConjugationOverride.create_from_json(""u'{"conjugation_stems":{"past":"dij","future":"dir","conditional":"dir"},"conjugations":{"imperative positive":[null, "di"]}}')])
+            ConjugationOverride.create_from_json(""u'{"conjugation_stems":{"past":"dij","future":"dir","conditional":"dir"},"conjugations":{"imperative_positive_second":"di"}}')])
         conjugations = decir.conjugate_tense(Tenses.imperative_positive)
         self.assertEqual(conjugations[Persons.second_person_singular], u'di', "problems with loading manual overrides of imperative")
         self.assertEqual(conjugations[Persons.third_person_singular], u'diga', "problems with loading manual overrides of imperative")
         
+    def test_go_verb_rules(self):
+        """-go verbs:
+        in yo present:
+        ending stem-consonent -> 'g' +'o' (tener)
+        ending stem-vowel -> 'ig' + 'o' (asir)
+        ending stem-'c' -> change 'c'->'g' (hacer,decir)
+        """
+        fakir = Verb(u"fakir", "fake go 1","go")
+        conjugation = fakir.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        self.assertEqual(conjugation, u"fakgo")
+         
+        fair = Verb(u"fair", "fake go 1","go")
+        conjugation = fair.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        self.assertEqual(conjugation, u"faigo")
+        
+        facer = Verb(u"facer", "fake go 1","go")
+        conjugation = facer.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        self.assertEqual(conjugation, u"fago")

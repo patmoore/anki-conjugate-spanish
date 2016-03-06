@@ -67,14 +67,29 @@ def Verb_Dictionary_load():
                 traceback.print_exc()
 
 def Verb_Dictionary_export(source):
-    with codecs.open('./conjugate_spanish/expanded/'+source+"-expanded.csv", "w", "utf-8") as f:
-        f.write("full_phrase,appliedOverrides,doNotApply,base_verb,")
+    with codecs.open('./conjugate_spanish/expanded/'+source+"-verbs-only.csv", "w", "utf-8") as f:
+        f.write("full_phrase")
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
-                f.write(Tenses[tense]+",")
+                f.write(u','+Tenses[tense])
             else:
                 for person in Persons.all:
-                    f.write(Tenses[tense]+"_"+Persons[person]+",")
+                    f.write(u','+Tenses[tense]+"_"+Persons[person])
+        f.write(u'\n')
+        for phrase in Verb_Dictionary_By[source]:
+            verb = Verb_Dictionary_get(phrase)   
+            print("conjugating>>"+verb.full_phrase)     
+            f.write(verb.print_csv(False))
+            f.write("\n")
+
+    with codecs.open('./conjugate_spanish/expanded/'+source+"-expanded.csv", "w", "utf-8") as f:
+        f.write("full_phrase,appliedOverrides,doNotApply,base_verb")
+        for tense in Tenses.all:
+            if tense in Tenses.Person_Agnostic:
+                f.write(u','+Tenses[tense])
+            else:
+                for person in Persons.all:
+                    f.write(u','+Tenses[tense]+"_"+Persons[person])
         f.write(u'\n')
         for phrase in Verb_Dictionary_By[source]:
             verb = Verb_Dictionary_get(phrase)   
@@ -82,4 +97,3 @@ def Verb_Dictionary_export(source):
             f.write(verb.print_csv())
             f.write("\n")
     
-    f.close()

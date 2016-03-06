@@ -3,7 +3,8 @@ from conjugate_spanish import Tenses, Persons, Verb
 import codecs
 import csv
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add,Verb_Dictionary_load
-from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect
+from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect,\
+    get_iterable
 Verb_Dictionary_load()
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     # csv.py doesn't do Unicode; encode temporarily as UTF-8:
@@ -24,10 +25,10 @@ def utf_8_encoder(unicode_csv_data):
         yield encoded
         
 class Test501verbs(unittest.TestCase):
-    def __check(self, verb_string, expected):
+    def __check(self, verb_string, expected, tenses=Tenses.all, persons=Persons.all):
         verb = Verb_Dictionary_get(verb_string)
         errors = {}
-        for tense in [Tenses.past_tense]:
+        for tense in get_iterable(tenses):
             if tense in Tenses.Person_Agnostic:
                 key = Tenses[tense]
                 expected_conjugation = expected[key] if expected[key] != u'' else None
@@ -35,7 +36,7 @@ class Test501verbs(unittest.TestCase):
                 if expected_conjugation != conjugation:
                     errors[key] = {'expected':expected_conjugation, 'actual':conjugation}
             else:
-                for person in [Persons.third_person_plural]:# Persons.all:
+                for person in get_iterable(persons):
                     key = Tenses[tense]+u'_'+Persons[person]
                     expected_conjugation = expected[key] if expected[key] != u'' else None
                     conjugation = verb.conjugate(tense,person)
@@ -46,14 +47,14 @@ class Test501verbs(unittest.TestCase):
         
     def test_a_verb(self):
         source=u'501verbs'
-        verb = u'traer'
+        verb = u'abrazar'
         with codecs.open('./tests/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
             reader = unicode_csv_reader(csvfile, skipinitialspace=True)
             for expected in reader:
                 if expected['full_phrase'] == verb:
-                    self.__check(expected['full_phrase'], expected)
+                    self.__check(expected['full_phrase'], expected, Tenses.present_tense, Persons.first_person_singular)
                     break
-                
+#                 
 #     def test_all_verbs(self):
 #         source=u'501verbs'
 #         with codecs.open('./tests/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:

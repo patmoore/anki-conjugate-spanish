@@ -42,16 +42,16 @@ class Tenses_(list):
 # names also used in manually defined override files
 Tenses = Tenses_([
     u'present',
-    u'incomplete past',
+    u'incomplete_past',
     u'past',
     u'future',
     u'conditional',
-    u'present subjective',
-    u'past subjective',
-    u'imperative positive',
-    u'imperative negative',
+    u'present_subjective',
+    u'past_subjective',
+    u'imperative_positive',
+    u'imperative_negative',
     u'gerund',
-    u'past participle'
+    u'past_participle'
 ])
 
 class Persons_(list):
@@ -133,6 +133,7 @@ def pick(dictionary, key, default_value):
 Vowels = u'aeiouü'
 AccentedVowels = u'áéíóú'
 AllVowels = Vowels+AccentedVowels
+accented_vowel_check = re.compile(u'['+AccentedVowels+u']', re.IGNORECASE+re.UNICODE)
 def accent_at(string_, index_=None):
     """
     allow the vowel to already be accented
