@@ -570,7 +570,7 @@ for suffix in [ u'aer', u'eer', u'oír', u'oer'] :
 http://www.spanish411.net/Spanish-Preterite-Tense.asp
 "-ñir" or "-llir" use "-ó" and "-eron" endings instead of "-ió" and "-ieron" because they already have a "y" sound in their stems:
 """
-ENDS_WITH_LL_N = re.compile("u'^(.*)(ll|ñ)", re.UNICODE+re.IGNORECASE)
+ENDS_WITH_LL_N = re.compile(u"^(.*?)(ll|ñ)$", re.UNICODE+re.IGNORECASE)
 def _ll_n_check(self, stem, ending, ending_beginning_replacement=u'', **kwargs):
     # remove the i if ends in ñ or ll (sound preservation)
     result = _check_and_change(stem, ending, ENDS_WITH_LL_N, STARTS_WITH_I, ending_beginning_replacement=ending_beginning_replacement)
@@ -579,7 +579,7 @@ LL_N_CO = __make_std_override(inf_match=re.compile(u'(ll|ñ)[eií]r$'),
     key=u"ll_ñ",
     examples=[u'tañer', u'reñir'],
     documentation=u"If the stem of -er or -ir verbs ends in ll or ñ, -iendo changes to -endo. (Since ll and ñ already have an i sound in them, it is not necessary to add it to the gerund ending.)")
-LL_N_CO.override_tense_ending(Tenses.gerund, _ll_n_check)
+LL_N_CO.override_tense_join(Tenses.gerund, _ll_n_check)
 LL_N_CO.override_tense_join(Tenses.past_tense, lambda self, stem, ending, **kwargs: _ll_n_check(self, stem, ending, ending_beginning_replacement=u'ó', **kwargs), Persons.third_person_singular, documentation="Note that this o is accented (other std overrides use an unaccented o")
 LL_N_CO.override_tense_join(Tenses.past_tense, _ll_n_check, Persons.third_person_plural, documentation="Note that this o is accented (other std overrides use an unaccented o")
 

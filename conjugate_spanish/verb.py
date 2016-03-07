@@ -34,14 +34,6 @@ CORE_VERB = 3
 INF_ENDING = 4
 REFLEXIVE_ENDING = 5
 SUFFIX_WORDS = 6
-def _check_for_multiple_accents(conjugation):
-    """
-    Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
-    """
-    if conjugation is not None:
-        accented = accented_vowel_check.findall(conjugation)
-        if len(accented) > 1:
-            raise Exception("Too many accents in "+conjugation)
 
 class Verb():
     '''
@@ -266,7 +258,7 @@ class Verb():
             else:
                 conjugation = self._conjugate_stem_and_endings(tense, person, options)
             
-        _check_for_multiple_accents(conjugation)
+        self._check_for_multiple_accents(tense, person, conjugation)
         return conjugation
     
     def _conjugate_stem_and_endings(self,tense, person,options):
@@ -837,6 +829,14 @@ class Verb():
                     return True
         return False
     
+    def _check_for_multiple_accents(self, tense, person, conjugation):
+        """
+        Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
+        """
+        if conjugation is not None:
+            accented = accented_vowel_check.findall(conjugation)
+            if len(accented) > 1:
+                self.__raise("Too many accents in "+conjugation, tense, person)
     def __raise(self, msg, tense=None, person=None, traceback_=None):
-        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
+        msg_ = u"{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
         raise Exception, msg_, traceback_
