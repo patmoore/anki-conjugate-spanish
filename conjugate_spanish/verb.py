@@ -619,8 +619,10 @@ class Verb():
             if inspect.isfunction(override) or inspect.ismethod(override):
                 boundfunc = six.create_bound_method(override, self)
                 return boundfunc                
+            elif isinstance(override, six.string_types):
+                return override                        
             else:
-                return override                                   
+                self.__raise(u"Override must be function or string not"+type(override),tense)           
             
         if not hasattr(self, attr_name):
             self_overrides = [ None ] * len(Tenses)
@@ -629,16 +631,11 @@ class Verb():
             self_overrides = getattr(self, attr_name)
             
         if tense in Tenses.Person_Agnostic:
-            if inspect.isfunction(overrides):
-                self_overrides[tense] = [ __convert_to_self_function(overrides) ]
-            elif isinstance(overrides, six.string_types):
-                self_overrides[tense] = [ overrides ]
-            elif len(overrides) == 1:
-                self_overrides[tense] = overrides
-            elif len(overrides) ==0:
-                pass
+            override_ = __convert_to_self_function(overrides)
+            if isinstance(override_, six.string_types) or self_overrides[tense] is None:
+                self_overrides[tense] = [ override_ ]
             else:
-                self.__raise("Tense is person agnostic so only 1 override is allowed", tense)
+                self_overrides[tense].append(override_)
             return
         
         if persons is None:
@@ -648,7 +645,8 @@ class Verb():
         elif isinstance(persons, list):
             _persons = persons
         else:
-            self.__raise("persons must be None, integer or list of integers")
+            self.__raise("persons must be None, integer or list of integers", tense)
+            
         if self_overrides[tense] is None:
             self_overrides[tense] = [None] * len(Persons)
             

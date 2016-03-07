@@ -502,9 +502,11 @@ I2Y_PastTense_CO = __make_std_override(
     (triple vowels) http://www.studyspanish.com/verbs/lessons/pretortho.htm"
 )
 I2Y_PastTense_CO.override_tense_join(Tenses.past_tense, __i2y_past_3rd_i_check, Persons.third_person, documentation=u"change i to y or remove i if stem doesn't end in vowel")
-I2Y_PastTense_CO.override_tense_join(Tenses.past_tense, __i2y_past_accent_i_check, Persons.all_except(Persons.third_person),
+Accent_Yo_PastTense_CO = __make_std_override(key=u'accent_i_yo', 
+    documentation=u'-aer, -eer, -oír, and -oer verbs: past tense (accented i,for 1st,2nd persons) if stem still ends in a vowel'
+    )
+Accent_Yo_PastTense_CO.override_tense_join(Tenses.past_tense, __i2y_past_accent_i_check, Persons.all_except(Persons.third_person),
     documentation=u"change i to accented i")
-    
 def _uir_present_check(self, stem, ending, **kwargs):
     """
     insert a 'y' between stem (if it still ends in a u) and any ending that starts in a vowel that is not 'i'
@@ -562,7 +564,7 @@ for suffix in [ u'aer', u'eer', u'oír', u'oer'] :
     co = __make_std_override(inf_match=re.compile(suffix+u'$'),
         # the i2y pattern that can be automatically assigned to eer verbs
         key=suffix,
-        parents=[I2Y_PastTense_CO], 
+        parents=[I2Y_PastTense_CO, Accent_Yo_PastTense_CO], 
         documentation=suffix+u" verbs"
         )
 
