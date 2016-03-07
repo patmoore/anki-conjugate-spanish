@@ -43,21 +43,32 @@ class Test501verbs(unittest.TestCase):
                     if expected_conjugation != conjugation:
                         errors[key] = {'expected':expected_conjugation, 'actual':conjugation}
         if len(errors) > 0:
-            self.assertFalse(True, verb.full_phrase+repr(errors))
+            return errors
+           #  self.assertFalse(True, verb.full_phrase+repr(errors))
+        else:
+            return None
         
     def test_a_verb(self):
         source=u'501verbs'
-        verb = u'abrazar'
+        verb = u'bullir'
         with codecs.open('./tests/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
             reader = unicode_csv_reader(csvfile, skipinitialspace=True)
             for expected in reader:
                 if expected['full_phrase'] == verb:
-                    self.__check(expected['full_phrase'], expected, Tenses.present_tense, Persons.first_person_singular)
+                    errors = self.__check(expected['full_phrase'], expected, Tenses.past_tense, Persons.third_person_singular)
+                    if errors is not None:
+                        self.assertFalse(True, verb.full_phrase+repr(errors))
                     break
-#                 
-#     def test_all_verbs(self):
-#         source=u'501verbs'
-#         with codecs.open('./tests/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
-#             reader = unicode_csv_reader(csvfile, skipinitialspace=True)
-#             for expected in reader:
-#                 self.__check(expected['full_phrase'], expected)
+                 
+    def test_all_verbs(self):
+        source=u'501verbs'
+        verbs_errors = {}
+        with codecs.open('./tests/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
+            reader = unicode_csv_reader(csvfile, skipinitialspace=True)
+            for expected in reader:
+                errors = self.__check(expected['full_phrase'], expected)
+                if errors is not None:
+                    verbs_errors[expected['full_phrase']] = errors
+        if len(verbs_errors) > 0:
+            for full_phrase, errors in verbs_errors.iteritems():
+                print(full_phrase, repr(errors))
