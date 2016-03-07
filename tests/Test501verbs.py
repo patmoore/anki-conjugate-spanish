@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 from conjugate_spanish import Tenses, Persons, Verb
 import codecs

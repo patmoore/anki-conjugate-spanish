@@ -14,6 +14,7 @@ encoding//conjugate_spanish/special_cases/tener_definition.py=utf-8
 encoding//conjugate_spanish/standard_endings.py=utf-8
 encoding//conjugate_spanish/verb.py=utf-8
 encoding//conjugate_spanish/verb_dictionary.py=utf-8
+encoding//tests/Test501verbs.py=utf-8
 encoding//tests/TestDerivedVerb.py=utf-8
 encoding//tests/TestImperativeConjugation.py=utf-8
 encoding//tests/TestStandardConjugationOverrides.py=utf-8
