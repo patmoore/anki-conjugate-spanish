@@ -344,11 +344,16 @@ UniversalAccentFix.override_tense_join(Tenses.all, _universal_accent_correction,
 STARTS_WITH_E=re.compile(u'^([eé])(.*)$', re.UNICODE+re.IGNORECASE)
 STARTS_WITH_I=re.compile(u'^([ii])(.*)$', re.UNICODE+re.IGNORECASE)
 STARTS_WITH_O=re.compile(u'^([oó])(.*)$', re.UNICODE+re.IGNORECASE)
+ENDS_WITH_B = re.compile(u'^(.*)(b)$', re.UNICODE+re.IGNORECASE)
 ENDS_WITH_G = re.compile(u'^(.*)(g)$', re.UNICODE+re.IGNORECASE)
+ENDS_WITH_R = re.compile(u'^(.*)(r)$', re.UNICODE+re.IGNORECASE)
+ENDS_WITH_OR = re.compile(u'^(.*)(or)$', re.UNICODE+re.IGNORECASE)
+ENDS_WITH_OLV = re.compile(u'^(.*)(olv)$', re.UNICODE+re.IGNORECASE)
 ENDS_WITH_U=re.compile(u'^(.*[uúü])()$', re.IGNORECASE+re.UNICODE)
 ENDS_WITH_C = re.compile(u'^(.*)(c)$')
 ENDS_WITH_VOWEL = re.compile(u'^(.*?['+AllVowels+u'])()$', re.IGNORECASE+re.UNICODE)
 STARTS_WITH_NON_I_VOWEL=re.compile(u'^()([oe].*)$', re.IGNORECASE+re.UNICODE)
+REMOVE_ENDING =re.compile(u'^(.*)()$', re.IGNORECASE+re.UNICODE)
 def _check_and_change(stem, ending,
     stem_re=re.compile(u"^(.*)()$", re.UNICODE+re.IGNORECASE), ending_re=re.compile(u'^()(.*)$', re.UNICODE+re.IGNORECASE), 
     stem_ending_replacement=None, ending_beginning_replacement=None):
@@ -645,6 +650,53 @@ def __check_radical_stem_change_present_sub(self, verb):
         return False        
 Present_Subjective_Infinitive.is_match = six.create_bound_method(__check_radical_stem_change_present_sub, Present_Subjective_Infinitive)
 
+Past_Participle_To = __make_std_override(key=u'ppto')
+Past_Participle_To.override_tense_ending(Tenses.past_participle, u'to')
+def _olver_(self, stem, ending, **kwargs):
+    result = _check_and_change(stem, ending, ENDS_WITH_OLV,
+        stem_ending_replacement=u'uel')
+    return result
+Past_Participle_Olver = __make_std_override(key=u"pp_olver",
+    parents=[Past_Participle_To],
+    documentation=u"past participle that has a olver -to ending rather than the normal -ado, -ando",
+    examples=[u'absolver', u'resolver', u'volver'])
+Past_Participle_Olver.override_tense_join(Tenses.past_participle, _olver_)
+def _abrir_(self, stem, ending, **kwargs):
+    result = _check_and_change(stem, ending, ENDS_WITH_R,
+        stem_ending_replacement=u'ier')
+    return result
+Past_Participle_Rir = __make_std_override(key=u"pp_rir",
+    parents=[Past_Participle_To],
+    documentation=u"past participle that has a -rir -to ending rather than the normal -ado, -ando",
+    examples=[u'abrir', u'cubrir'])
+Past_Participle_Rir.override_tense_join(Tenses.past_participle, _abrir_)
+def _morir_(self, stem, ending, **kwargs):
+    result = _check_and_change(stem, ending, ENDS_WITH_OR,
+        stem_ending_replacement=u'uer')
+    return result
+Past_Participle_Orir = __make_std_override(key=u"pp_orir",
+    parents=[Past_Participle_To],
+    documentation=u"past participle that has a olver -to ending rather than the normal -ado, -ando",
+    examples=[u'morir'])
+Past_Participle_Orir.override_tense_join(Tenses.past_participle, _morir_)
+def _escribir_(self, stem, ending, **kwargs):
+    result = _check_and_change(stem, ending, ENDS_WITH_B,
+        stem_ending_replacement=u'')
+    return result
+Past_Participle_Cribir = __make_std_override(key=u"pp_cribir",
+    parents=[Past_Participle_To],
+    documentation=u"past participle that has a cribir -to ending rather than the normal -ado, -ando",
+    examples=[u'escribir'])
+Past_Participle_Cribir.override_tense_join(Tenses.past_participle, _escribir_)
+def _ver_(self, stem, ending, **kwargs):
+    result = _check_and_change(stem, ending,
+        stem_ending_replacement=u'is')
+    return result
+Past_Participle_Ver = __make_std_override(key=u"pp_ver",
+    parents=[Past_Participle_To],
+    documentation=u"past participle that has a ver -to ending rather than the normal -ado, -ando",
+    examples=[u'ver'])
+Past_Participle_Ver.override_tense_join(Tenses.past_participle, _ver_)
 # TODO: Need to check for reflexive verb
 # Ir_Reflexive_Accent_I_CO = __make_std_override(u'[ií]r$', key="imp_accent_i", 
 #     documentation="Second person plural, reflexive positive, ir verbs accent the i: Vestíos! (get dressed!) ",

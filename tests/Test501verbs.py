@@ -27,6 +27,8 @@ def utf_8_encoder(unicode_csv_data):
 class Test501verbs(unittest.TestCase):
     def __check(self, verb_string, expected, tenses=Tenses.all, persons=Persons.all):
         verb = Verb_Dictionary_get(verb_string)
+        if verb is None:
+            raise Exception(verb_string+u": no verb")
         errors = {}
         for tense in get_iterable(tenses):
             if tense in Tenses.Person_Agnostic:
