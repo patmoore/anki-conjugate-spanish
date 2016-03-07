@@ -347,6 +347,7 @@ STARTS_WITH_O=re.compile(u'^([oó])(.*)$', re.UNICODE+re.IGNORECASE)
 ENDS_WITH_B = re.compile(u'^(.*)(b)$', re.UNICODE+re.IGNORECASE)
 ENDS_WITH_G = re.compile(u'^(.*)(g)$', re.UNICODE+re.IGNORECASE)
 ENDS_WITH_R = re.compile(u'^(.*)(r)$', re.UNICODE+re.IGNORECASE)
+ENDS_WITH_AC = re.compile(u'^(.*)(ac)$', re.UNICODE+re.IGNORECASE)
 ENDS_WITH_OR = re.compile(u'^(.*)(or)$', re.UNICODE+re.IGNORECASE)
 ENDS_WITH_OLV = re.compile(u'^(.*)(olv)$', re.UNICODE+re.IGNORECASE)
 ENDS_WITH_U=re.compile(u'^(.*[uúü])()$', re.IGNORECASE+re.UNICODE)
@@ -679,15 +680,16 @@ Past_Participle_Orir = __make_std_override(key=u"pp_orir",
     documentation=u"past participle that has a olver -to ending rather than the normal -ado, -ando",
     examples=[u'morir'])
 Past_Participle_Orir.override_tense_join(Tenses.past_participle, _morir_)
-def _escribir_(self, stem, ending, **kwargs):
+def _cribir_(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_B,
         stem_ending_replacement=u'')
     return result
 Past_Participle_Cribir = __make_std_override(key=u"pp_cribir",
+    inf_match=re.compile(u'cribir$'),
     parents=[Past_Participle_To],
     documentation=u"past participle that has a cribir -to ending rather than the normal -ado, -ando",
-    examples=[u'escribir'])
-Past_Participle_Cribir.override_tense_join(Tenses.past_participle, _escribir_)
+    examples=[u'escribir',u'transcribir',u'inscribir', u'describir' ])
+Past_Participle_Cribir.override_tense_join(Tenses.past_participle, _cribir_)
 def _ver_(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending,
         stem_ending_replacement=u'is')
@@ -697,6 +699,16 @@ Past_Participle_Ver = __make_std_override(key=u"pp_ver",
     documentation=u"past participle that has a ver -to ending rather than the normal -ado, -ando",
     examples=[u'ver'])
 Past_Participle_Ver.override_tense_join(Tenses.past_participle, _ver_)
+def _acer_(self, stem, ending, **kwargs):
+    result = _check_and_change(stem, ending,
+        ENDS_WITH_AC, REMOVE_ENDING,
+        stem_ending_replacement=u'',
+        ending_beginning_replacement=u'echo')
+    return result
+Past_Participle_Acer = __make_std_override(key=u"pp_acer",
+    documentation=u"past participle that has a acer -to ending rather than the normal -ado, -ando",
+    examples=[u'hacer', u'satisfacer'])
+Past_Participle_Acer.override_tense_join(Tenses.past_participle, _acer_)
 # TODO: Need to check for reflexive verb
 # Ir_Reflexive_Accent_I_CO = __make_std_override(u'[ií]r$', key="imp_accent_i", 
 #     documentation="Second person plural, reflexive positive, ir verbs accent the i: Vestíos! (get dressed!) ",
