@@ -182,6 +182,8 @@ class ConjugationOverride():
         return overrides if len(overrides) > 0 else None
 
     def is_match(self, verb):
+        if self.inf_match is None:
+            raise Exception(self.key+":No inf_match - did you forget to provide an is_match method?")
         if self.inf_match.search(verb.inf_verb_string):
             return True
         else:
@@ -288,7 +290,7 @@ for vowel_from, present_vowels_to, past_vowels_to, gerund_vowel in radical_stem_
     first_person_co.override_tense_stem(Tenses.present_tense, __make_radical_call(vowel_from, present_vowels_to), Persons.first_person_singular)
     conjugation_override = __make_std_override(key=key,
         parents=[first_person_co],
-        documentation='radical stem changing '+key+ "; past tense="+vowel_from+':'+past_vowels_to
+        documentation='radical stem changing '+key+ "; present tense"
         )
 
     conjugation_override.override_tense_stem(Tenses.present_tense, __make_radical_call(vowel_from, present_vowels_to),
