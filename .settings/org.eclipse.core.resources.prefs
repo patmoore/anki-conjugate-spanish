@@ -20,4 +20,4 @@ encoding//tests/TestImperativeConjugation.py=utf-8
 encoding//tests/TestStandardConjugationOverrides.py=utf-8
 encoding//tests/TestThirdPersonOnly.py=utf-8
 encoding/conjugate.py=utf-8
-encoding/test.py=utf-8
+encoding/generateReference.py=utf-8
