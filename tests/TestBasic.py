@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 from conjugate_spanish import Tenses, Persons, Verb
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add
@@ -57,3 +58,13 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.base_verb_str, u"absfaketer")
         self.assertEqual(verb.inf_verb_string, u"absfaketer")
         self.assertEqual(verb.full_phrase, u"a absfaketer de {{inf}}")
+
+    def test_explicit_accent(self):
+        """
+        Test to make sure that the u in qu is skipped.
+        """
+        verb = Verb(u"acercarse",u"approach,draw near")
+        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.third_person_singular)
+        self.assertEqual(conjugation, u'acérquese')
+        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.third_person_plural)
+        self.assertEqual(conjugation, u'acérquense')
