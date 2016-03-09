@@ -19,8 +19,7 @@ _ir_conjugation_overrides.override_tense(Tenses.incomplete_past_tense, [six.u('i
 _ir_conjugation_overrides.override_tense_stem(Tenses.present_subjective_tense, six.u('vay'))
 _ir_conjugation_overrides.override_tense(Tenses.imperative_positive, u've', Persons.second_person_singular)
 _ir_conjugation_overrides.override_tense(Tenses.imperative_positive, u'vamos', Persons.first_person_plural)
-_ir_conjugation_overrides.override_tense_stem(Tenses.past_participle, u'')
-_ir_conjugation_overrides.override_tense_stem(Tenses.gerund, u'')
+_ir_conjugation_overrides.override_tense_stem(Tenses.Person_Agnostic, u'')
 Ir_Definition = Verb_Dictionary_add(u'ir', conjugation_overrides=_ir_conjugation_overrides, definition="to go")
 
 # Note: inherit from parent is implicit

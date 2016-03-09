@@ -78,11 +78,11 @@ class TestDerivedVerb(unittest.TestCase):
         tail = faketenerse_1.conjugate(tense)
         self.assertEqual(u'faketeniéndose', tail, tail+":tense="+Tenses[tense])
         
-        tense = Tenses.past_participle             
-        tail = faketenerse.conjugate_tense(tense)[4:]
-        self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+Tenses[tense])
-        tail = faketenerse_1.conjugate_tense(tense)[4:]
-        self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+Tenses[tense])
+        for tense in Tenses.past_part_adj:             
+            tail = faketenerse.conjugate_tense(tense)[4:]
+            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+Tenses[tense])
+            tail = faketenerse_1.conjugate_tense(tense)[4:]
+            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+Tenses[tense])
 
             
     def test_tener_imperatives_non_reflexive(self):

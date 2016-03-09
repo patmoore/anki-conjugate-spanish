@@ -28,8 +28,11 @@ class Tenses_(list):
     imperative_negative = 8
     gerund = 9
     past_participle = 10
-    Person_Agnostic = [ gerund, past_participle ]
+    adjective = 11
+    Person_Agnostic = [ gerund, past_participle, adjective ]
     imperative = [ imperative_negative, imperative_positive ]
+    # Most of the time these 2 have same conjugation
+    past_part_adj = [ past_participle, adjective]
 
     @property
     def all(self):
@@ -51,7 +54,11 @@ Tenses = Tenses_([
     u'imperative_positive',
     u'imperative_negative',
     u'gerund',
-    u'past_participle'
+    u'past_participle',
+    #usually it is same as past participle: However,
+    #The boy is cursed. --> el niño está maldito. (adjective)
+    #The boy has been cursed --> el niño ha sido maldecido ( one of the perfect tenses)
+    u'adjective'
 ])
 
 class Persons_(list):
@@ -66,7 +73,7 @@ class Persons_(list):
     Past_Tense_Stem_Changing_Persons = [third_person_singular, third_person_plural]
     first_person = [ first_person_singular, first_person_plural ]
     second_person = [ second_person_singular, second_person_plural ]
-    third_person = [ third_person_singular, third_person_plural]
+    third_person = [ third_person_singular, third_person_plural]    
     @property
     def all(self):
         return range(len(self))
@@ -172,3 +179,8 @@ def dump_trace(e, message):
     traceback.print_tb(tb)
     formatted = traceback.format_exception(extype, ex, tb)[-1]
     
+def re_compile(string):
+    """
+    unicode, ignore case
+    """
+    return re.compile(string, re.UNICODE+re.IGNORECASE)

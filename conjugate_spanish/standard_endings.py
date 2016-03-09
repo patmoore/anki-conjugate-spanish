@@ -109,7 +109,10 @@ Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.gerund] = u'ando
 Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.gerund] = u'iendo'
 Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.gerund] = u'iendo'
 # -ed verb
-Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.past_participle] = u'ado'
-Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.past_participle] = u'ido'
-Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.past_participle] = u'ido'
+Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.past_participle] = \
+  Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.adjective] = u'ado'
+Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.past_participle] = \
+  Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.adjective] = \
+  Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.past_participle] = \
+  Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.adjective] = u'ido'
 

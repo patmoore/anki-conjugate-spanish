@@ -13,8 +13,9 @@ class TestStandardConjugationOverrides(unittest.TestCase):
          
     def test_past_part_override(self):
         ir = Verb_Dictionary_get(u'ir')
-        gerund = ir.conjugate_tense(Tenses.past_participle)
-        self.assertEqual(gerund, u'ido', 'ir past part. wrong')
+        for tense in Tenses.past_part_adj:
+            pp = ir.conjugate_tense(tense)
+            self.assertEqual(pp, u'ido', 'ir past part. wrong')
          
     def test_guir_yo(self):
         distinguir = Verb_Dictionary_get(u'distinguir')

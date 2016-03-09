@@ -797,6 +797,10 @@ class Verb():
         return self.prefix_words != u'' or self.suffix_words != u''
     
     @property
+    def is_regular(self):
+        return self.appliedOverrides is None or len(self.appliedOverrides) == 0  
+    
+    @property
     def appliedOverrides(self):
         appliedOverrides_ = list(self._appliedOverrides)
         if self.base_verb is not None:

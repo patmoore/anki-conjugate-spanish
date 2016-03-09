@@ -6,7 +6,9 @@ import csv
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add,Verb_Dictionary_load
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect,\
     get_iterable
+MASTER_DIR = u'./conjugate_spanish/expanded'
 Verb_Dictionary_load()
+
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     # csv.py doesn't do Unicode; encode temporarily as UTF-8:
     csv_reader = csv.DictReader(utf_8_encoder(unicode_csv_data),
@@ -46,32 +48,51 @@ class Test501verbs(unittest.TestCase):
                     if expected_conjugation != conjugation:
                         errors[key] = {'expected':expected_conjugation, 'actual':conjugation}
         if len(errors) > 0:
+            errors['appliedOverrides'] = verb.appliedOverrides
             return errors
            #  self.assertFalse(True, verb.full_phrase+repr(errors))
         else:
             return None
         
-    def test_a_verb(self):
-        source=u'501verbs'
-        verb = u'bullir'
-        with codecs.open('./tests/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
-            reader = unicode_csv_reader(csvfile, skipinitialspace=True)
-            for expected in reader:
-                if expected['full_phrase'] == verb:
-                    errors = self.__check(expected['full_phrase'], expected, Tenses.past_tense, Persons.third_person_singular)
-                    if errors is not None:
-                        self.assertFalse(True, verb.full_phrase+repr(errors))
-                    break
-                 
-    def test_all_verbs(self):
-        source=u'501verbs'
+    def _check_verbs(self, source):
         verbs_errors = {}
-        with codecs.open('./tests/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
+        with codecs.open(MASTER_DIR+u'/'+source+"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
             reader = unicode_csv_reader(csvfile, skipinitialspace=True)
             for expected in reader:
                 errors = self.__check(expected['full_phrase'], expected)
                 if errors is not None:
-                    verbs_errors[expected['full_phrase']] = errors
-        if len(verbs_errors) > 0:
-            for full_phrase, errors in verbs_errors.iteritems():
-                print(full_phrase, repr(errors))
+                    verbs_errors[expected['full_phrase']] = errors                    
+        return verbs_errors
+    
+    def test_a_verb(self):
+        source=u'eír'
+        verb_string = u'reír'
+        with codecs.open(MASTER_DIR+u'/'+source+u"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
+            reader = unicode_csv_reader(csvfile, skipinitialspace=True)
+            for expected in reader:
+                if expected['full_phrase'] == verb_string:
+                    errors = self.__check(expected['full_phrase'], expected)
+                    if errors is not None:
+                        self.assertFalse(True, verb_string+repr(errors))
+                    break
+#                     
+#     def test_regular_verbs(self):
+#         source=u'501verbs-regular'
+#         verbs_errors = self._check_verbs(source)
+#         if len(verbs_errors) > 0:
+#             for full_phrase, errors in verbs_errors.iteritems():
+#                 print(full_phrase, repr(errors))
+#                 
+#     def test_irregular_verbs(self):
+#         source=u'501verbs-irregular'
+#         verbs_errors = self._check_verbs(source)
+#         if len(verbs_errors) > 0:
+#             for full_phrase, errors in verbs_errors.iteritems():
+#                 print(full_phrase, repr(errors))
+#                 
+#     def test_master_verbs(self):
+#         source=u'501verbs-master'
+#         verbs_errors = self._check_verbs(source)
+#         if len(verbs_errors) > 0:
+#             for full_phrase, errors in verbs_errors.iteritems():
+#                 print(full_phrase, repr(errors))
