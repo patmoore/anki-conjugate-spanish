@@ -400,6 +400,11 @@ def _check_and_change(stem, ending,
         if ending_beginning_replacement is not None:
             result[1] = ending_beginning_replacement+ending_match.group(2) 
     return result
+
+Use_Er_Conjugation_In_Past = __make_std_override(key=u'use_er',
+    documentation=u'some verbs', examples= [u'andar'])
+Use_Er_Conjugation_In_Past.override_tense_ending(Tenses.past_tense, lambda self, tense, person, **kwargs: Standard_Conjugation_Endings[Infinitive_Endings.er_verb][tense][person])
+    
 """
 ==================================================
 Gerund  - http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA2iFNsOEI
@@ -676,7 +681,7 @@ Guar_CO = __make_std_override(inf_match=re_compile(u'guar$'),
     key=u'guar',
     examples=[u'averiguar'],
     documentation=u'guar verbs need a umlaut/dieresis ü to keep the u sound so we pronounce gu like gw which keeps it consistent with the infinitive sound http://www.spanish411.net/Spanish-Preterite-Tense.asp')
-Guar_CO.override_tense_stem(Tenses.present_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'u', u'ü'), Persons.first_person_singular,
+Guar_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'u', u'ü'), Persons.first_person_singular,
     documentation="preserves sound in infinitive")
 
 #>>>>>>> TODO: check to see of all -go verbs use just stem in imperative 2nd person, salir, tener,poner
