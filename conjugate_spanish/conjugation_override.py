@@ -369,7 +369,7 @@ ENDS_WITH_R = re_compile(u'^(.*)(r)$')
 ENDS_WITH_AC = re_compile(u'^(.*)(ac)$')
 ENDS_WITH_OR = re_compile(u'^(.*)(or)$')
 ENDS_WITH_OLV = re_compile(u'^(.*)(olv)$')
-ENDS_WITH_U=re_compile(u'^(.*[uúü])()$')
+ENDS_WITH_U=re_compile(u'^(.*)([uúü])$')
 ENDS_WITH_C = re_compile(u'^(.*)(c)$')
 ENDS_WITH_Z = re_compile(u'^(.*)(z)$')
 ENDS_WITH_I = re_compile(u'^(.*)(i)$')
@@ -681,8 +681,12 @@ Guar_CO = __make_std_override(inf_match=re_compile(u'guar$'),
     key=u'guar',
     examples=[u'averiguar'],
     documentation=u'guar verbs need a umlaut/dieresis ü to keep the u sound so we pronounce gu like gw which keeps it consistent with the infinitive sound http://www.spanish411.net/Spanish-Preterite-Tense.asp')
-Guar_CO.override_tense_stem(Tenses.past_tense, lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'u', u'ü'), Persons.first_person_singular,
+def _umlaut_u_(self, stem, ending, **kwargs):
+    result = _check_and_change(stem, ending, ENDS_WITH_U, STARTS_WITH_E, stem_ending_replacement=u'ü')
+    return result
+Guar_CO.override_tense_join(Tenses.past_tense, _umlaut_u_, Persons.first_person_singular,
     documentation="preserves sound in infinitive")
+Guar_CO.override_tense_join(Tenses.present_subjective_tense, _umlaut_u_, documentation="preserves sound in infinitive")
 
 #>>>>>>> TODO: check to see of all -go verbs use just stem in imperative 2nd person, salir, tener,poner
 def __go(self, stem, **kwargs):

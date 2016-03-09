@@ -217,7 +217,7 @@
 "enviar","send","iar"
 "en-volver","wrap up"
 "equivocarse","be mistaken"
-"erguir","raise,stand up straight",,"{""conjugation_stems"":{""present_except_nosvos"":""irgu"",""third_past"":""ir""}}",,"alternative 'yergu' ( i.e. y in front ) only in present"
+"erguir","raise,stand up straight",,"{""conjugation_stems"":{""present_except_nosvos"":""irgu"",""third_past"":""irgu"",""gerund"":""irgu""}}",,"alternative 'yergu' ( i.e. y in front ) only in present"
 "errar","err,wander,roam,miss",,"{""conjugation_stems"":{""present_except_nosvos"":""yerr""}}"
 "es-coger","choose,select"
 "escribir","write","pp_cribir"
