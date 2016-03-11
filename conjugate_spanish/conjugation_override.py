@@ -590,7 +590,7 @@ def _uir_present_check(self, stem, ending, **kwargs):
     """
     insert a 'y' between stem (if it still ends in a u) and any ending that starts in a vowel that is not 'i'
     """
-    result = _check_and_change(stem, ending, ENDS_WITH_U, STARTS_WITH_NON_I_VOWEL, u'y')
+    result = _check_and_change(stem, ending, ENDS_WITH_U, STARTS_WITH_NON_I_VOWEL, u'uy')
     return result
 Uir_CO = make_std_override(inf_match=re_compile(six.u('[^qg]uir$')),
     parents=[I2Y_PastTense_CO], 

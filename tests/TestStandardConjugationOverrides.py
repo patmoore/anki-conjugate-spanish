@@ -87,6 +87,9 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         self.assertEqual(conjugation, u"fago")
         
     def test_radical_o2ue__ir_changing(self):
+        """
+        make sure that the key places of stem changing occur (ir different than er ar verbs)
+        """ 
         verb = Verb(u'dormir', u'fake',"o:ue")
         conjugation = verb.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(conjugation, u'duermo')
@@ -98,3 +101,10 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         self.assertEqual(conjugation, u'duerman')
         conjugation = verb.conjugate(Tenses.gerund)
         self.assertEqual(conjugation, u'durmiendo')
+        
+    def test_uir_verbs(self):
+        """ uir verbs have to worry about removing the 'u' before o
+        """
+        verb = Verb(u'constituir', u"constitute") 
+        conjugation = verb.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        self.assertEqual(u'constituyo', conjugation, u'constituyo !='+conjugation)
