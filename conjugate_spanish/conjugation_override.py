@@ -67,8 +67,7 @@ class ConjugationOverride(object):
             try:
                 manual_overrides = json.loads(json_string, 'utf-8')
             except ValueError as e:
-                print("while parsing json manual_overrides to verb_dictionary", repr(e))
-                print("manual_overrides="+manual_overrides)        
+                print(u"while parsing json manual_overrides "+ json_string + u" to verb_dictionary", repr(e))       
         conjugation_override = ConjugationOverride(key=key,manual_overrides=manual_overrides) 
         return conjugation_override   
             
@@ -550,7 +549,7 @@ def __i2y_past_3rd_i_check(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_VOWEL,
         STARTS_WITH_I, ending_beginning_replacement=u'y')
     if result[0] == stem and result[1] == ending:
-        # if no change remore the i in the ending (traer)
+        # if no change remore the i in the ending (traer, decir)
         result = _check_and_change(stem, ending, ending_re=STARTS_WITH_I,ending_beginning_replacement=u'')
     return result
 
@@ -563,6 +562,7 @@ I2Y_PastTense_CO = make_std_override(
     (triple vowels) http://www.studyspanish.com/verbs/lessons/pretortho.htm"
 )
 I2Y_PastTense_CO.override_tense_join(Tenses.past_tense, __i2y_past_3rd_i_check, Persons.third_person, documentation=u"change i to y or remove i if stem doesn't end in vowel")
+
 def _accent_i_check(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_VOWEL,
         STARTS_WITH_I, ending_beginning_replacement=u'í')
@@ -625,6 +625,7 @@ Past_Yo_Ud_Irr_CO = make_std_override(key=u'e_and_o',
 Past_Yo_Ud_Irr_CO.override_tense_ending(Tenses.past_tense, u'e', Persons.first_person_singular)
 Past_Yo_Ud_Irr_CO.override_tense_ending(Tenses.past_tense, u'o', Persons.third_person_singular)
 
+## TODO : note this may also apply to decir verbs (bendecir)
 Ducir_CO = make_std_override(inf_match=re_compile(u'd[úu]cir$'),
     key='ducir',
     parents=u'e_and_o',
@@ -735,22 +736,28 @@ Oy_CO.override_tense_ending(Tenses.present_tense, u"oy", Persons.first_person_si
 
 Infinitive_Stems_E2D = make_std_override(key=u'e2d', documentation="Future Tense/Conditional Tense:Some verbs convert the -er ending infinitive stem to a 'd'",
         examples=[u'tener'])
-Infinitive_Stems_E2D.override_tense_stem(Tenses.future_tense, lambda self, stem, **kwargs: stem[:-2] + u'dr')
-Infinitive_Stems_E2D.override_tense_stem(Tenses.conditional_tense, lambda self, stem, **kwargs: stem[:-2] + u'dr')
+Infinitive_Stems_E2D.override_tense_stem(Tenses.future_cond, lambda self, stem, **kwargs: stem[:-2] + u'dr')
 
 Infinitive_Stems_R_Only = make_std_override(key=u'r_only', documentation="Future Tense/Conditional Tense:Some verbs remove the vowel in the infinitive ending to a r",
         examples=[u'haber'])
-Infinitive_Stems_R_Only.override_tense_stem(Tenses.future_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
-Infinitive_Stems_R_Only.override_tense_stem(Tenses.conditional_tense, lambda self, stem, **kwargs: stem[:-2] + u'r')
+Infinitive_Stems_R_Only.override_tense_stem(Tenses.future_cond, lambda self, stem, **kwargs: stem[:-2] + u'r')
 
-Past_Participle_To = make_std_override(key=u'ppto')
-Past_Participle_To.override_tense_ending(Tenses.past_part_adj, u'to')
+Imperative_Infinitive_Stem_Only = make_std_override(key="imp_inf_stem_only", 
+    documentation=u'in second person positive some verbs only use the infinitive stem with no ending',
+    examples=[u'poner',u'salir',u'tener'])
+Imperative_Infinitive_Stem_Only.override_tense(Tenses.imperative_positive, lambda self, **kwargs: self.stem, Persons.second_person_singular)
+
+Past_Participle_To = make_std_override(key=u'pp_to')
+Past_Participle_To.override_tense_ending(Tenses.past_participle, u'to')
+Adjective_To = make_std_override(key=u'adj_to')
+Adjective_To.override_tense_ending(Tenses.adjective, u'to')
+Past_Adj_To = make_std_override(key=u'pa_to', parents=[Past_Participle_To, Adjective_To])
 def _olver_(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_OLV,
         stem_ending_replacement=u'uel')
     return result
 Past_Participle_Olver = make_std_override(key=u"pp_olver",
-    parents=[Past_Participle_To],
+    parents=Past_Adj_To,
     documentation=u"past participle that has a olver -to ending rather than the normal -ado, -ando",
     examples=[u'absolver', u'resolver', u'volver'])
 Past_Participle_Olver.override_tense_join(Tenses.past_part_adj, _olver_)
@@ -759,7 +766,7 @@ def _abrir_(self, stem, ending, **kwargs):
         stem_ending_replacement=u'ier')
     return result
 Past_Participle_Rir = make_std_override(key=u"pp_rir",
-    parents=[Past_Participle_To],
+    parents=Past_Adj_To,
     documentation=u"past participle that has a -rir -to ending rather than the normal -ado, -ando",
     examples=[u'abrir', u'cubrir'])
 Past_Participle_Rir.override_tense_join(Tenses.past_part_adj, _abrir_)
@@ -768,7 +775,7 @@ def _morir_(self, stem, ending, **kwargs):
         stem_ending_replacement=u'uer')
     return result
 Past_Participle_Orir = make_std_override(key=u"pp_orir",
-    parents=[Past_Participle_To],
+    parents=Past_Adj_To,
     documentation=u"past participle that has a olver -to ending rather than the normal -ado, -ando",
     examples=[u'morir'])
 Past_Participle_Orir.override_tense_join(Tenses.past_part_adj, _morir_)
@@ -778,7 +785,7 @@ def _cribir_(self, stem, ending, **kwargs):
     return result
 Past_Participle_Cribir = make_std_override(key=u"pp_cribir",
     inf_match=re_compile(u'cribir$'),
-    parents=[Past_Participle_To],
+    parents=Past_Adj_To,
     documentation=u"past participle that has a cribir -to ending rather than the normal -ado, -ando",
     examples=[u'escribir',u'transcribir',u'inscribir', u'describir' ])
 Past_Participle_Cribir.override_tense_join(Tenses.past_part_adj, _cribir_)
@@ -787,7 +794,7 @@ def _ver_(self, stem, ending, **kwargs):
         stem_ending_replacement=u'is')
     return result
 Past_Participle_Ver = make_std_override(key=u"pp_ver",
-    parents=[Past_Participle_To],
+    parents=Past_Adj_To,
     documentation=u"past participle that has a ver -to ending rather than the normal -ado, -ando",
     examples=[u'ver'])
 Past_Participle_Ver.override_tense_join(Tenses.past_part_adj, _ver_)

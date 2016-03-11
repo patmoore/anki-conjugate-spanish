@@ -46,6 +46,7 @@ class Tenses_(BaseConsts_):
     adjective = 11
     Person_Agnostic = [ gerund, past_participle, adjective ]
     imperative = [ imperative_negative, imperative_positive ]
+    future_cond = [ future_tense, conditional_tense]
     # Most of the time these 2 have same conjugation
     past_part_adj = [ past_participle, adjective]
     

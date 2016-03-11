@@ -352,10 +352,10 @@ class Verb():
                     message = "Trying to conjugate " + formatted
                     self.__raise(message, tense, person, tb)
             return current_conjugation_stem
-        if tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense]:
+        if tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense, Tenses.gerund, Tenses.past_participle]:
             current_conjugation_stem = self.stem
-        elif tense in Tenses.Person_Agnostic:
-            current_conjugation_stem = self.stem
+        elif tense == Tenses.adjective:
+            current_conjugation_stem = self.conjugate_stem(Tenses.past_participle, person, current_conjugation_ending)
         elif tense in [ Tenses.future_tense, Tenses.conditional_tense]:
             current_conjugation_stem = remove_accent(self.inf_verb_string)
         elif tense == Tenses.present_subjective_tense:
