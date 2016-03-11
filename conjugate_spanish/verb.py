@@ -14,9 +14,9 @@ import traceback
 # sys.stdout = UTF8Writer(sys.stdout)
 from standard_endings import Standard_Conjugation_Endings
 
-_ending_vowel_check = re.compile(u'['+Vowels+u']$', re.IGNORECASE+re.UNICODE)
+_ending_vowel_check = re_compile(u'['+Vowels.all+u']$')
 # check for word with only a single vowel ( used in imperative conjugation )
-_single_vowel_re = re.compile(u'^([^'+AllVowels+u']*)(['+AllVowels+u'])([^'+AllVowels+u']*)$', re.IGNORECASE+re.UNICODE)
+_single_vowel_re = re.compile(u'^([^'+Vowels.all+u']*)(['+Vowels.all+u'])([^'+Vowels.all+u']*)$', re.IGNORECASE+re.UNICODE)
 #
 # Parse up the infinitive string: 
 # group 1 = prefix words (if present)
@@ -460,11 +460,14 @@ class Verb():
                             result = accent_at(conjugation_string,index)
                             break
                     elif conjugation_string[index] in _weak_vowel:
-                        #weak vowel                                   
+                        #weak vowel                                                           
                         if vowel_skip > 0:
                             vowel_skip -=1
-                        elif index-1 >= 0 and conjugation_string[index-1] in _strong_vowel:
+                        elif index >= 1 and conjugation_string[index-1] in _strong_vowel:
                             # accent should be on strong vowel immediately before the weak vowel (so skip the current weak vowel)                           
+                            continue
+                        elif index >= 1 and conjugation_string[index-1:index+1] in [u'qu',u'gu' ]:
+                            # qu is a dipthong ( see accent rules on acercarse : 1st person plural and 3rd person plural imperative  ) 
                             continue
                         else:
                             # for two weak vowels the accent is on the second one (i.e. this one) 
@@ -562,14 +565,19 @@ class Verb():
                 returned_conjugation = handle_explicit_accent_() + Persons_Indirect[person]
             elif person == Persons.second_person_plural:  # (imperative positive) 
                 # TODO look for single vowel in conjugation for model verb.
-                # TODO : Would like to make this a conjugation override
-                if self.verb_ending_index == Infinitive_Endings.ir_verb and conjugation[-2:] == u'ir':
-                    # ir verbs need the i (in ir) accented rule k and l
-                    # this makes sense because otherwise the os would be accented.
-                    # example ¡Vestíos! - Get Dressed!
-                    # we don't need to worry about accenting the -ir verbs that already have the i accented ( example reírse )
-                    # what about verbs that already have explicit accent?
-                    returned_conjugation = remove_accent(conjugation) + u'í' + Persons_Indirect[Persons.second_person_plural]
+                # TODO : Would like to make this a conjugation override - but conjugation overrides are not applied on derived verbs
+                if self.verb_ending_index == Infinitive_Endings.ir_verb:
+                    if conjugation[-2:] == u'id':
+                        # ir verbs need the i (in ir) accented rule k and l
+                        # this makes sense because otherwise the os would be accented.
+                        # example ¡Vestíos! - Get Dressed!
+                        # we don't need to worry about accenting the -ir verbs that already have the i accented ( example reírse )
+                        # what about verbs that already have explicit accent?
+                        returned_conjugation = remove_accent(conjugation[:-2]) + u'í' + Persons_Indirect[Persons.second_person_plural]
+                    elif conjugation[-2:] == u'íd':
+                        returned_conjugation = _replace_last_letter_of_stem(conjugation, u'd', Persons_Indirect[Persons.second_person_plural])
+                    else:
+                        self.__raise(u"don't know how to handle:"+conjugation, tense, person)
                 else:
                     # ex: ¡Sentaos! - Sit down! ( the spoken accent will be on the ending a )
                     returned_conjugation = _replace_last_letter_of_stem(remove_accent(conjugation), u'd', Persons_Indirect[Persons.second_person_plural])
@@ -718,6 +726,9 @@ class Verb():
             #No override or blank
             return
         if override.key not in self.doNotApply and override.key not in self.appliedOverrides:
+            if override.key:
+                # Custom overrides do not always have keys
+                self.add_applied_override(override.key)
             override.apply(self)        
 
     @property

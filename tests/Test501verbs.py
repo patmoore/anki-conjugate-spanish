@@ -6,6 +6,7 @@ import csv
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add,Verb_Dictionary_load
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect,\
     get_iterable
+from conjugate_spanish.conjugation_override import Standard_Overrides
 MASTER_DIR = u'./conjugate_spanish/expanded'
 Verb_Dictionary_load()
 
@@ -65,8 +66,8 @@ class Test501verbs(unittest.TestCase):
         return verbs_errors
     
     def test_a_verb(self):
-        source=u'eír'
-        verb_string = u'reír'
+        source=u'501verbs'
+        verb_string = u'colgar'
         with codecs.open(MASTER_DIR+u'/'+source+u"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
             reader = unicode_csv_reader(csvfile, skipinitialspace=True)
             for expected in reader:
@@ -75,7 +76,21 @@ class Test501verbs(unittest.TestCase):
                     if errors is not None:
                         self.assertFalse(True, verb_string+repr(errors))
                     break
-#                     
+
+#     def test_std_overrides(self):
+#         for source in Standard_Overrides.keys():
+#             print(u">>>>>>>Testing "+source)
+#             source = source.replace(u':',u'2')
+#             with codecs.open(MASTER_DIR+u'/'+source+u"-verbs-only.csv", mode='rb', encoding="utf-8" ) as csvfile:
+#                 reader = unicode_csv_reader(csvfile, skipinitialspace=True)
+#                 for expected in reader:
+#                     print(u"\tTesting "+expected['full_phrase'])
+#                     errors = self.__check(expected['full_phrase'], expected, Tenses.imperative_positive, Persons.second_person_plural)
+#                     if errors is not None:
+#                         self.assertFalse(True, expected['full_phrase']+repr(errors))
+                        
+            
+
 #     def test_regular_verbs(self):
 #         source=u'501verbs-regular'
 #         verbs_errors = self._check_verbs(source)

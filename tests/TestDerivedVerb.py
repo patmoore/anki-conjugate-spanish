@@ -39,6 +39,18 @@ class TestDerivedVerb(unittest.TestCase):
         self.assertTrue(faketenerse_1.is_child(tener_))
         self.assertTrue(faketenerse_1.is_child(tener))
         
+    def test_tener_conjugation(self):
+        """
+        test to make sure that tener is being conjugated correctly
+        this tests overriding the stem and conjugation because if this doesn't work the other tests will not work
+        """
+        conjugation = tener.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        self.assertEqual(u'tengo', conjugation, "Make sure that the override of the first person stem change happens")
+        conjugation = tener.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        self.assertEqual(u'ten', conjugation, "Make sure that the override of the first person stem change happens")
+        conjugation = tener.conjugate(Tenses.imperative_positive, Persons.first_person_plural)
+        self.assertEqual(u'tengamos', conjugation, "Make sure that the override of the first_person_plural stem change happens")
+         
     def test_tener_most_tenses_non_reflexive(self):
         """
         all except the imperatives

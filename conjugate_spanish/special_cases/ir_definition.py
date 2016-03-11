@@ -7,6 +7,7 @@ from conjugate_spanish.verb_dictionary import Verb_Dictionary_add
 Past_Tense_IR_CO = ConjugationOverride()
 Past_Tense_IR_CO.override_tense_stem(Tenses.past_tense, six.u('fu'))
 Past_Tense_IR_CO.override_tense_ending(Tenses.past_tense, six.u('i'), Persons.first_person_singular, documentation="no accent on i")
+# TODO : these next 2 look like a standard override.
 Past_Tense_IR_CO.override_tense_ending(Tenses.past_tense, six.u('e'), Persons.third_person_singular)
 Past_Tense_IR_CO.override_tense_ending(Tenses.past_tense, six.u('eron'), Persons.third_person_plural, documentation="missing i")
 

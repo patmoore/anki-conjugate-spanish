@@ -3,7 +3,8 @@ import unittest
 import inspect
 from conjugate_spanish import Tenses, Persons, Verb
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add, Verb_Dictionary_load
-from conjugate_spanish.conjugation_override import Dependent_Standard_Overrides, ConjugationOverride
+from conjugate_spanish.conjugation_override import Dependent_Standard_Overrides, ConjugationOverride,\
+    Radical_Stem_Conjugation_Overrides
 Verb_Dictionary_load()
 class TestStandardConjugationOverrides(unittest.TestCase):
     def test_gerund_override(self):
@@ -27,8 +28,8 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         faketir - e:i is explicitly assigned ( fake verb to make it easier to debug ) 
         """
         faketir = Verb("faketir", "", conjugation_overrides="e:i")
-        match = Dependent_Standard_Overrides[u"stem_changing_ir_"+u"e:i"].is_match(faketir)
-        self.assertTrue(match, 'automatch')
+#         match = Dependent_Standard_Overrides[u"stem_changing_ir_"+u"e:i"].is_match(faketir)
+#         self.assertTrue(match, 'automatch')
         self.assertIsNotNone(faketir.conjugation_stems, "faketir.conjugation_stems")
         self.assertTrue(inspect.ismethod(faketir.conjugation_stems[9][0]), "is method")
         self.assertFalse(inspect.isfunction(faketir.conjugation_stems[9][0]), "is function")
@@ -40,24 +41,25 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         fakegir - e:i is implicitly assigned: gir have stem changing by default
         """
         fakegir = Verb(u'fakegir', "")
-        conjugation_overrides = fakegir.appliedOverrides
+#         self.assertTrue(fakegir.has_override_applied(u''))
         self.assertIsNotNone(fakegir.conjugation_stems, "fakegir.conjugation_stems")
         gerund = fakegir.conjugate_tense(Tenses.gerund)
-        self.assertEqual(gerund, u'fakigiendo', 'e2i gerund wrong')
+        self.assertEqual(gerund, u'fakigiendo', u'e2i gerund wrong='+gerund)
         
-    def test_manual_overrides(self):
+    def test_beginning_word_radical_stem_changing_overrides(self):
         """
-        test to see if a manual override defined as a json object will be correctly applied.
-        Make sure for a manual override with None in a override position does not remove a previous override.
         """
-        oler = Verb(u'oler',"to hear",["pres_sub_inf","o:ue"])
-        conjugations = oler.conjugate_all_tenses()
-        self.assertEqual(conjugations[Tenses.present_tense][Persons.first_person_singular], u'huelo', "problems with loading manual overrides ")
-        self.assertEqual(conjugations[Tenses.present_subjective_tense][Persons.first_person_plural], u'olamos', "problems with using predefined overrides with manual overrides")
+        oler = Verb(u'oler',"to hear",["o:ue"])
+        conjugation = oler.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        self.assertEqual(conjugation, u'huelo', "problems with loading manual overrides "+conjugation)
+        conjugation = oler.conjugate(Tenses.present_subjective_tense, Persons.first_person_plural)
+        self.assertEqual(conjugation, u'olamos', "replacing the beginning vowel back with the infinitive vowel")
      
     def test_that_explicit_override_takes_precedent(self):
         """
         decir is a go verb which must override the default -cir behavior of changing c-> zc
+        test to see if a manual override defined as a json object will be correctly applied.
+        Make sure for a manual override with None in a override position does not remove a previous override.
         """
         decir = Verb("decir","to say, tell",["go","e:i","-v_cir",
             ConjugationOverride.create_from_json(""u'{"conjugation_stems":{"past":"dij","future":"dir","conditional":"dir"},"conjugations":{"imperative_positive_second":"di"}}')])
@@ -83,3 +85,16 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         facer = Verb(u"facer", "fake go 1","go")
         conjugation = facer.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(conjugation, u"fago")
+        
+    def test_radical_o2ue__ir_changing(self):
+        verb = Verb(u'dormir', u'fake',"o:ue")
+        conjugation = verb.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        self.assertEqual(conjugation, u'duermo')
+        conjugation = verb.conjugate(Tenses.past_tense, Persons.third_person_plural)
+        self.assertEqual(conjugation, u'durmieron')
+        conjugation = verb.conjugate(Tenses.present_subjective_tense, Persons.first_person_plural)
+        self.assertEqual(conjugation, u'durmamos')
+        conjugation = verb.conjugate(Tenses.present_subjective_tense, Persons.third_person_plural)
+        self.assertEqual(conjugation, u'duerman')
+        conjugation = verb.conjugate(Tenses.gerund)
+        self.assertEqual(conjugation, u'durmiendo')
