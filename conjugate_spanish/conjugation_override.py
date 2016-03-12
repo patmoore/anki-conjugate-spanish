@@ -824,6 +824,11 @@ Past_Participle_Acer.override_tense_join(Tenses.past_part_adj, _acer_)
 UnaccentPresent_Past_CO = make_std_override(key=u'unaccent_present_past', documentation=u'small verbs have no accent on past and present tense conjugations',
     examples= [u'dar',u'ir'])
 UnaccentPresent_Past_CO.override_tense_join([Tenses.present_tense,Tenses.past_tense], lambda self, stem, ending, **kwargs: [remove_accent(stem), remove_accent(ending)])
+
+Defective_CO = make_std_override(key=u'defective')
+tenses = list(Tenses.future_cond)
+tenses.extend(Tenses.imperative)
+Defective_CO.override_tense(tenses, lambda self, **kwargs: u'')
 # TODO: Need to check for reflexive verb
 # Ir_Reflexive_Accent_I_CO = make_std_override(u'[ií]r$', key="imp_accent_i", 
 #     documentation="Second person plural, reflexive positive, ir verbs accent the i: Vestíos! (get dressed!) ",
