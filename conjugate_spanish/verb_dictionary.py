@@ -41,9 +41,11 @@ def Verb_Dictionary_get(phrase):
 def Verb_Dictionary_load():
     import special_cases
     
-    for fileNameBase in ['501verbs','501extendedverbs']:
+    for fileNameBase in [u'501verbs',u'501extendedverbs']:
         fileName = './conjugate_spanish/dictionaries/'+fileNameBase+'.csv'
         verbs = []
+        if fileNameBase == u'501verbs':
+            verbs.extend([u'hacer',u'ser',u'ir',u'irse',u'hacer',u'estar'])
         Verb_Dictionary_By[fileNameBase] = verbs
         print("reading "+fileName)
         with codecs.open(fileName, mode='r' ) as csvfile:

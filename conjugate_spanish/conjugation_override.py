@@ -302,24 +302,26 @@ class Radical_Stem_Conjugation_Override(ConjugationOverride):
 
         # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
         # but for example, absolver o:ue does not have past tense stem changing
+        self.stem_changing_ir_gerund = make_std_override(key=key+u"_ir_gerund",
+            examples=[u'dormir'],
+            documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
+        )
+        self.stem_changing_ir_gerund.override_tense_stem(Tenses.gerund, infinitive_to_past_tense)     
+        # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
+        # but for example, absolver o:ue does not have past tense stem changing
         self.stem_changing_ir_past = make_std_override(key=key+u"_past_3rd",
             examples=[u'dormir'],
             documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
         )
         self.stem_changing_ir_past.override_tense_stem(Tenses.past_tense, infinitive_to_past_tense, past_stem_persons)
         
+        self.add_std() # bad if we are running a web site but this makes the below code work
         self.stem_changing_ir_past_all = make_std_override(key=key+u"_past_all",
-            examples=[u'venir'],
+            examples=[u'venir',u'poder',u'predecir'],
+            parents=[self.key,self.stem_changing_ir_gerund],
             documentation=u"Some -ir verbs apply the stem-change to all preterite (must be manually applied)"
         )
         self.stem_changing_ir_past_all.override_tense_stem(Tenses.past_tense, infinitive_to_past_tense, Persons.all)
-        # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
-        # but for example, absolver o:ue does not have past tense stem changing
-        self.stem_changing_ir_gerund = make_std_override(key=key+u"_ir_gerund",
-            examples=[u'dormir'],
-            documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
-        )
-        self.stem_changing_ir_gerund.override_tense_stem(Tenses.gerund, infinitive_to_past_tense)     
         
         self.conjugation_overrides = [ None ] * len(Infinitive_Endings)
         if self.present_stem_vowels is not None:
@@ -345,7 +347,8 @@ class Radical_Stem_Conjugation_Override(ConjugationOverride):
         conjugation_override = Radical_Stem_Conjugation_Override(inf_stem_vowel=inf_stem_vowel, present_stem_vowels=present_stem_vowels, 
             past_stem_vowels=past_stem_vowels,
             beginning_word_vowels=beginning_word_vowels)
-        conjugation_override.add_std()
+        # really should be here -- but we don't have to worry about adding an object to a global before init completes for this program so f*ck it
+#         conjugation_override.add_std()
         Radical_Stem_Conjugation_Overrides[conjugation_override.key] = conjugation_override 
 
 """
@@ -434,7 +437,7 @@ def _check_and_change(stem, ending,
     return result
 
 Use_Er_Conjugation_In_Past = make_std_override(key=u'use_er',
-    documentation=u'some verbs', examples= [u'andar'])
+    documentation=u'some -ar verbs use -er conjugation in past tense', examples= [u'andar',u'estar'])
 Use_Er_Conjugation_In_Past.override_tense_ending(Tenses.past_tense, lambda self, tense, person, **kwargs: Standard_Conjugation_Endings[Infinitive_Endings.er_verb][tense][person])
     
 """
@@ -817,6 +820,10 @@ Past_Participle_Acer = make_std_override(key=u"pp_acer",
     documentation=u"past participle that has a acer -to ending rather than the normal -ado, -ando",
     examples=[u'hacer', u'satisfacer'])
 Past_Participle_Acer.override_tense_join(Tenses.past_part_adj, _acer_)
+
+UnaccentPresent_Past_CO = make_std_override(key=u'unaccent_present_past', documentation=u'small verbs have no accent on past and present tense conjugations',
+    examples= [u'dar',u'ir'])
+UnaccentPresent_Past_CO.override_tense_join([Tenses.present_tense,Tenses.past_tense], lambda self, stem, ending, **kwargs: [remove_accent(stem), remove_accent(ending)])
 # TODO: Need to check for reflexive verb
 # Ir_Reflexive_Accent_I_CO = make_std_override(u'[ií]r$', key="imp_accent_i", 
 #     documentation="Second person plural, reflexive positive, ir verbs accent the i: Vestíos! (get dressed!) ",
