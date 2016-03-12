@@ -19,7 +19,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
             self.assertEqual(pp, u'ido', 'ir past part. wrong')
          
     def test_guir_yo(self):
-        distinguir = Verb_Dictionary_get(u'distinguir')
+        distinguir = Verb(u'distinguir','')
         yo_present = distinguir.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(yo_present, u'distingo', 'guir yo present wrong')
  
@@ -108,3 +108,32 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         verb = Verb(u'constituir', u"constitute") 
         conjugation = verb.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(u'constituyo', conjugation, u'constituyo !='+conjugation)
+        
+    def test_u_u_verbs(self):
+        """
+        uar verbs have a u:ú stem change
+        """
+        verb = Verb(u'continuar', u'continue')
+        conjugation = verb.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        self.assertEqual(u'continúo', conjugation, u'continúo !='+ conjugation)
+        conjugation = verb.conjugate(Tenses.present_subjective_tense, Persons.first_person_singular)
+        self.assertEqual(u'continúe', conjugation, u'continúe !='+ conjugation)
+        
+    def test_complex_verbs(self):
+        """
+        e:i verbs have a u:ú stem change
+        """
+        verb = Verb(u'venir', u'come',[u"-e:ie_1sp",u'e:ie',u'e:ie_past_all',u'go',u'e2d',u"e_and_o"])
+        radical_stem = Radical_Stem_Conjugation_Overrides[u'e:ie']
+        self.assertTrue(verb.has_override_applied(radical_stem.key))
+        self.assertFalse(verb.has_override_applied(radical_stem.first_person_conjugation_override.key))
+        self.assertTrue(verb.has_override_applied(radical_stem.stem_changing_ir_past_all.key))
+        conjugation = verb.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        self.assertEqual(u'vengo', conjugation, u'vengo !='+ conjugation)
+        conjugation = verb.conjugate(Tenses.present_tense, Persons.second_person_singular)
+        self.assertEqual(u'vienes', conjugation, u'vienes !='+ conjugation)
+        
+        conjugation = verb.conjugate(Tenses.past_tense, Persons.first_person_singular)
+        self.assertEqual(u'vine', conjugation, u'vine !='+ conjugation)
+        conjugation = verb.conjugate(Tenses.past_tense, Persons.third_person_singular)
+        self.assertEqual(u'vino', conjugation, u'vino !='+ conjugation)

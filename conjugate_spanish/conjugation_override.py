@@ -153,13 +153,6 @@ class ConjugationOverride(object):
         self._overrides(tense, overrides, u'conjugation_joins',persons)
         self.documentation.extend(make_list(documentation))      
         
-    def override_present_stem_changers(self, overrides, documentation=None):
-        """
-        Special case because occurs so often in spanish
-        overrides 1st person singular, 2nd person singular and 3rd person singular and plural
-        """
-        self.override_tense_stem(tenses=Tenses.present_tense, overrides=overrides, persons=Persons.Present_Tense_Stem_Changing_Persons, documentation=documentation)
-        
     def override_past_stem_changers(self, overrides, documentation=None):
         """
         Special case because occurs so often in spanish
@@ -224,20 +217,27 @@ class ConjugationOverride(object):
     
 Radical_Stem_Conjugation_Overrides = {} 
 class Radical_Stem_Conjugation_Override(ConjugationOverride):
-    def __init__(self, inf_stem_vowel, present_stem_vowels, beginning_word_vowels,
+    def __init__(self, inf_stem_vowel, present_stem_vowels=None, beginning_word_vowels=None,
+        past_stem_vowels = None,
+        past_stem_persons=Persons.third_person,
         inf_match=None, parents=None, documentation=None, examples=None, auto_match=None, manual_overrides=None,
         ):
-        key = inf_stem_vowel+u':'+present_stem_vowels
+        if past_stem_vowels is None:
+            past_stem_vowels = present_stem_vowels[0] 
+        if present_stem_vowels is None:
+            key = inf_stem_vowel+u':p_'+past_stem_vowels
+        else:
+            key = inf_stem_vowel+u':'+present_stem_vowels
         
         super(Radical_Stem_Conjugation_Override, self).__init__(inf_match, parents, documentation, examples, key, auto_match, manual_overrides)
 
         def __make_radical_call(vowels_from, vowels_to, beginning_word_vowels_to=None, beginning_word_vowels_from=None):
             # Note: even for i-> transitions this is needed to ensure correct accents on the result.
             # -guir/-quir must not pick up a trailing 'u' as the 'last' vowel
-            regex = re_compile(u'^(.*?)('+Vowels.re_any_string(vowels_from)+u'|'+Vowels.re_any_string(vowels_to)+u')?([^'+Vowels.all+u']*u?)$')
+            regex = re_compile(u'^(.*?)('+Vowels.re_any_string(vowels_from)+u'|'+Vowels.re_any_string(vowels_to)+u')?([^'+Vowels.all+u']*(qu|gu)?)$')
             if beginning_word_vowels_from is not None:
                 # huelo needs to be checked for 'hue' before looking for 'ue'
-                regexes = [ re_compile(u'^()('+Vowels.re_any_string(beginning_word_vowels_from)+u')([^'+Vowels.all+u']*u?)$'), regex]
+                regexes = [ re_compile(u'^()('+Vowels.re_any_string(beginning_word_vowels_from)+u')([^'+Vowels.all+u']*(qu|gu)?)$'), regex]
             else:
                 regexes = [regex]
             def __radical_stem_change(self, stem, **kwargs):
@@ -270,56 +270,67 @@ class Radical_Stem_Conjugation_Override(ConjugationOverride):
         self.inf_stem_vowel = inf_stem_vowel
         self.present_stem_vowels = present_stem_vowels
         self.beginning_word_vowels = beginning_word_vowels
-        past_stem_vowels = present_stem_vowels[0]
-        infinitive_to_present_tense = __make_radical_call(inf_stem_vowel, present_stem_vowels, beginning_word_vowels_to=beginning_word_vowels)
+        self.past_stem_vowels = past_stem_vowels
+        
         infinitive_to_past_tense = __make_radical_call(inf_stem_vowel, past_stem_vowels, beginning_word_vowels_to=beginning_word_vowels)
-        # used to change present subjective 1st/2nd person plural
-        present_tense_to_past_tense = __make_radical_call(present_stem_vowels, past_stem_vowels, beginning_word_vowels_from=beginning_word_vowels)
-        present_tense_to_infinitive = __make_radical_call(present_stem_vowels, inf_stem_vowel, beginning_word_vowels_from=beginning_word_vowels)
-        first_person_co_key = key+u'_1sp'
-        self.first_person_conjugation_override = make_std_override(key=first_person_co_key,
-            documentation='radical stem changing '+key+ "; present tense first person only (allows for this to be turned off) - tener"
-        )
-        self.first_person_conjugation_override.override_tense_stem(Tenses.present_tense, infinitive_to_present_tense, Persons.first_person_singular)
-        self.most_present_tense = make_std_override(key=key+u'_present',
-            parents=[self.first_person_conjugation_override],
-            documentation='radical stem changing '+key+ "; present tense"
+        if self.present_stem_vowels is not None:
+            infinitive_to_present_tense = __make_radical_call(inf_stem_vowel, self.present_stem_vowels, beginning_word_vowels_to=beginning_word_vowels)
+            # used to change present subjective 1st/2nd person plural
+            present_tense_to_past_tense = __make_radical_call(self.present_stem_vowels, self.past_stem_vowels, beginning_word_vowels_from=beginning_word_vowels)
+            present_tense_to_infinitive = __make_radical_call(self.present_stem_vowels, self.inf_stem_vowel, beginning_word_vowels_from=beginning_word_vowels)
+            first_person_co_key = key+u'_1sp'
+            self.first_person_conjugation_override = make_std_override(key=first_person_co_key,
+                documentation='radical stem changing '+key+ "; present tense first person only (allows for this to be turned off) - tener"
             )
-    
-        self.most_present_tense.override_tense_stem(Tenses.present_tense, infinitive_to_present_tense,
-            [Persons.second_person_singular, Persons.third_person_singular, Persons.third_person_plural])
+            self.first_person_conjugation_override.override_tense_stem(Tenses.present_tense, infinitive_to_present_tense, Persons.first_person_singular)
+            self.most_present_tense = make_std_override(key=key+u'_present',
+                parents=[self.first_person_conjugation_override],
+                documentation='radical stem changing '+key+ "; present tense"
+                )
+        
+            self.most_present_tense.override_tense_stem(Tenses.present_tense, infinitive_to_present_tense,
+                [Persons.second_person_singular, Persons.third_person_singular, Persons.third_person_plural])
+            # TODO - check to see if the first_person stem radical change has been applied. before doing a revert ( tener ) 
+            self.nos_vos_present_subjective_ir = make_std_override(key=key+u'_pres_sub_nos_vos_ir',
+                documentation=u'stem changing ir verbs that actually applied the stem change in the yo-present use the 3rd past tense vowel',  examples=[u'dormir',u'morir']
+            )
+            self.nos_vos_present_subjective_ir.override_tense_stem(Tenses.present_subjective_tense, present_tense_to_past_tense, [Persons.first_person_plural,Persons.second_person_plural])
+            self.nos_vos_present_subjective_ar = make_std_override(key=key+u'_pres_sub_nos_vos',
+                documentation=u'stem changing ar,er verbs use the infinitive vowel. ir verbs that do not apply the stem change in the yo-present use the infinitive vowel',  examples=[u'dormir',u'morir']
+            )
+            self.nos_vos_present_subjective_ar.override_tense_stem(Tenses.present_subjective_tense, present_tense_to_infinitive, [Persons.first_person_plural,Persons.second_person_plural])
+
         # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
         # but for example, absolver o:ue does not have past tense stem changing
         self.stem_changing_ir_past = make_std_override(key=key+u"_past_3rd",
-#                 auto_match=True,
             examples=[u'dormir'],
             documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
         )
-        self.stem_changing_ir_past.override_tense_stem(Tenses.past_tense, infinitive_to_past_tense, Persons.third_person)
+        self.stem_changing_ir_past.override_tense_stem(Tenses.past_tense, infinitive_to_past_tense, past_stem_persons)
+        
+        self.stem_changing_ir_past_all = make_std_override(key=key+u"_past_all",
+            examples=[u'venir'],
+            documentation=u"Some -ir verbs apply the stem-change to all preterite (must be manually applied)"
+        )
+        self.stem_changing_ir_past_all.override_tense_stem(Tenses.past_tense, infinitive_to_past_tense, Persons.all)
         # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
         # but for example, absolver o:ue does not have past tense stem changing
         self.stem_changing_ir_gerund = make_std_override(key=key+u"_ir_gerund",
-#                 auto_match=True,
             examples=[u'dormir'],
             documentation=u"Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
         )
         self.stem_changing_ir_gerund.override_tense_stem(Tenses.gerund, infinitive_to_past_tense)     
         
-        # TODO - check to see if the first_person stem radical change has been applied. before doing a revert ( tener ) 
-        self.nos_vos_present_subjective_ir = make_std_override(key=key+u'_pres_sub_nos_vos_ir',
-            documentation=u'stem changing ir verbs that actually applied the stem change in the yo-present use the 3rd past tense vowel',  examples=[u'dormir',u'morir']
-        )
-        self.nos_vos_present_subjective_ir.override_tense_stem(Tenses.present_subjective_tense, present_tense_to_past_tense, [Persons.first_person_plural,Persons.second_person_plural])
-        self.nos_vos_present_subjective_ar = make_std_override(key=key+u'_pres_sub_nos_vos',
-            documentation=u'stem changing ar,er verbs use the infinitive vowel. ir verbs that do not apply the stem change in the yo-present use the infinitive vowel',  examples=[u'dormir',u'morir']
-        )
-        self.nos_vos_present_subjective_ar.override_tense_stem(Tenses.present_subjective_tense, present_tense_to_infinitive, [Persons.first_person_plural,Persons.second_person_plural])
         self.conjugation_overrides = [ None ] * len(Infinitive_Endings)
-        for ending in Infinitive_Endings.all:
-            self.conjugation_overrides[ending] = [self.first_person_conjugation_override, self.most_present_tense ]
+        if self.present_stem_vowels is not None:
+            for ending in Infinitive_Endings.all:
+                self.conjugation_overrides[ending] = [self.first_person_conjugation_override, self.most_present_tense ]
+        else:
+            for ending in Infinitive_Endings.all:
+                self.conjugation_overrides[ending] = [ ]            
 
         self.conjugation_overrides[Infinitive_Endings.ir_verb].extend([self.stem_changing_ir_gerund, self.stem_changing_ir_past])
-                
+            
     def apply(self, verb):
         conjugation_overrides = self.conjugation_overrides[verb.verb_ending_index]
         for conjugation_override in conjugation_overrides:
@@ -330,8 +341,9 @@ class Radical_Stem_Conjugation_Override(ConjugationOverride):
             verb.process_conjugation_override(self.nos_vos_present_subjective_ar)
             
     @classmethod
-    def make(cls, inf_stem_vowel, present_stem_vowels, beginning_word_vowels=None):    
+    def make(cls, inf_stem_vowel, present_stem_vowels=None, past_stem_vowels=None, past_stem_persons=Persons.third_person, beginning_word_vowels=None):    
         conjugation_override = Radical_Stem_Conjugation_Override(inf_stem_vowel=inf_stem_vowel, present_stem_vowels=present_stem_vowels, 
+            past_stem_vowels=past_stem_vowels,
             beginning_word_vowels=beginning_word_vowels)
         conjugation_override.add_std()
         Radical_Stem_Conjugation_Overrides[conjugation_override.key] = conjugation_override 
@@ -347,6 +359,12 @@ Radical_Stem_Conjugation_Override.make(inf_stem_vowel=u'o', present_stem_vowels=
 Radical_Stem_Conjugation_Override.make(inf_stem_vowel=u'i', present_stem_vowels=u'ie')
 #jugar - only example
 Radical_Stem_Conjugation_Override.make(inf_stem_vowel=u'u', present_stem_vowels=u'ue')
+# [^qg]uar verbs act like radical stem changers
+Radical_Stem_Conjugation_Override.make(inf_stem_vowel=u'u', present_stem_vowels=u'ú')
+# iar verbs
+Radical_Stem_Conjugation_Override.make(inf_stem_vowel=u'i', present_stem_vowels=u'í')
+# hacer and satisfacer
+Radical_Stem_Conjugation_Override.make(inf_stem_vowel=u'a', past_stem_vowels=u'i', past_stem_persons=Persons.all)
 
 def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= None):
     truncated_stem = stem[:-1]
@@ -360,24 +378,12 @@ def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= No
     else:
         return truncated_stem        
     
-def _replace_first_letter_of_ending(ending, expected_first_letter, new_beginning= None):
-    truncated_ending = ending[1:]
-    first_letter = ending[0]
-    if expected_first_letter is not None and expected_first_letter != first_letter:
-        # this occurs if another alteration happened first
-        return ending
-#         raise Exception(ending+":wrong ending expected:"+expected_last_letter+" got "+last_letter)
-    elif new_beginning is not None:
-        return new_beginning+truncated_ending
-    else:
-        return truncated_ending   
 def _universal_accent_correction(self, stem, ending, **kwargs):
     # if the ending has an accent then we remove the accent on the stem
     if accented_vowel_check.search(stem) and accented_vowel_check.search(ending):
         return [ remove_accent(stem), ending]
     else:
         return [stem, ending]
-
 # explicitly applied at the end
 UniversalAccentFix = ConjugationOverride()
 UniversalAccentFix.override_tense_join(Tenses.all, _universal_accent_correction, documentation=u"ensure an accented ending overrides an accented stem")
@@ -502,7 +508,6 @@ E_Gir_CO = make_std_override(inf_match=re_compile(u'egir$'),
 def _car_check(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_C,STARTS_WITH_E,u'qu')
     return result
-
 Car_CO = make_std_override(inf_match=re_compile(six.u('car$')), 
     key='car',
     documentation='verbs ending in -car have c -> qu before e',
@@ -513,9 +518,15 @@ Car_CO.override_tense_join(Tenses.present_subjective_tense, _car_check)
 
 # ========================================================================
 # http://www.intro2spanish.com/verbs/listas/master-zco.htm
+
+# TODO : NOTE: May need to do this check for e_and_o verbs?
 def _v_ceir_check(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_C,STARTS_WITH_O,u'zc')
     return result    
+def _c2_z_check(self, stem, ending, **kwargs):
+    result = _check_and_change(stem, ending, ENDS_WITH_C,STARTS_WITH_O,u'z')
+    return result  
+
 Cer_After_Vowel_CO = make_std_override(inf_match=re_compile(u'['+Vowels.all+u']cer$'),
     key='v_cer',
     documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o',
@@ -526,10 +537,9 @@ Cir_After_Vowel_CO = make_std_override(inf_match=re_compile(u'['+Vowels.all+u']c
     documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o')
 for co in [ Cer_After_Vowel_CO, Cir_After_Vowel_CO]:
     co.override_tense_join(Tenses.present_tense, _v_ceir_check, Persons.first_person_singular)
-
-def _c_ceir_check(self, stem, ending, **kwargs):
-    result = _check_and_change(stem, ending, ENDS_WITH_C,STARTS_WITH_O,u'z')
-    return result    
+    # Exists to handle satisfacer: (e_and_o) verbs : May not to be so general?
+    co.override_tense_join(Tenses.past_tense, _c2_z_check, Persons.third_person_singular)
+  
 Cer_After_Const_CO = make_std_override(inf_match=re_compile(u'[^'+Vowels.all+u']cer$'),
     key='c_cer',
     documentation='verbs ending in -cer or -cir with a preceding consonant have c -> z before o',
@@ -541,7 +551,7 @@ Cir_After_Const_CO = make_std_override(inf_match=re_compile(u'[^'+Vowels.all+u']
     examples=[u'convencer']
     )
 for co in [ Cer_After_Const_CO, Cir_After_Const_CO ]:
-    co.override_tense_join(Tenses.present_tense, _c_ceir_check, Persons.first_person_singular)
+    co.override_tense_join(Tenses.present_tense, _c2_z_check, Persons.first_person_singular)
 # ========================================================================
 # http://www.studyspanish.com/verbs/lessons/pretortho.htm
 
@@ -593,7 +603,7 @@ def _uir_present_check(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_U, STARTS_WITH_NON_I_VOWEL, u'uy')
     return result
 Uir_CO = make_std_override(inf_match=re_compile(six.u('[^qg]uir$')),
-    parents=[I2Y_PastTense_CO], 
+    parents=[I2Y_PastTense_CO, Yendo_Gerund_CO], 
     key="uir",
     documentation='-uir but NOT quir nor guir verbs. Add a y before inflection except 1st/2nd plurals',
     examples=[u'incluir', u'construir', u'contribuir']
@@ -697,16 +707,16 @@ LL_N_CO.override_tense_join(Tenses.past_tense, _ll_n_check, Persons.third_person
 Iar_CO = make_std_override(inf_match=re_compile(u'iar$'),
     auto_match=False,
     key=u'iar',
+    parents=[u'i:í'],
     documentation=u'some iar verbs accent the i so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-iar-with-i-ii.htm\
      http://www.intro2spanish.com/verbs/listas/master-iar.htm',
     examples=[u'confiar',u'criar',u'desviar',u'enfriar',u'esquiar'])
-Iar_CO.override_present_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'i', u'í'))
 
 Uar_CO = make_std_override(inf_match=re_compile(u'[^g]uar$'),
-    auto_match=False,
     key=u'uar',
-    documentation=u'some uar verbs accent the u so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-uar-with-u-uu.htm')
-Uar_CO.override_present_stem_changers(lambda self, stem, **kwargs: _replace_last_letter_of_stem(stem, u'u', u'ú'))
+    parents=[u'u:ú'],
+    documentation=u'some uar verbs accent the u so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-uar-with-u-uu.htm only exceptions seem to be guar verbs',
+    examples=[u'continuar'])
 
 Guar_CO = make_std_override(inf_match=re_compile(u'guar$'),
     key=u'guar',
@@ -719,12 +729,11 @@ Guar_CO.override_tense_join(Tenses.past_tense, _umlaut_u_, Persons.first_person_
     documentation="preserves sound in infinitive")
 Guar_CO.override_tense_join(Tenses.present_subjective_tense, _umlaut_u_, documentation="preserves sound in infinitive")
 
-#>>>>>>> TODO: check to see of all -go verbs use just stem in imperative 2nd person, salir, tener,poner
 def __go(self, stem, **kwargs):
     if stem[-1:] in Vowels.all:
         return stem +u'ig'
     elif stem[-1:] == u'c':
-        # hacer is example
+        # hacer, saticificar is example
         return stem[:-1]+u'g'
     else:
         return stem +u'g'

@@ -3,7 +3,7 @@ from conjugate_spanish.conjugation_override import ConjugationOverride
 from conjugate_spanish.constants import Tenses, Persons
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_add
 
-_conjugation_overrides = ConjugationOverride(parents=[u'go', u'pp_acer'])
+_conjugation_overrides = ConjugationOverride(parents=[u'go', u'pp_acer',u'e_and_o'])
 
 # all except 2nd person plural have just h as a stem
 _conjugation_overrides.override_tense_stem(Tenses.past_tense, u'hic', Persons.all_except(Persons.third_person_singular))

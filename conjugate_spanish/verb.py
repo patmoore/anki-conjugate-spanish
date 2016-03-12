@@ -453,7 +453,7 @@ class Verb():
                 #May need to go through twice if there is only 1 vowel in the word and it would be normally skipped
                 for index in range(len(conjugation_string)-1,0,-1):                    
                     if conjugation_string[index] in _strong_vowel:
-                        #strong vowel                        
+                        #strong vowel             
                         if vowel_skip > 0:
                             vowel_skip -=1
                         else:

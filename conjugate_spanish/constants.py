@@ -160,6 +160,9 @@ class Vowels_(list):
     accented = a_a + e_a + i_a + o_a + u_a
     all = a_any + e_any + i_any +o_any +u_any
     any_ = [ a_any, e_any, i_any, o_any, u_any ]
+    
+    strong = [ a, a_a, e, e_a, o, o_a ]
+    weak = [ i, i_a, u, u_a, u_u ]
     @classmethod
     def any(cls, vowel):
         for an_any in Vowels_.any_:
@@ -170,8 +173,29 @@ class Vowels_(list):
     def re_any_string(cls, string_):
         regex_str = u''
         for char in string_:
-            regex_str += u'['+Vowels_.any(char)+u']'
+            reg_chars = Vowels_.any(char)
+            if len(reg_chars) == 1:
+                regex_str += reg_chars
+            else:
+                regex_str += u'['+reg_chars+u']'
         return regex_str    
+    dipthong_regex_pattern = u'(?:(?:[iu]?h?[aeo])|(?:[aeo]h?[iu]?))'
+    
+    accent_rules = [
+        # word ends in strong vowel, dipthong or n,s
+        re_compile(u'^(.*?)('+dipthong_regex_pattern+u')([^'+all+u']*)('+dipthong_regex_pattern+u'[ns]{0,2})$'),
+        # word ends in weak vowel or n,s
+        re_compile(u'^(.*?)('+dipthong_regex_pattern+u')([^'+all+u']*)([iu]?[ns]{0,2})$'),
+        re_compile(u'^(.*?)('+u'[iu]'+u')([^'+all+u']*)([ns]{0,2})$'),
+    ]
+    @classmethod
+    def find_accented(cls, word):
+        for accent_rule in Vowels_.accent_rules:
+            match = accent_rule.match(word)
+            if match is not None:
+                break
+        return match
+        
     
 Vowels = Vowels_([
     u'a',

@@ -2,7 +2,7 @@
 import unittest
 from conjugate_spanish import Tenses, Persons, Verb
 from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add
-from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect
+from conjugate_spanish.constants import Vowels
 
 class TestBasic(unittest.TestCase):
     """
@@ -68,3 +68,26 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(conjugation, u'acérquese')
         conjugation = verb.conjugate(Tenses.imperative_positive, Persons.third_person_plural)
         self.assertEqual(conjugation, u'acérquense')
+        
+    def test_proper_accent(self):
+        """
+        make sure the o is accented not the i ( i is a weak vowel )
+        """
+        verb = Verb(u'divorciarse',u'')
+        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        self.assertEqual(u'divórciate', conjugation)
+        
+    def test_accenting_rules(self):
+        samples = {
+            u'divorcia' : [u'div', u'o',u'rc',u'ia'],
+            u'divorcian' : [u'div', u'o',u'rc',u'ian'],
+            u'divourcia' : [u'div', u'ou',u'rc',u'ia'],
+            u'ten' : [ u't',u'e',u'n', u''],
+            u'di' : [ u'd',u'i',u'',u''],
+            u'rehuso' : [u'r',u'ehu']
+        }
+        for word,expected in samples.iteritems():
+            match = Vowels.find_accented(word)
+            l = [i for i in match.groups()]
+            self.assertListEqual(expected, l)
+        
