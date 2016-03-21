@@ -188,6 +188,8 @@ class Vowels_(list):
         re_compile(u'^(.*?)('+dipthong_regex_pattern+u')([^'+all+u']*)([iu]?[ns]{0,2})$'),
         re_compile(u'^(.*?)('+u'[iu]'+u')([^'+all+u']*)([ns]{0,2})$'),
     ]
+    #TODO needs more work
+    # need to pick out the exact vowel to accent.
     @classmethod
     def find_accented(cls, word):
         for accent_rule in Vowels_.accent_rules:

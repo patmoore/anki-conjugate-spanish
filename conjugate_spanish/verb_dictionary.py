@@ -4,11 +4,9 @@ from __future__ import print_function
 import codecs
 import traceback
 import csv
-import six
 from verb import Verb
 from constants import *
 
-from constants import make_unicode
 from conjugation_override import ConjugationOverride
 
 Verb_Dictionary = {}
@@ -42,7 +40,7 @@ def Verb_Dictionary_load():
     import special_cases
     
     for fileNameBase in [u'501verbs',u'501extendedverbs']:
-        fileName = './conjugate_spanish/dictionaries/'+fileNameBase+'.csv'
+        fileName = u'./conjugate_spanish/dictionaries/'+fileNameBase+u'.csv'
         verbs = []
         if fileNameBase == u'501verbs':
             verbs.extend([u'hacer',u'ser',u'ir',u'irse',u'hacer',u'estar'])
@@ -73,8 +71,8 @@ def Verb_Dictionary_export(source, outputfile=None, testfn=lambda **kwargs:True)
         outputfile = source
     _outputfile = u'./conjugate_spanish/expanded/'+outputfile+u'-verbs-only.csv'
     
-    with codecs.open(_outputfile, "w", "utf-8") as f:
-        f.write("full_phrase")
+    with codecs.open(_outputfile, u"w", u"utf-8") as f:
+        f.write(u"full_phrase")
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
                 f.write(u','+Tenses[tense])
@@ -86,9 +84,9 @@ def Verb_Dictionary_export(source, outputfile=None, testfn=lambda **kwargs:True)
             verb = Verb_Dictionary_get(phrase)
             call = {u"verb":verb}
             if testfn(**call):   
-                print("conjugating>>"+verb.full_phrase)
+                print(u"conjugating>>"+verb.full_phrase)
                 f.write(verb.print_csv(False))
-                f.write("\n")
+                f.write(u"\n")
 
 #     with codecs.open('./conjugate_spanish/expanded/'+source+"-expanded.csv", "w", "utf-8") as f:
 #         f.write("full_phrase,appliedOverrides,doNotApply,base_verb")

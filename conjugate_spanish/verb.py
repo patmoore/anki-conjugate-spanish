@@ -688,6 +688,20 @@ class Verb():
         if self.base_verb_str is not None:
             result[u'base_verb'] = self.base_verb_str
         return result
+    
+    @property
+    def overrides_string(self):    
+        """
+        so users can edit a note
+        """            
+        if self.doNotApply is not None and self.doNotApply != []:
+            result = u'-' + u',-'.join(self.doNotApply)
+        else:
+            result =u''
+        
+        if self.appliedOverrides is not None and self.appliedOverrides != []:
+            result += u',' + u','.join(self.appliedOverrides)
+        return result
         
     def __get_override(self, tense, person, attr_name):
         """
@@ -850,6 +864,7 @@ class Verb():
             accented = accented_vowel_check.findall(conjugation)
             if len(accented) > 1:
                 self.__raise("Too many accents in "+conjugation, tense, person)
+                
     def __raise(self, msg, tense=None, person=None, traceback_=None):
         msg_ = u"{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
         raise Exception, msg_, traceback_
