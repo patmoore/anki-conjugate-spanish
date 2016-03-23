@@ -8,6 +8,7 @@ from verb import Verb
 from constants import *
 
 from conjugation_override import ConjugationOverride
+import os
 
 Verb_Dictionary = {}
 Verb_Dictionary_By = {}
@@ -38,9 +39,12 @@ def Verb_Dictionary_get(phrase):
 
 def Verb_Dictionary_load():
     import special_cases
-    
+#     print(u"current directory=",os.getcwd())
+    basedir = os.path.dirname(os.path.realpath(__file__))
+    dictionaryDirectory = basedir+u'/dictionaries/'
+#     print(u"current directory=",basedir)
     for fileNameBase in [u'501verbs',u'501extendedverbs']:
-        fileName = u'./conjugate_spanish/dictionaries/'+fileNameBase+u'.csv'
+        fileName = dictionaryDirectory+fileNameBase+u'.csv'
         verbs = []
         if fileNameBase == u'501verbs':
             verbs.extend([u'hacer',u'ser',u'ir',u'irse',u'hacer',u'estar'])

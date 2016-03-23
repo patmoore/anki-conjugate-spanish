@@ -697,11 +697,16 @@ class Verb():
         if self.doNotApply is not None and self.doNotApply != []:
             result = u'-' + u',-'.join(self.doNotApply)
         else:
-            result =u''
-        
+            result = None
         if self.appliedOverrides is not None and self.appliedOverrides != []:
-            result += u',' + u','.join(self.appliedOverrides)
-        return result
+            if result is not None:
+                result += u',' + u','.join(self.appliedOverrides)
+            else:
+                result = u','.join(self.appliedOverrides)
+        if result is None:
+            return u'regular'
+        else:
+            return result
         
     def __get_override(self, tense, person, attr_name):
         """
