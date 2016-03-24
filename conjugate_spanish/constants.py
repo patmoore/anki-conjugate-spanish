@@ -5,11 +5,11 @@ import re
 import sys
 import traceback
 
-def re_compile(string):
+def re_compile(string_):
     """
     unicode, ignore case
     """
-    return re.compile(string, re.UNICODE+re.IGNORECASE)
+    return re.compile(string_, re.UNICODE+re.IGNORECASE)
 
 class BaseConsts_(list):
     @property

@@ -41,6 +41,7 @@ class ModelTemplate_(dict):
     ENGLISH_DEFINITION = u'English definition'
     CONJUGATION_OVERRIDES = u'Conjugation Overrides'
     MANUAL_CONJUGATION_OVERRIDES = u'Manual Conjugation Overrides'
+    splitTensePerson = re_compile(u'(.*):(.*)')
     """
     Used to create custom models for verbs
     """
@@ -75,7 +76,65 @@ class ModelTemplate_(dict):
         
     def addCard(self, card):
         addToList(self[u'tmpls'], card)
-
+        
+    @classmethod
+    def getModel(cls, model, create=False):
+        global mw
+        if isinstance(model, six.string_types):
+            model_ = mw.col.models.byName(model)
+            if model_ is None and create:
+                model_ = mw.col.models.new(model)
+        elif isinstance(model, ModelTemplate_):
+            return model
+        else:
+            return ModelTemplate_(model=model_)
+    def verbToNote(self, verb):
+        note = Note(mw.col, model=self )
+        for field in self[u'flds']:
+            fieldName = field[u'name']
+            if fieldName == ModelTemplate_.INFINITIVE_OR_PHRASE:
+                value = verb.full_phrase
+            elif fieldName == ModelTemplate_.ENGLISH_DEFINITION:
+                value = verb.definition
+            elif fieldName == ModelTemplate_.CONJUGATION_OVERRIDES:
+                value = verb.overrides_string
+            elif fieldName == ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES:
+                value = verb.
+            else:
+                conjugation_match = ModelTemplate_.splitTensePerson.match(fieldName)
+                if conjugation_match is not None:
+                    tense = Tenses.index(conjugation_match.group(1))
+                    if tense in Tenses.Person_Agnostic:
+                        value = verb.conjugate(tense)
+                    else:
+                        person = Persons.index(conjugation_match.group(2))
+                        value = verb.conjugate(tense, person)
+                    
+            if value is None:
+                """
+                 HACK because anki can't handle None as a field value
+                "/Users/patmoore/Documents/Anki/addons/conjugate_spanish/anki_integration.py", line 324, in loadDictionary
+                    mw.col.addNote(note)
+                  File "/Users/patmoore/side-projects/anki/anki/collection.py", line 250, in addNote
+                    cms = self.findTemplates(note)
+                  File "/Users/patmoore/side-projects/anki/anki/collection.py", line 284, in findTemplates
+                    avail = self.models.availOrds(model, joinFields(note.fields))
+                  File "/Users/patmoore/side-projects/anki/anki/utils.py", line 265, in joinFields
+                    return "\x1f".join(list)
+                TypeError: sequence item 3: expected string or Unicode, NoneType found
+                """
+                value = u''
+            note[fieldName] = value
+        return note
+    
+    def noteToVerb(self,note):
+        phrase = note[ModelTemplate_.INFINITIVE_OR_PHRASE]
+        definition = note[ModelTemplate_.ENGLISH_DEFINITION]
+        conjugation_overrides = note[ModelTemplate_.CONJUGATION_OVERRIDES]
+        manual_overrides = note[ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES]
+        verb = Verb_Dictionary.get(phrase)
+        if verb is None:
+            verb = Verb_Dictionary.add(phrase, definition, conjugation_overrides, manual_overrides=manual_overrides)
 
 class CardTemplate_(dict):
     STD_ANSWER_FORMAT = u'{{FrontSide}}\n\n<hr id=answer>\n\n'
@@ -175,10 +234,10 @@ ModelDefinitions = { }
 for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
     ModelDefinitions[modelName] = {
         u'fields': [
-            ModelTemplate_.INFINITIVE_OR_PHRASE,
-            ModelTemplate_.ENGLISH_DEFINITION,
-            ModelTemplate_.CONJUGATION_OVERRIDES,
-            ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES,
+            {u'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
+            {u'name': ModelTemplate_.ENGLISH_DEFINITION},
+            {u'name': ModelTemplate_.CONJUGATION_OVERRIDES},
+            {u'name': ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES},
         ]
     }
 
@@ -229,9 +288,9 @@ class AnkiIntegration_(object):
         """
         see if we can generate card templates automatically
         """
-        model = self._getModel(self.modelName) 
+        model = ModelTemplate_.getModel(self.modelName) 
         if model is None:
-            model = self._getModel(self.modelName, True)
+            model = self.getModel(self.modelName, True)
             model[u'flds']=[]    
             modelT = ModelTemplate_(model)   
             modelT.createField(name=ModelTemplate_.INFINITIVE_OR_PHRASE)
@@ -314,7 +373,7 @@ class AnkiIntegration_(object):
         pass
         
     def setDeckNoteType(self, deck):
-        model = self._getModel(self.modelName)
+        model = self.getModel(self.modelName)
         deck_ = self._getDeck(deck)
         deck_[u'mid'] = model[u'id']
         self._saveDeck(deck_)
@@ -329,16 +388,6 @@ class AnkiIntegration_(object):
             return deck
         deck_ = mw.col.decks.get(deckId)
         return deck_
-        
-    def _getModel(self, model, create=False):
-        global mw
-        if isinstance(model, six.string_types):
-            model_ = mw.col.models.byName(model)
-            if model_ is None and create:
-                model_ = mw.col.models.new(model)
-        else:
-            return model
-        return model_
     
     def _saveDeck(self, deck):
         mw.col.decks.save(deck)
@@ -350,36 +399,8 @@ class AnkiIntegration_(object):
         # set it to call testFunction when it's clicked
         mw.connect(action, SIGNAL("triggered()"), func)
         # and add it to the tools menu
-        mw.form.menuTools.addAction(action)
+        mw.form.menuTools.addAction(action)        
         
-        
-    def verbToNote(self, verb):
-        note = Note(mw.col, model=self._getModel(self.modelName) )
-        note[INFINITIVE_OR_PHRASE] = verb.full_phrase
-        note[ENGLISH_DEFINITION] = verb.definition
-        note[CONJUGATION_OVERRIDES] = verb.overrides_string
-        for tense in Tenses.all:
-            if tense in Tenses.Person_Agnostic:
-                note[Tenses[tense]] = verb.conjugate(tense)
-            else:
-                for person in Persons.all:
-                    conjugation = verb.conjugate(tense,person)
-                    if conjugation is None:
-                        """
-                         HACK because anki can't handle None as a field value
-                        "/Users/patmoore/Documents/Anki/addons/conjugate_spanish/anki_integration.py", line 324, in loadDictionary
-                            mw.col.addNote(note)
-                          File "/Users/patmoore/side-projects/anki/anki/collection.py", line 250, in addNote
-                            cms = self.findTemplates(note)
-                          File "/Users/patmoore/side-projects/anki/anki/collection.py", line 284, in findTemplates
-                            avail = self.models.availOrds(model, joinFields(note.fields))
-                          File "/Users/patmoore/side-projects/anki/anki/utils.py", line 265, in joinFields
-                            return "\x1f".join(list)
-                        TypeError: sequence item 3: expected string or Unicode, NoneType found
-                        """
-                        conjugation = u''
-                    note[Tenses[tense]+' '+Persons[person]] = conjugation
-        return note
         
     def loadDictionary(self):
         Verb_Dictionary.load()
