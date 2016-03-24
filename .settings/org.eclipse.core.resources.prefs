@@ -5,6 +5,7 @@ encoding//conjugate_spanish/cc.py=utf-8
 encoding//conjugate_spanish/conjugate_spanish.py=utf-8
 encoding//conjugate_spanish/conjugation_override.py=utf-8
 encoding//conjugate_spanish/constants.py=utf-8
+encoding//conjugate_spanish/nonconjugated_phrase.py=utf-8
 encoding//conjugate_spanish/special_cases/__init__.py=utf-8
 encoding//conjugate_spanish/special_cases/estar_definition.py=utf-8
 encoding//conjugate_spanish/special_cases/haber_definition.py=utf-8
