@@ -14,7 +14,7 @@ from verb import Verb
 import six
 from anki.notes import Note
 from anki.utils import intTime
-from verb_dictionary import Verb_Dictionary_get
+from verb_dictionary import Verb_Dictionary
 from constants import *
 
 __all__ = [ 'AnkiIntegration']
@@ -29,16 +29,20 @@ MODEL_FIELDS = {
 }
 
 
-INFINITIVE_OR_PHRASE = u'Infinitive or Phrase'
-ENGLISH_DEFINITION = u'English definition'
-CONJUGATION_OVERRIDES = u'Conjugation Overrides'
 def addToList(list_, item):
     item[u'ord'] = len(list_)
     list_.append(item)
     
+def td(string_):
+    return u'<td>' + string_ + u'</td>'
+
 class ModelTemplate_(dict):
+    INFINITIVE_OR_PHRASE = u'Infinitive or Phrase'
+    ENGLISH_DEFINITION = u'English definition'
+    CONJUGATION_OVERRIDES = u'Conjugation Overrides'
+    MANUAL_CONJUGATION_OVERRIDES = u'Manual Conjugation Overrides'
     """
-    Used to combine a model with a verb
+    Used to create custom models for verbs
     """
     def __init__(self, model, **kwargs):
         super(ModelTemplate_, self).__init__(model)
@@ -46,11 +50,21 @@ class ModelTemplate_(dict):
     def createConjugationFields(self, tenses=Tenses.all, persons=Persons.all):
         for tense in tenses:
             if tense in Tenses.Person_Agnostic:
-                self.createField(name=Tenses[tense])
+                self.createField(name=ModelTemplate_.fieldName(tense))
             else:
                 for person in persons:
-                    self.createField(name=Tenses[tense]+' '+Persons[person])
-                
+                    name = ModelTemplate_.fieldName(tense, person)
+                    if name is not None:
+                        self.createField(name=name)
+        
+    @classmethod        
+    def fieldName(cls, tense, person=None):
+        if tense in Tenses.Person_Agnostic:
+            return Tenses[tense]
+        elif tense not in Tenses.imperative and person != Persons.first_person_singular:
+            return Tenses[tense]+' '+Persons[person]
+        else:
+            return None
     def createField(self, name):
         field = dict(MODEL_FIELDS)
         field[u'name'] = name
@@ -61,9 +75,7 @@ class ModelTemplate_(dict):
         
     def addCard(self, card):
         addToList(self[u'tmpls'], card)
-        
-def td(string_):
-    return u'<td>' + string_ + u'</td>'
+
 
 class CardTemplate_(dict):
     STD_ANSWER_FORMAT = u'{{FrontSide}}\n\n<hr id=answer>\n\n'
@@ -121,8 +133,8 @@ class CardTemplate_(dict):
     def createConjugationOverrideCard(cls, model=None):
         card = CardTemplate_(model)
         card.name = u'Conjugation Overrides'
-        card.questionFormat = u'{{'+INFINITIVE_OR_PHRASE+u'}}'
-        card.answerFormat = CardTemplate_.STD_ANSWER_FORMAT + u'{{'+CONJUGATION_OVERRIDES+u'}}'
+        card.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'
+        card.answerFormat = CardTemplate_.STD_ANSWER_FORMAT + u'{{'+ModelTemplate_.CONJUGATION_OVERRIDES+u'}}'
         return card
 
     @classmethod
@@ -131,7 +143,7 @@ class CardTemplate_(dict):
             return td(Persons[person])+ td(u'{{'+Tenses[tense]+u' '+Persons[person]+u'}}')     
         card = CardTemplate_(model)        
         card.name = Tenses[tense]
-        card.questionFormat = u'{{'+INFINITIVE_OR_PHRASE+u'}}'+u'<br>'+Tenses[tense]
+        card.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'+u'<br>'+Tenses[tense]
         answer = CardTemplate_.STD_ANSWER_FORMAT+u'<table>\n'
         answer += u'<tr>'
         if tense in Tenses.Person_Agnostic:
@@ -154,7 +166,40 @@ class CardTemplate_(dict):
         answer += u'</table>'
         card.answerFormat = answer
         return card
-        
+    
+BASE_MODEL = u'Español:Verb'
+FULLY_CONJUGATED_MODEL = u'Español:Fully Conjugated Verb'
+THIRD_PERSON_ONLY_MODEL = u'Español:Third Person Only'
+
+ModelDefinitions = { }
+for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
+    ModelDefinitions[modelName] = {
+        u'fields': [
+            ModelTemplate_.INFINITIVE_OR_PHRASE,
+            ModelTemplate_.ENGLISH_DEFINITION,
+            ModelTemplate_.CONJUGATION_OVERRIDES,
+            ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES,
+        ]
+    }
+
+for tense in Tenses.All_Persons:
+    for person in Persons.all:
+        ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense,person))
+for tense in Tenses.imperative:
+    for person in Persons.all_except(Persons.first_person_singular):
+        ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense,person))
+for tense in Tenses.Person_Agnostic:
+    ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense))
+
+for tense in Tenses.All_Persons:
+    for person in Persons.third_person:
+        ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense,person))
+for tense in Tenses.imperative:
+    for person in Persons.third_person:
+        ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense,person))
+for tense in Tenses.Person_Agnostic:
+    ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense))
+    
 TEMPLATE_FIELDS = {
     u'name': u'Card 1',
     u'qfmt': u'{{Front}}', 
@@ -164,6 +209,8 @@ TEMPLATE_FIELDS = {
     u'ord': 0, 
     u'bqfmt': u''
 }
+
+
 """
 Plan:
 1. Define standard espanol card conjugation: stores fields that are represented in the Verb card. (string representations of co)
@@ -187,11 +234,11 @@ class AnkiIntegration_(object):
             model = self._getModel(self.modelName, True)
             model[u'flds']=[]    
             modelT = ModelTemplate_(model)   
-            modelT.createField(name=INFINITIVE_OR_PHRASE)
+            modelT.createField(name=ModelTemplate_.INFINITIVE_OR_PHRASE)
             
-            modelT.createField(name=ENGLISH_DEFINITION)
+            modelT.createField(name=ModelTemplate_.ENGLISH_DEFINITION)
             #How to provide help text? 
-            modelT.createField(name=CONJUGATION_OVERRIDES)
+            modelT.createField(name=ModelTemplate_.CONJUGATION_OVERRIDES)
             modelT.createConjugationFields()
             
             self._createTemplates(modelT)
@@ -335,8 +382,7 @@ class AnkiIntegration_(object):
         return note
         
     def loadDictionary(self):
-        from verb_dictionary import Verb_Dictionary, Verb_Dictionary_load
-        Verb_Dictionary_load()
+        Verb_Dictionary.load()
         for key, verb in Verb_Dictionary.iteritems():
             note = self.verbToNote(verb)
             mw.col.addNote(note)

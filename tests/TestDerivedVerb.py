@@ -1,30 +1,30 @@
 # -*- coding: utf-8 -*-
 import unittest
 from conjugate_spanish import Tenses, Persons, Verb
-from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add, Verb_Dictionary_load
+from conjugate_spanish.verb_dictionary import Verb_Dictionary
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect
 
 All_Infinitive_Endings= list(Infinitive_Endings)
 All_Infinitive_Endings.append(u'ír')
-Verb_Dictionary_load()
+Verb_Dictionary.load()
 #
 # complex tener based derivations
 #
-tener = Verb_Dictionary_get(u'tener')
+tener = Verb_Dictionary.get(u'tener')
 # Note: need to add to dictionary in order to do base_string lookup
 # TODO : levels of dictionary so we can drop a dictionary
-faketener = Verb_Dictionary_add(u'faketener', u"fake tener", base_verb=tener)
-faketenerse = Verb_Dictionary_add(u'faketenerse', u"fake tener", base_verb=u'tener')
+faketener = Verb_Dictionary.add(u'faketener', u"fake tener", base_verb=tener)
+faketenerse = Verb_Dictionary.add(u'faketenerse', u"fake tener", base_verb=u'tener')
 
 # tests double derivatives
 # real world example: desacordarse -> acordarse -> acordar
-descfaketenerse = Verb_Dictionary_add(u'descfaketenerse', u"fake tener", base_verb=faketenerse)
+descfaketenerse = Verb_Dictionary.add(u'descfaketenerse', u"fake tener", base_verb=faketenerse)
 faketenerse_1 = Verb(u'faketenerse', u"fake tener", base_verb=faketener)
 
-fakeacordar = Verb_Dictionary_add(u"fakeacordar", u"fake acordar", "o:ue")
+fakeacordar = Verb_Dictionary.add(u"fakeacordar", u"fake acordar", "o:ue")
 #derive just because of reflexive/non-reflexive
-fakeacordarse = Verb_Dictionary_add(u"fakeacordarse", u"fake acordarse")
-descfakeacordarse = Verb_Dictionary_add(u"descfakeacordarse", u"fake acordarse", base_verb=fakeacordarse)
+fakeacordarse = Verb_Dictionary.add(u"fakeacordarse", u"fake acordarse")
+descfakeacordarse = Verb_Dictionary.add(u"descfakeacordarse", u"fake acordarse", base_verb=fakeacordarse)
 
 class TestDerivedVerb(unittest.TestCase):
     def test_tener_setup(self):

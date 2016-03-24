@@ -764,8 +764,8 @@ class Verb():
         elif not hasattr(self, '_base_verb'):
             # some verbs are based off of others (tener)
             # TODO: maldecir has different tu affirmative than decir        
-            from verb_dictionary import Verb_Dictionary_get
-            _base_verb = Verb_Dictionary_get(self.base_verb_str)
+            from verb_dictionary import Verb_Dictionary
+            _base_verb = Verb_Dictionary.get(self.base_verb_str)
             if _base_verb is None:
                 # TODO - may not be in dictionary yet?
                 return None 

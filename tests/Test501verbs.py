@@ -3,12 +3,12 @@ import unittest
 from conjugate_spanish import Tenses, Persons, Verb
 import codecs
 import csv
-from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add,Verb_Dictionary_load
+from conjugate_spanish.verb_dictionary import Verb_Dictionary
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect,\
     get_iterable
 from conjugate_spanish.conjugation_override import Standard_Overrides
 MASTER_DIR = u'./conjugate_spanish/expanded'
-Verb_Dictionary_load()
+Verb_Dictionary.load()
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     # csv.py doesn't do Unicode; encode temporarily as UTF-8:
@@ -30,7 +30,7 @@ def utf_8_encoder(unicode_csv_data):
         
 class Test501verbs(unittest.TestCase):
     def __check(self, verb_string, expected, tenses=Tenses.all, persons=Persons.all):
-        verb = Verb_Dictionary_get(verb_string)
+        verb = Verb_Dictionary.get(verb_string)
         if verb is None:
             raise Exception(verb_string+u": no verb")
         errors = {}

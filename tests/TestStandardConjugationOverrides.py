@@ -2,18 +2,18 @@
 import unittest
 import inspect
 from conjugate_spanish import Tenses, Persons, Verb
-from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add, Verb_Dictionary_load
+from conjugate_spanish.verb_dictionary import Verb_Dictionary
 from conjugate_spanish.conjugation_override import Dependent_Standard_Overrides, ConjugationOverride,\
     Radical_Stem_Conjugation_Overrides
-Verb_Dictionary_load()
+# Verb_Dictionary.load()
 class TestStandardConjugationOverrides(unittest.TestCase):
     def test_gerund_override(self):
-        ir = Verb_Dictionary_get(u'ir')
+        ir = Verb_Dictionary.get(u'ir')
         gerund = ir.conjugate_tense(Tenses.gerund)
         self.assertEqual(gerund, u'yendo', 'ir gerund wrong')
          
     def test_past_part_override(self):
-        ir = Verb_Dictionary_get(u'ir')
+        ir = Verb_Dictionary.get(u'ir')
         for tense in Tenses.past_part_adj:
             pp = ir.conjugate_tense(tense)
             self.assertEqual(pp, u'ido', 'ir past part. wrong')

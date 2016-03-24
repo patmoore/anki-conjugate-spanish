@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from conjugate_spanish import ConjugationOverride, Tenses, Persons, Standard_Conjugation_Endings, Infinitive_Endings
-from conjugate_spanish.verb_dictionary import Verb_Dictionary_add
+from conjugate_spanish.verb_dictionary import Verb_Dictionary
 
 Past_Tense_IR_CO = ConjugationOverride(parents=[u'unaccent_present_past'])
 Past_Tense_IR_CO.override_tense_stem(Tenses.past_tense, u'fu')
@@ -17,7 +17,7 @@ _ir_conjugation_overrides.override_tense_stem(Tenses.present_subjective_tense, u
 _ir_conjugation_overrides.override_tense(Tenses.imperative_positive, u've', Persons.second_person_singular)
 _ir_conjugation_overrides.override_tense(Tenses.imperative_positive, u'vamos', Persons.first_person_plural)
 _ir_conjugation_overrides.override_tense_stem(Tenses.Person_Agnostic, u'')
-Ir_Definition = Verb_Dictionary_add(u'ir', conjugation_overrides=_ir_conjugation_overrides, definition=u"to go")
+Ir_Definition = Verb_Dictionary.add(u'ir', conjugation_overrides=_ir_conjugation_overrides, definition=u"to go")
 
 # Note: inherit from parent is implicit
 _irse_conjugation_overrides = ConjugationOverride(key=u"irse_irregular")
@@ -25,4 +25,4 @@ _irse_conjugation_overrides = ConjugationOverride(key=u"irse_irregular")
 _irse_conjugation_overrides.override_tense(Tenses.imperative_positive, u'vámo', Persons.first_person_plural, documentation=u"vámonos only for POSITIVE")
 _irse_conjugation_overrides.override_tense(Tenses.imperative_negative, u'nos vayamos', Persons.first_person_plural, documentation=u"no nos vayamos")
 _irse_conjugation_overrides.override_tense(Tenses.imperative_positive, u'idos', Persons.second_person_plural, documentation=u"idos only for POSITIVE")
-Irse_Definition = Verb_Dictionary_add(u'irse', conjugation_overrides=_irse_conjugation_overrides, definition=u"to go")
+Irse_Definition = Verb_Dictionary.add(u'irse', conjugation_overrides=_irse_conjugation_overrides, definition=u"to go")

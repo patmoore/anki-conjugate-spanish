@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from conjugate_spanish.conjugation_override import ConjugationOverride
 from conjugate_spanish.constants import Tenses, Persons, Infinitive_Endings
-from conjugate_spanish.verb_dictionary import Verb_Dictionary_add
+from conjugate_spanish.verb_dictionary import Verb_Dictionary
 from conjugate_spanish.standard_endings import Standard_Conjugation_Endings
 
 _conjugation_overrides = ConjugationOverride(parents=[u'r_only', u'e_and_o'])
@@ -14,4 +14,4 @@ for person in [ Persons.second_person_singular, Persons.third_person_singular, P
     
 _conjugation_overrides.override_tense_stem(Tenses.past_tense, u'hub') 
 _conjugation_overrides.override_tense_stem(Tenses.present_subjective_tense, u'hay')
-Verb_Dictionary_add(u'haber', conjugation_overrides=_conjugation_overrides, definition="to have (helping verb)")
+Verb_Dictionary.add(u'haber', conjugation_overrides=_conjugation_overrides, definition="to have (helping verb)")

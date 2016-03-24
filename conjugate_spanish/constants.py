@@ -45,6 +45,9 @@ class Tenses_(BaseConsts_):
     past_participle = 10
     adjective = 11
     Person_Agnostic = [ gerund, past_participle, adjective ]
+    # these tenses conjugate for all persons ( note: imperative and Person_agnostic is missing)
+    All_Persons = [ present_tense, incomplete_past_tense, past_tense, future_tense,
+        conditional_tense, present_subjective_tense, past_subjective_tense]
     imperative = [ imperative_negative, imperative_positive ]
     future_cond = [ future_tense, conditional_tense]
     # Most of the time these 2 have same conjugation

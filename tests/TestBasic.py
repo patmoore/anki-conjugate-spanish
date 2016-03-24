@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 from conjugate_spanish import Tenses, Persons, Verb
-from conjugate_spanish.verb_dictionary import Verb_Dictionary_get, Verb_Dictionary_add
+from conjugate_spanish.verb_dictionary import Verb_Dictionary
 from conjugate_spanish.constants import Vowels
 
 class TestBasic(unittest.TestCase):
