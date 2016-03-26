@@ -47,7 +47,7 @@ class Verb():
             # Note: that the prefix can be u'' - usually for reflexive verbs. 
     '''
     
-    def __init__(self, verb_string, definition, conjugation_overrides=None, base_verb=None, **kwargs):
+    def __init__(self, verb_string, definition=u'', conjugation_overrides=None, base_verb=None, **kwargs):
         '''
         Constructor
         :param verb_string:

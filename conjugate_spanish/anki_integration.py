@@ -55,14 +55,17 @@ class ModelTemplate_(object):
         if collection is None:
             collection = mw.col
         self.collection = collection
-        self.modelManager = collection.models        
+        self.modelManager = collection.models 
+        changed = False       
         if fields is not None:
             for fieldDefinition in fields:
                 fieldName = fieldDefinition[u'name']
                 if not self.hasField(fieldName):
+                    changed = True
                     field = self.createField(fieldName)
-                    self.addField(field)   
-        self.save()
+                    self.addField(field)
+        if changed:   
+            self.save()
         
     def createConjugationFields(self, tenses=Tenses.all, persons=Persons.all):
         for tense in tenses:
@@ -78,7 +81,7 @@ class ModelTemplate_(object):
     def fieldName(cls, tense, person=None):
         if tense in Tenses.Person_Agnostic:
             return Tenses[tense]+u'/-'
-        elif tense not in Tenses.imperative and person != Persons.first_person_singular:
+        elif tense not in Tenses.imperative or person != Persons.first_person_singular:
             return Tenses[tense]+'/'+Persons[person]
         else:
             return None
@@ -86,6 +89,17 @@ class ModelTemplate_(object):
     def hasField(self, fieldName):
         fieldNames = self.modelManager.fieldNames(self.model)
         return fieldName in fieldNames
+    
+    def getFieldIndex(self, fieldName):
+        fieldNames = self.modelManager.fieldNames(self.model)
+        try:
+            index = fieldNames.index(fieldName)
+            return index
+        except ValueError:
+            return -1
+                    
+    def getFieldByIndex(self, index):
+        return self.modelManager.fieldNames(self.model)[index]
     
     def createField(self, fieldName):
         field = self.modelManager.newField(fieldName)
@@ -175,17 +189,30 @@ class ModelTemplate_(object):
         else:
             self.modelManager.add(self.model)
             
+    def getCard(self, cardName):
+        for template in self.model[u'tmpl']:
+            if template[u'name'] == cardName:
+                return template
+        return None
+    
     def createConjugationOverrideCard(self):
-        card = CardTemplate_(name = u'Conjugation Overrides')
-        card.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'
-        card.answerFormat =u'{{'+ModelTemplate_.CONJUGATION_OVERRIDES+u'}}'
-        return card
+        cardName=u'Conjugation Overrides'
+        card = self.getCard(cardName)
+        if card is None:
+            card = self.modelManager.newTemplate(name=cardName)
+        
+        cardTemplate = CardTemplate_(card)
+        cardTemplate.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'
+        cardTemplate.answerFormat =u'{{'+ModelTemplate_.CONJUGATION_OVERRIDES+u'}}'
+        return cardTemplate
 
     def createTenseCard(self, tense):   
         def addCell(person):
-            return iftest(Tenses[tense]+u' '+Persons[person],td(Persons[person])+ td(u'{{'+Tenses[tense]+u' '+Persons[person]+u'}}'))     
-        card = CardTemplate_(name = Tenses[tense])
-        card.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'+u'<br>'+Tenses[tense]
+            return iftest(Tenses[tense]+u' '+Persons[person],td(Persons[person])+ td(u'{{'+Tenses[tense]+u' '+Persons[person]+u'}}'))
+        cardName = Tenses[tense]
+        card = self.getCard(cardName)
+        cardTemplate = CardTemplate_(card)
+        cardTemplate.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'+u'<br>'+Tenses[tense]
         answer = u'<table>\n'
         answer += u'<tr>'
         if tense in Tenses.Person_Agnostic:            
@@ -206,8 +233,9 @@ class ModelTemplate_(object):
                 answer += addCell(person)
         answer += u'</tr>\n'
         answer += u'</table>'
-        card.answerFormat = answer
-        return card
+        cardTemplate.answerFormat = answer
+        return cardTemplate
+    
 class CardTemplate_(object):
     STD_ANSWER_FORMAT = u'{{FrontSide}}\n\n<hr id=answer>\n\n'
     """
@@ -357,17 +385,22 @@ class AnkiIntegration_(object):
     def showAnswer(self):
         pass
     
-    def editFocusGained(self, *args):
-        if len(args) == 0 or not self.isConjugationNote(args[0]):
-            return
-        note = args[0]
-        pass
+    def editFocusGained(self, note, currentFieldIndex):
         # TODO test for a spanish model
+        modelTemplate = ModelTemplate_(note.model())
+        inf_field = modelTemplate.getFieldIndex(ModelTemplate_.INFINITIVE_OR_PHRASE)
+        conjugationoverrides_field = modelTemplate.getFieldIndex(ModelTemplate_.CONJUGATION_OVERRIDES)
+        if currentFieldIndex != inf_field and note.fields[inf_field] != u'' and note.fields[conjugationoverrides_field] == u'':
+            # don't generate until not on infinitive field
+            verb = Verb(note.fields[inf_field])
+            note.fields[conjugationoverrides_field] = verb.overrides_string
+            note.flush()
+        pass
         
     def isConjugationNote(self, note):
         return isinstance(note, Note) and note.model()[u'name'] == self.modelName
     
-    def onFoo(self, *args):
+    def onFullyConjugateVerb(self, *args):
         pass
     
     def setupEditorButtons(self, *args):
@@ -375,8 +408,8 @@ class AnkiIntegration_(object):
             return
         editor = args[0]
         b = editor._addButton
-        b("foo", self.onFoo, "",
-          shortcut(_("Customize onFoo")), size=False, text=_("onFoo..."),
+        b("fullyConjugate", self.onFullyConjugateVerb, "",
+          shortcut(_("Fully Conjugate")), size=False, text=_("Fully Conjugate Verb..."),
           native=True, canDisable=False)
          
     def convertInfinitiveCardToConjugatedCards(self):
@@ -438,7 +471,7 @@ class AnkiIntegration_(object):
     def initialize(self, *args):
         for modelName, modelDefinition in ModelDefinitions.iteritems():
             modelTemplate = ModelTemplate_.getModel(modelName, collection=mw.col, create=True, **modelDefinition)
-            mw.col.models.update(modelTemplate)
+            modelTemplate.save()
 #     def enterNewVerbInit(key, definition):
 #         global AnkiIntegration
 #         def testFunction():
