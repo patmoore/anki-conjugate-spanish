@@ -16,6 +16,7 @@ from anki.notes import Note
 from anki.utils import intTime
 from verb_dictionary import Verb_Dictionary
 from constants import *
+import anki.stdmodels
 
 __all__ = [ 'AnkiIntegration']
 MODEL_FIELDS = {
@@ -36,18 +37,33 @@ def addToList(list_, item):
 def td(string_):
     return u'<td>' + string_ + u'</td>'
 
-class ModelTemplate_(dict):
+def iftest(variable, string_):
+    return u'{{#'+variable+u'}}'+string_+u'{{/'+variable+u'}}'
+
+class ModelTemplate_(object):
     INFINITIVE_OR_PHRASE = u'Infinitive or Phrase'
     ENGLISH_DEFINITION = u'English definition'
     CONJUGATION_OVERRIDES = u'Conjugation Overrides'
     MANUAL_CONJUGATION_OVERRIDES = u'Manual Conjugation Overrides'
-    splitTensePerson = re_compile(u'(.*):(.*)')
+    splitTensePerson = re_compile(u'(.*)/(.*)')
     """
     Used to create custom models for verbs
     """
-    def __init__(self, model, **kwargs):
-        super(ModelTemplate_, self).__init__(model)
-    
+    def __init__(self, model, fields=None, collection=None, **kwargs):
+        global mw
+        self.model = model
+        if collection is None:
+            collection = mw.col
+        self.collection = collection
+        self.modelManager = collection.models        
+        if fields is not None:
+            for fieldDefinition in fields:
+                fieldName = fieldDefinition[u'name']
+                if not self.hasField(fieldName):
+                    field = self.createField(fieldName)
+                    self.addField(field)   
+        self.save()
+        
     def createConjugationFields(self, tenses=Tenses.all, persons=Persons.all):
         for tense in tenses:
             if tense in Tenses.Person_Agnostic:
@@ -61,35 +77,51 @@ class ModelTemplate_(dict):
     @classmethod        
     def fieldName(cls, tense, person=None):
         if tense in Tenses.Person_Agnostic:
-            return Tenses[tense]
+            return Tenses[tense]+u'/-'
         elif tense not in Tenses.imperative and person != Persons.first_person_singular:
-            return Tenses[tense]+' '+Persons[person]
+            return Tenses[tense]+'/'+Persons[person]
         else:
             return None
-    def createField(self, name):
-        field = dict(MODEL_FIELDS)
-        field[u'name'] = name
-        self.addField(field)
+        
+    def hasField(self, fieldName):
+        fieldNames = self.modelManager.fieldNames(self.model)
+        return fieldName in fieldNames
+    
+    def createField(self, fieldName):
+        field = self.modelManager.newField(fieldName)
+        return field
         
     def addField(self, field):
-        addToList(self[u'flds'],field)
+        self.modelManager.addField(self.model,field)
         
     def addCard(self, card):
         addToList(self[u'tmpls'], card)
         
     @classmethod
-    def getModel(cls, model, create=False):
+    def getModel(cls, model, create=False, **kwargs):
         global mw
-        if isinstance(model, six.string_types):
-            model_ = mw.col.models.byName(model)
-            if model_ is None and create:
-                model_ = mw.col.models.new(model)
-        elif isinstance(model, ModelTemplate_):
+        
+        if isinstance(model, ModelTemplate_):
             return model
+        elif isinstance(model, six.string_types):
+            modelName = model
+            model_ = mw.col.models.byName(modelName)
+            if model_ is None:
+                if not create:
+                    return None
         else:
-            return ModelTemplate_(model=model_)
+            modelName = BASE_MODEL
+            
+        if model_ is None:
+            model_ = mw.col.models.new(name=modelName)
+            
+        if modelName in ModelDefinitions:            
+            kwargs.update(ModelDefinitions[modelName])
+            
+        return ModelTemplate_(model=model_, **kwargs)
+    
     def verbToNote(self, verb):
-        note = Note(mw.col, model=self )
+        note = Note(self.collection, model=self )
         for field in self[u'flds']:
             fieldName = field[u'name']
             if fieldName == ModelTemplate_.INFINITIVE_OR_PHRASE:
@@ -99,7 +131,7 @@ class ModelTemplate_(dict):
             elif fieldName == ModelTemplate_.CONJUGATION_OVERRIDES:
                 value = verb.overrides_string
             elif fieldName == ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES:
-                value = verb.
+                value = verb.manualOverrides
             else:
                 conjugation_match = ModelTemplate_.splitTensePerson.match(fieldName)
                 if conjugation_match is not None:
@@ -131,82 +163,33 @@ class ModelTemplate_(dict):
         phrase = note[ModelTemplate_.INFINITIVE_OR_PHRASE]
         definition = note[ModelTemplate_.ENGLISH_DEFINITION]
         conjugation_overrides = note[ModelTemplate_.CONJUGATION_OVERRIDES]
+        # TODO 
         manual_overrides = note[ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES]
         verb = Verb_Dictionary.get(phrase)
         if verb is None:
             verb = Verb_Dictionary.add(phrase, definition, conjugation_overrides, manual_overrides=manual_overrides)
 
-class CardTemplate_(dict):
-    STD_ANSWER_FORMAT = u'{{FrontSide}}\n\n<hr id=answer>\n\n'
-    """
-    This class is mostly here to document the way that anki works.
-    """
-    def __init__(self, model=None, **kwargs):
-        super(CardTemplate_, self).__init__({
-            u'name': u'',
-            u'qfmt': u'', 
-            u'afmt': u'', 
-            u'did': None, 
-            u'bafmt': u'', 
-            u'bqfmt': u'',
-            u'ord': 0
-        })
-        self.update(kwargs)
-        self.model = model
-    @property
-    def name(self):
-        return self[u'name']
-    @name.setter
-    def name(self, name):
-        self[u'name'] = name
-    @property
-    def questionFormat(self):
-        return self[u'qfmt']
-    @questionFormat.setter
-    def questionFormat(self, qfmt):
-        self[u'qfmt'] = qfmt
-    @property
-    def answerFormat(self):
-        return self[u'afmt']
-    @answerFormat.setter
-    def answerFormat(self, afmt):
-        self[u'afmt'] = afmt
-    @property
-    def backQuestionFormat(self):
-        return self[u'bqfmt']
-    @backQuestionFormat.setter
-    def backQuestionFormat(self, bqfmt):
-        self[u'bqfmt'] = bqfmt
-    @property
-    def backAnswerFormat(self):
-        return self[u'bafmt']
-    @backAnswerFormat.setter
-    def backAnswerFormat(self, bafmt):
-        self[u'bafmt'] = bafmt
-    
-    def add(self, model=None):
-        model_ = model if model is not None else self.model
-        model_.addCard(self)
-        
-    @classmethod
-    def createConjugationOverrideCard(cls, model=None):
-        card = CardTemplate_(model)
-        card.name = u'Conjugation Overrides'
+    def save(self):
+        if u'id' in self.model and self.model[u'id'] is not None:
+            self.modelManager.update(self.model)
+        else:
+            self.modelManager.add(self.model)
+            
+    def createConjugationOverrideCard(self):
+        card = CardTemplate_(name = u'Conjugation Overrides')
         card.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'
-        card.answerFormat = CardTemplate_.STD_ANSWER_FORMAT + u'{{'+ModelTemplate_.CONJUGATION_OVERRIDES+u'}}'
+        card.answerFormat =u'{{'+ModelTemplate_.CONJUGATION_OVERRIDES+u'}}'
         return card
 
-    @classmethod
-    def createTenseCard(cls, tense, model=None):   
+    def createTenseCard(self, tense):   
         def addCell(person):
-            return td(Persons[person])+ td(u'{{'+Tenses[tense]+u' '+Persons[person]+u'}}')     
-        card = CardTemplate_(model)        
-        card.name = Tenses[tense]
+            return iftest(Tenses[tense]+u' '+Persons[person],td(Persons[person])+ td(u'{{'+Tenses[tense]+u' '+Persons[person]+u'}}'))     
+        card = CardTemplate_(name = Tenses[tense])
         card.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'+u'<br>'+Tenses[tense]
-        answer = CardTemplate_.STD_ANSWER_FORMAT+u'<table>\n'
+        answer = u'<table>\n'
         answer += u'<tr>'
-        if tense in Tenses.Person_Agnostic:
-            answer += td(u'{{'+Tenses[tense]+u'}}')            
+        if tense in Tenses.Person_Agnostic:            
+            answer += iftest(Tenses[tense], td(u'{{'+Tenses[tense]+u'}}'))            
         else:
             if tense in Tenses.imperative:
                 answer+=td(u'')+addCell(Persons.first_person_plural)
@@ -225,10 +208,49 @@ class CardTemplate_(dict):
         answer += u'</table>'
         card.answerFormat = answer
         return card
-    
-BASE_MODEL = u'Español:Verb'
-FULLY_CONJUGATED_MODEL = u'Español:Fully Conjugated Verb'
-THIRD_PERSON_ONLY_MODEL = u'Español:Third Person Only'
+class CardTemplate_(object):
+    STD_ANSWER_FORMAT = u'{{FrontSide}}\n\n<hr id=answer>\n\n'
+    """
+    This class is mostly here to document the way that anki works.
+    """
+    def __init__(self, card, **kwargs):
+        modelManager = mw.col.models
+        self.card =card
+        
+    @property
+    def name(self):
+        return self.card[u'name']
+    @name.setter
+    def name(self, name):
+        self.card[u'name'] = name
+    @property
+    def questionFormat(self):
+        return self.card[u'qfmt']
+    @questionFormat.setter
+    def questionFormat(self, qfmt):
+        self.card[u'qfmt'] = qfmt
+    @property
+    def answerFormat(self):
+        return self.card[u'afmt']
+    @answerFormat.setter
+    def answerFormat(self, afmt):
+        self.card[u'afmt'] = CardTemplate_.STD_ANSWER_FORMAT + afmt
+    @property
+    def backQuestionFormat(self):
+        return self.card[u'bqfmt']
+    @backQuestionFormat.setter
+    def backQuestionFormat(self, bqfmt):
+        self.card[u'bqfmt'] = bqfmt
+    @property
+    def backAnswerFormat(self):
+        return self.card[u'bafmt']
+    @backAnswerFormat.setter
+    def backAnswerFormat(self, bafmt):
+        self.card[u'bafmt'] = bafmt
+SPANISH_PREFIX = u'Español:'
+BASE_MODEL = SPANISH_PREFIX+u'Verb'
+FULLY_CONJUGATED_MODEL = SPANISH_PREFIX+u'Fully Conjugated Verb'
+THIRD_PERSON_ONLY_MODEL = SPANISH_PREFIX+u'Third Person Only'
 
 ModelDefinitions = { }
 for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
@@ -241,24 +263,27 @@ for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
         ]
     }
 
+ModelDefinitions[BASE_MODEL][u'menuName'] = u'Conjugate Spanish:Basic'
+ModelDefinitions[FULLY_CONJUGATED_MODEL][u'menuName'] = u'Conjugate Spanish:Full Conjugation'
+ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'menuName'] = u'Conjugate Spanish:Third party only verbs'
 for tense in Tenses.All_Persons:
     for person in Persons.all:
-        ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense,person))
+        ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.imperative:
     for person in Persons.all_except(Persons.first_person_singular):
-        ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense,person))
+        ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.Person_Agnostic:
-    ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense))
+    ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense)})
 
 for tense in Tenses.All_Persons:
     for person in Persons.third_person:
-        ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense,person))
+        ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.imperative:
     for person in Persons.third_person:
-        ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense,person))
+        ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.Person_Agnostic:
-    ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append(ModelTemplate_.fieldName(tense))
-    
+    ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense)})
+        
 TEMPLATE_FIELDS = {
     u'name': u'Card 1',
     u'qfmt': u'{{Front}}', 
@@ -279,30 +304,31 @@ NOTES: Anki Note objects have the information. Anki Card" are generated from Not
 """
 class AnkiIntegration_(object):
     
-    def __init__(self, modelName=u'Español Verbs-1'):
+    def __init__(self, modelName=BASE_MODEL):
         self.modelName = modelName
         addHook('editFocusGained', self.editFocusGained)
         addHook('setupEditorButtons', self.setupEditorButtons)
         
-    def _createModel(self):
-        """
-        see if we can generate card templates automatically
-        """
-        model = ModelTemplate_.getModel(self.modelName) 
-        if model is None:
-            model = self.getModel(self.modelName, True)
-            model[u'flds']=[]    
-            modelT = ModelTemplate_(model)   
-            modelT.createField(name=ModelTemplate_.INFINITIVE_OR_PHRASE)
-            
-            modelT.createField(name=ModelTemplate_.ENGLISH_DEFINITION)
-            #How to provide help text? 
-            modelT.createField(name=ModelTemplate_.CONJUGATION_OVERRIDES)
-            modelT.createConjugationFields()
-            
-            self._createTemplates(modelT)
-            mw.col.models.add(modelT)
-            mw.col.models.flush()
+#     def _createModel(self):
+#         """
+#         see if we can generate card templates automatically
+#         """
+#         
+#         model = ModelTemplate_.getModel(self.modelName) 
+#         if model is None:
+#             model = self.getModel(self.modelName, True)
+#             model[u'flds']=[]    
+#             modelT = ModelTemplate_(model)   
+#             modelT.createField(name=ModelTemplate_.INFINITIVE_OR_PHRASE)
+#             
+#             modelT.createField(name=ModelTemplate_.ENGLISH_DEFINITION)
+#             #How to provide help text? 
+#             modelT.createField(name=ModelTemplate_.CONJUGATION_OVERRIDES)
+#             modelT.createConjugationFields()
+#             
+#             self._createTemplates(modelT)
+#             mw.col.models.add(modelT)
+#             mw.col.models.flush()
             
     def _createTemplates(self, model):
         card = CardTemplate_.createConjugationOverrideCard(model)
@@ -379,7 +405,7 @@ class AnkiIntegration_(object):
         self._saveDeck(deck_)
     
     def _getDeck(self, deck):
-        global mw
+        from aqt import mw
         if isinstance(deck, six.string_types):
             deckId = mw.col.decks.id(deck)             
         elif isinstance(deck, six.integer_types):
@@ -390,10 +416,11 @@ class AnkiIntegration_(object):
         return deck_
     
     def _saveDeck(self, deck):
+        from aqt import mw
         mw.col.decks.save(deck)
         
     def addMenuItem(self, menuString, func):
-        global mw
+        from aqt import mw
         # create a new menu item, "test"
         action = QAction(menuString, mw)
         # set it to call testFunction when it's clicked
@@ -401,67 +428,73 @@ class AnkiIntegration_(object):
         # and add it to the tools menu
         mw.form.menuTools.addAction(action)        
         
-        
     def loadDictionary(self):
         Verb_Dictionary.load()
+        modelTemplate = ModelTemplate_.getModel(BASE_MODEL, create=True)
         for key, verb in Verb_Dictionary.iteritems():
-            note = self.verbToNote(verb)
+            note = modelTemplate.verbToNote(verb)
             mw.col.addNote(note)
 
-AnkiIntegration = AnkiIntegration_()   
-def AnkiIntegration_initialize(*args):
-    global AnkiIntegration
-    AnkiIntegration._createModel()
-       
-    def enterNewVerbInit(key, definition):
-        global AnkiIntegration
-        def testFunction():
-            global mw
-            global showInfo
-            AnkiIntegration._createModel()
-            # get the number of cards in the current collection, which is stored in
-            # the main window
-            cardCount = mw.col.cardCount()
-            deckName = u'ImportDeck'
-            # will create deck if it doesn't exist (mw.col.decks is a DeckManager)
-            did = mw.col.decks.id(deckName)
-            # show a message box
-            showInfo("Card count: {0}, deck id={1}".format(cardCount,did))
+    def initialize(self, *args):
+        for modelName, modelDefinition in ModelDefinitions.iteritems():
+            modelTemplate = ModelTemplate_.getModel(modelName, collection=mw.col, create=True, **modelDefinition)
+            mw.col.models.update(modelTemplate)
+#     def enterNewVerbInit(key, definition):
+#         global AnkiIntegration
+#         def testFunction():
+#             global mw
+#             global showInfo
+#             AnkiIntegration._createModel()
+#             # get the number of cards in the current collection, which is stored in
+#             # the main window
+#             cardCount = mw.col.cardCount()
+#             deckName = u'ImportDeck'
+#             # will create deck if it doesn't exist (mw.col.decks is a DeckManager)
+#             did = mw.col.decks.id(deckName)
+#             # show a message box
+#             showInfo("Card count: {0}, deck id={1}".format(cardCount,did))
+#         
+#         AnkiIntegration.addMenuItem(definition[u'menu'], testFunction)
+        FEATURES = {
+#         u'new_verb': {
+#             u'menu': u'Enter new verb or phrase',
+#             u'help': u'create a new verb',
+#             u'init' : enterNewVerbInit,
+#             u'disable': True
+#         },
+#             u'create_desk': {
+#                 u'menu': u'Create a new deck',            
+#                 u'init': self.createNewDeckMenu,
+#                 u'disable': True
+#             },
+            u'conjugate_note': {
+                u'menu': u'Conjugate a note',            
+                u'init': self.createConjugateMenu,
+            },
+            u'load_dictionary': {
+                u'menu': u'Load a dictionary',            
+                u'init': self.createLoadMenu,
+            },
+        }
+    
+        for key,value in FEATURES.iteritems():
+            if u'disable' not in value or value[u'disable'] == False:
+                value[u'init'](key, value)
+#     def createNewDeckMenu(self, key, definition):
+#         self.addMenuItem(definition[u'menu'], self.createNewDeck)
+    
+    def createConjugateMenu(self, key, definition):
+        self.addMenuItem(definition[u'menu'], self.conjugateCurrentNote)
         
-        AnkiIntegration.addMenuItem(definition[u'menu'], testFunction)
-    
-    def createNewDeckMenu(key, definition):
-        AnkiIntegration.addMenuItem(definition[u'menu'], AnkiIntegration.createNewDeck)
-    
-    def createConjugateMenu(key, definition):
-        AnkiIntegration.addMenuItem(definition[u'menu'], AnkiIntegration.conjugateCurrentNote)
-        
-    def createLoadMenu(key, definition):
-        AnkiIntegration.addMenuItem(definition[u'menu'], AnkiIntegration.loadDictionary)
-    FEATURES = {
-        u'new_verb': {
-            u'menu': u'Enter new verb or phrase',
-            u'help': u'create a new verb',
-            u'init' : enterNewVerbInit,
-            u'disable': True
-        },
-        u'create_desk': {
-            u'menu': u'Create a new deck',            
-            u'init': createNewDeckMenu,
-            u'disable': True
-        },
-        u'conjugate_note': {
-            u'menu': u'Conjugate a note',            
-            u'init': createConjugateMenu,
-        },
-        u'load_dictionary': {
-            u'menu': u'Load a dictionary',            
-            u'init': createLoadMenu,
-        },
-    }
-    
-    for key,value in FEATURES.iteritems():
-        if u'disable' not in value or value[u'disable'] == False:
-            value[u'init'](key, value)
-    
-addHook(u'profileLoaded', AnkiIntegration_initialize)
+    def createLoadMenu(self, key, definition):
+        self.addMenuItem(definition[u'menu'], self.loadDictionary)
+
+AnkiIntegration = AnkiIntegration_()
+addHook(u'profileLoaded', AnkiIntegration.initialize)
+
+## TODO: I saw code like this in the japanese addon : but the models are not created 
+## maybe only on installation?
+for modelName, modelDefinition in ModelDefinitions.iteritems():
+    def __makecall(modelName, modelDefinition):
+        return lambda col: ModelTemplate_(modelName, collection=col, **modelDefinition)
+    anki.stdmodels.models.append((_(modelName), __makecall(modelName, modelDefinition)))

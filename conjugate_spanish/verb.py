@@ -71,6 +71,7 @@ class Verb():
         self.inf_ending = phrase_match.group(INF_ENDING)
         self.reflexive = phrase_match.group(REFLEXIVE_ENDING) is not None and phrase_match.group(REFLEXIVE_ENDING) != u''        
         self.suffix_words = phrase_match.group(SUFFIX_WORDS)
+        self.manualOverrides = None # TODO: be able to save manual overrides as a string for display/editting
 
         _base_verb = make_unicode(base_verb)
         if _base_verb == u'':
