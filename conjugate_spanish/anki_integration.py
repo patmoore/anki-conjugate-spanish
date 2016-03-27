@@ -108,8 +108,8 @@ class ModelTemplate_(object):
     def addField(self, field):
         self.modelManager.addField(self.model,field)
         
-    def addCard(self, card):
-        addToList(self[u'tmpls'], card)
+    def addCard(self, cardTemplate):
+        self.modelManager.addTemplate(self.model, cardTemplate.card)
         
     @classmethod
     def getModel(cls, model, create=False, **kwargs):
@@ -189,28 +189,30 @@ class ModelTemplate_(object):
         else:
             self.modelManager.add(self.model)
             
-    def getCard(self, cardName):
-        for template in self.model[u'tmpl']:
+    def getCard(self, cardName, create=False):
+        for template in self.model[u'tmpls']:
             if template[u'name'] == cardName:
                 return template
+        if create:
+            template = self.modelManager.newTemplate(name=cardName)
+            return template
         return None
     
     def createConjugationOverrideCard(self):
         cardName=u'Conjugation Overrides'
-        card = self.getCard(cardName)
-        if card is None:
-            card = self.modelManager.newTemplate(name=cardName)
+        card = self.getCard(cardName, create=True)
         
         cardTemplate = CardTemplate_(card)
         cardTemplate.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'
         cardTemplate.answerFormat =u'{{'+ModelTemplate_.CONJUGATION_OVERRIDES+u'}}'
+        self.addCard(cardTemplate)
         return cardTemplate
 
     def createTenseCard(self, tense):   
         def addCell(person):
             return iftest(Tenses[tense]+u' '+Persons[person],td(Persons[person])+ td(u'{{'+Tenses[tense]+u' '+Persons[person]+u'}}'))
         cardName = Tenses[tense]
-        card = self.getCard(cardName)
+        card = self.getCard(cardName,create=True)
         cardTemplate = CardTemplate_(card)
         cardTemplate.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'+u'<br>'+Tenses[tense]
         answer = u'<table>\n'
@@ -234,6 +236,7 @@ class ModelTemplate_(object):
         answer += u'</tr>\n'
         answer += u'</table>'
         cardTemplate.answerFormat = answer
+        self.addCard(cardTemplate)
         return cardTemplate
     
 class CardTemplate_(object):
@@ -275,6 +278,7 @@ class CardTemplate_(object):
     @backAnswerFormat.setter
     def backAnswerFormat(self, bafmt):
         self.card[u'bafmt'] = bafmt
+        
 SPANISH_PREFIX = u'Español:'
 BASE_MODEL = SPANISH_PREFIX+u'Verb'
 FULLY_CONJUGATED_MODEL = SPANISH_PREFIX+u'Fully Conjugated Verb'
@@ -337,33 +341,11 @@ class AnkiIntegration_(object):
         addHook('editFocusGained', self.editFocusGained)
         addHook('setupEditorButtons', self.setupEditorButtons)
         
-#     def _createModel(self):
-#         """
-#         see if we can generate card templates automatically
-#         """
-#         
-#         model = ModelTemplate_.getModel(self.modelName) 
-#         if model is None:
-#             model = self.getModel(self.modelName, True)
-#             model[u'flds']=[]    
-#             modelT = ModelTemplate_(model)   
-#             modelT.createField(name=ModelTemplate_.INFINITIVE_OR_PHRASE)
-#             
-#             modelT.createField(name=ModelTemplate_.ENGLISH_DEFINITION)
-#             #How to provide help text? 
-#             modelT.createField(name=ModelTemplate_.CONJUGATION_OVERRIDES)
-#             modelT.createConjugationFields()
-#             
-#             self._createTemplates(modelT)
-#             mw.col.models.add(modelT)
-#             mw.col.models.flush()
             
-    def _createTemplates(self, model):
-        card = CardTemplate_.createConjugationOverrideCard(model)
-        card.add()
+    def _createTemplates(self, modelTemplate):
+        card = modelTemplate.createConjugationOverrideCard()
         for tense in Tenses.all:
-            card = CardTemplate_.createTenseCard(tense, model)
-            card.add()
+            card = modelTemplate.createTenseCard(tense)
         
     def createNewDeck(self, deckName=u'Español Verbs'):
         """
@@ -471,7 +453,9 @@ class AnkiIntegration_(object):
     def initialize(self, *args):
         for modelName, modelDefinition in ModelDefinitions.iteritems():
             modelTemplate = ModelTemplate_.getModel(modelName, collection=mw.col, create=True, **modelDefinition)
+            self._createTemplates(modelTemplate)
             modelTemplate.save()
+            
 #     def enterNewVerbInit(key, definition):
 #         global AnkiIntegration
 #         def testFunction():
