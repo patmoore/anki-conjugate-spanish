@@ -10,32 +10,17 @@ from constants import *
 from conjugation_override import ConjugationOverride
 import os
 
-class Verb_Dictionary_(dict):
+class Espanol_Dictionary_(dict):
     def add(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
-        if conjugation_overrides == u'':
-            conjugation_overrides = None
-        elif isinstance(conjugation_overrides, six.string_types):
-            conjugation_overrides = conjugation_overrides.split(",")
-                
-        if manual_overrides is not None and manual_overrides != u'':        
-            conjugation_override = ConjugationOverride.create_from_json(manual_overrides, key=phrase+"_irregular")
-        
-            if conjugation_overrides is None:
-                conjugation_overrides = [conjugation_override]
-            else:
-                conjugation_overrides.append(conjugation_override)
-                                    
-        verb = Verb(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb)  
+        verb = Verb(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)  
         if phrase in self:
             print(phrase+" already in dictionary")
         else:      
             self[verb.full_phrase] = verb
-    #     print "Adding "+verb.inf_verb_string
         return verb
 
     def load(self):
         import special_cases
-    #     print(u"current directory=",os.getcwd())
         basedir = os.path.dirname(os.path.realpath(__file__))
         dictionaryDirectory = basedir+u'/dictionaries/'
     #     print(u"current directory=",basedir)
@@ -88,5 +73,5 @@ class Verb_Dictionary_(dict):
                     f.write(verb.print_csv(False))
                     f.write(u"\n")
 
-Verb_Dictionary = Verb_Dictionary_()
+Verb_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary_By = {}

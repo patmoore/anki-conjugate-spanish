@@ -63,9 +63,9 @@ class ConjugationOverride(object):
         
     @staticmethod
     def create_from_json(json_string, key=None):
-        if json_string is not None and json_string != u'':
+        if isinstance(json_string, six.string_types) and json_string != u'':
             try:
-                manual_overrides = json.loads(json_string, u'utf-8')
+                manual_overrides = json.loads(make_unicode(json_string), u'utf-8')
             except ValueError as e:
                 print(u"while parsing json manual_overrides "+ json_string + u" to verb_dictionary", repr(e))       
         conjugation_override = ConjugationOverride(key=key,manual_overrides=manual_overrides) 

@@ -47,10 +47,10 @@ class Verb():
             # Note: that the prefix can be u'' - usually for reflexive verbs. 
     '''
     
-    def __init__(self, verb_string, definition=u'', conjugation_overrides=None, base_verb=None, **kwargs):
+    def __init__(self, phrase_verb_string, definition=u'', conjugation_overrides=None, base_verb=None, manual_overrides=None, **kwargs):
         '''
         Constructor
-        :param verb_string:
+        :param phrase_verb_string:
         :param base_verb: used as base verb for conjugation
         '''
         self.definition = make_unicode(definition)
@@ -58,12 +58,13 @@ class Verb():
         self._doNotApply = []
         self._appliedOverrides = []
  
-        _verb_string = make_unicode(verb_string)
+        # need to preserve with the / and - so that we can go from Note objects back to Verb objects
+        self.key = _phrase_verb_string = make_unicode(phrase_verb_string)
                             
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
-        phrase_match = _phrase_parsing.match(_verb_string)
+        phrase_match = _phrase_parsing.match(_phrase_verb_string)
         if phrase_match is None:
-            self.__raise(_verb_string+": does not appear to be a verb or phrase with verb infinitive in it.")            
+            self.__raise(_phrase_verb_string+": does not appear to be a verb or phrase with verb infinitive in it.")            
 
         self.prefix_words = phrase_match.group(PREFIX_WORDS)
         self.prefix = phrase_match.group(PREFIX_CHARS)
@@ -112,10 +113,25 @@ class Verb():
         else:
             self.base_verb_str = None
                         
-        if conjugation_overrides is not None:
-            for conjugation_override in get_iterable(conjugation_overrides):
-                self.process_conjugation_override(conjugation_override)  
+        self.manual_overrides_string = manual_overrides
+        if isinstance(conjugation_overrides, six.string_types) and conjugation_overrides != u'':
+            self.overrides_string = conjugation_overrides = conjugation_overrides.split(",")                
+        else:
+            self.overrides_string = u''
+            
+        if self.manual_overrides_string is not None and self.manual_overrides_string != u'': 
+            self.manual_overrides_string = manual_overrides
+            manual_conjugation_override = ConjugationOverride.create_from_json(self.manual_overrides_string, key=phrase_verb_string+"_irregular")
+        
+            if conjugation_overrides is None:
+                conjugation_overrides = [manual_conjugation_override]
+            else:
+                conjugation_overrides.append(manual_conjugation_override) 
                  
+        if conjugation_overrides is not None:            
+            for conjugation_override in get_iterable(conjugation_overrides):
+                self.process_conjugation_override(conjugation_override) 
+                
         # look for default overrides - apply to end so that user could explicitly turn off the override
         for conjugation_override in Standard_Overrides.itervalues():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
