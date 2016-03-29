@@ -115,7 +115,8 @@ class Verb():
                         
         self.manual_overrides_string = manual_overrides
         if isinstance(conjugation_overrides, six.string_types) and conjugation_overrides != u'':
-            self.overrides_string = conjugation_overrides = conjugation_overrides.split(",")                
+            self.overrides_string = conjugation_overrides
+            conjugation_overrides = conjugation_overrides.split(",")                
         else:
             self.overrides_string = u''
             
