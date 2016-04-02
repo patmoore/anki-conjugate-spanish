@@ -18,6 +18,7 @@ from verb_dictionary import Verb_Dictionary
 from constants import *
 import anki.stdmodels
 import inspect
+from functools import partial
 
 __all__ = [ 'AnkiIntegration']
 MODEL_FIELDS = {
@@ -38,7 +39,9 @@ def addToList(list_, item):
 def td(string_):
     return u'<td>' + string_ + u'</td>'
 
-def iftest(variable, string_):
+def iftest(variable, string_ = None):
+    if string_ is None:
+        string_ = u'{{' + variable +u'}}'
     return u'{{#'+variable+u'}}'+string_+u'{{/'+variable+u'}}'
 
 class ModelTemplate_(object):
@@ -47,6 +50,7 @@ class ModelTemplate_(object):
     CONJUGATION_OVERRIDES = u'Conjugation Overrides'
     MANUAL_CONJUGATION_OVERRIDES = u'Manual Conjugation Overrides'
     KEY = u'key'
+    ROOT_VERB = u'Root Verb'
     splitTensePerson = re_compile(u'(.*)/(.*)')
     """
     Used to create custom models for verbs
@@ -67,6 +71,7 @@ class ModelTemplate_(object):
                     field = self.createField(fieldName)
                     self.addField(field)
         
+        self.model[u'sortf'] = self.getFieldIndex(ModelTemplate_.KEY)
         self._createTemplates()
         if self._changed: 
             self.save()
@@ -140,11 +145,13 @@ class ModelTemplate_(object):
         modelTemplate = ModelTemplate_(model=model_, **kwargs)
         return modelTemplate
     
-    def verbToNote(self, verb):
+    def verbToNote(self, verb, irregularOnly=True):
+        conjugations = verb.conjugate_irregular_tenses() if irregularOnly else verb.conjugate_all_tenses()        
         note = Note(self.collection, model=self.model )
         for field in self.model[u'flds']:
             fieldName = field[u'name']
             if fieldName == ModelTemplate_.KEY:
+                # TODO Some key
                 value = verb.key
             elif fieldName == ModelTemplate_.INFINITIVE_OR_PHRASE:
                 value = verb.full_phrase
@@ -154,15 +161,17 @@ class ModelTemplate_(object):
                 value = verb.overrides_string
             elif fieldName == ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES:
                 value = verb.manualOverrides
+            elif fieldName == ModelTemplate_.ROOT_VERB:
+                value = verb.base_verb_str
             else:
                 conjugation_match = ModelTemplate_.splitTensePerson.match(fieldName)
                 if conjugation_match is not None:
                     tense = Tenses.index(conjugation_match.group(1))
                     if tense in Tenses.Person_Agnostic:
-                        value = verb.conjugate(tense)
+                        value = conjugations[tense] #verb.conjugate(tense)
                     else:
                         person = Persons.index(conjugation_match.group(2))
-                        value = verb.conjugate(tense, person)
+                        value = conjugations[tense][person] # verb.conjugate(tense, person)
                     
             if value is None:
                 """
@@ -183,14 +192,14 @@ class ModelTemplate_(object):
     
     def noteToVerb(self,note):
         phrase = note[ModelTemplate_.INFINITIVE_OR_PHRASE]
-        key = note[ModelTemplate_.KEY]
+        key = note[ModelTemplate_.KEY] if ModelTemplate_.key in note else phrase
         definition = note[ModelTemplate_.ENGLISH_DEFINITION]
         conjugation_overrides = note[ModelTemplate_.CONJUGATION_OVERRIDES]
         # TODO 
         manual_overrides = note[ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES]
-        verb = Verb_Dictionary.get(phrase)
+        verb = Verb_Dictionary.get(key)
         if verb is None:
-            verb = Verb_Dictionary.add(phrase, definition, conjugation_overrides, manual_overrides=manual_overrides)
+            verb = Verb_Dictionary.add(key, definition, conjugation_overrides, manual_overrides=manual_overrides)
 
     def save(self):
         if u'id' in self.model and self.model[u'id'] is not None:
@@ -210,6 +219,18 @@ class ModelTemplate_(object):
             return cardTemplate
         return None
     
+    @classmethod
+    def isSpanishModel(cls, note):
+        return note.model()[u'name'].find(SPANISH_PREFIX) >=0
+    
+    @property
+    def name(self):
+        return self.model[u'name']
+    
+    @property
+    def isBaseModel(self):
+        return self.name == BASE_MODEL
+    
     def _createTemplates(self):
         card = self.createConjugationOverrideCard()
         for tense in Tenses.all:
@@ -217,9 +238,16 @@ class ModelTemplate_(object):
     
     def createConjugationOverrideCard(self):
         cardName=u'Conjugation Overrides'
-        def _create(cardTemplate):
+        def _create(cardTemplate):                
             cardTemplate.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'
-            cardTemplate.answerFormat =u'{{'+ModelTemplate_.CONJUGATION_OVERRIDES+u'}}'
+            answer = u'{{' + ModelTemplate_.ENGLISH_DEFINITION+u'}}' +\
+                u'<br/>' + \
+                iftest(ModelTemplate_.CONJUGATION_OVERRIDES) +\
+                u'<br/>' +\
+                iftest(ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES) +\
+                u'<br/>' +\
+                iftest(ModelTemplate_.ROOT_VERB)  
+            cardTemplate.answerFormat = answer
             self.addCard(cardTemplate)
             self._changed = True
             
@@ -310,6 +338,8 @@ for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
             {u'name': ModelTemplate_.ENGLISH_DEFINITION},
             {u'name': ModelTemplate_.CONJUGATION_OVERRIDES},
             {u'name': ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES},
+            {u'name': ModelTemplate_.ROOT_VERB},
+            {u'name': ModelTemplate_.KEY},
         ]
     }
 
@@ -333,17 +363,6 @@ for tense in Tenses.imperative:
         ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.Person_Agnostic:
     ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense)})
-        
-TEMPLATE_FIELDS = {
-    u'name': u'Card 1',
-    u'qfmt': u'{{Front}}', 
-    u'did': None, 
-    u'bafmt': u'', 
-    u'afmt': u'{{FrontSide}}\n\n<hr id=answer>\n\n{{Back}}', 
-    u'ord': 0, 
-    u'bqfmt': u''
-}
-
 
 """
 Plan:
@@ -356,8 +375,10 @@ class AnkiIntegration_(object):
     
     def __init__(self, modelName=BASE_MODEL):
         self.modelName = modelName
+        self.modelTemplates = {}
         addHook('editFocusGained', self.editFocusGained)
         addHook('setupEditorButtons', self.setupEditorButtons)
+        addHook('editFocusLost', self.onFocusLost)
         
     def createNewDeck(self, deckName=u'Español Verbs'):
         """
@@ -380,30 +401,77 @@ class AnkiIntegration_(object):
         pass
     
     def editFocusGained(self, note, currentFieldIndex):
-        # TODO test for a spanish model
+        # TODO test for a spanish model        
+        pass
+    
+    def onFocusLost(self, flag, note, currentFieldIndex):
+        """
+        returning true will cause the note to be saved and refreshed
+        """
+        if not ModelTemplate_.isSpanishModel(note):
+            return flag
         modelTemplate = ModelTemplate_(note.model())
         inf_field = modelTemplate.getFieldIndex(ModelTemplate_.INFINITIVE_OR_PHRASE)
         conjugationoverrides_field = modelTemplate.getFieldIndex(ModelTemplate_.CONJUGATION_OVERRIDES)
-        if currentFieldIndex != inf_field and note.fields[inf_field] != u'' and note.fields[conjugationoverrides_field] == u'':
-            # don't generate until not on infinitive field
+        if currentFieldIndex == inf_field and note.fields[inf_field] != u'' and note.fields[conjugationoverrides_field] == u'':
+            # don't generate unless leaving infinitive field
             verb = Verb(note.fields[inf_field])
             note.fields[conjugationoverrides_field] = verb.overrides_string
-            note.flush()
-        pass
-        
+            return True
+        return flag
+         
     def isConjugationNote(self, note):
         return isinstance(note, Note) and note.model()[u'name'] == self.modelName
     
-    def onFullyConjugateVerb(self, *args):
-        pass
-    
-    def setupEditorButtons(self, *args):
-        if len(args) == 0 or not isinstance(args[0], Editor):
+    def _createNote(self, note, derivedModelName, irregularOnly):        
+        modelTemplate = self._getNoteModelTemplate(note)
+        if modelTemplate is not None:
+            if modelTemplate.isBaseModel:
+                modelName = FULLY_CONJUGATED_MODEL
+                currentModelTemplate = self._getModelTemplateByName(derivedModelName)
+                word_phrase_str = note[ModelTemplate_.INFINITIVE_OR_PHRASE]
+                word_phrase = Verb_Dictionary.get(word_phrase_str)
+                newNote = currentModelTemplate.verbToNote(word_phrase, irregularOnly)
+                mw.col.addNote(newNote)
+    def onFullyConjugateVerb(self, editor, *args):
+        note = editor.note
+        editor.saveNow()
+        self._createNote(note, FULLY_CONJUGATED_MODEL, False)
+            
+    def onIrregularConjugateVerb(self, editor, *args):
+        note = editor.note
+        editor.saveNow()
+        self._createNote(note, FULLY_CONJUGATED_MODEL, True)
+        
+    def onConjugationOverrides(self, editor):
+        from ui.overrides import OverridesDialog
+        editor.saveNow()
+        OverridesDialog(editor.mw, editor.note, parent=editor.parentWindow)
+        
+    def _getNoteModelTemplate(self, note):
+        if note is not None and ModelTemplate_.isSpanishModel(note):
+            modelName = note.model()[u'name']
+            return self._getModelTemplateByName(modelName)
+        
+    def _getModelTemplateByName(self, modelName):
+        if modelName in self.modelTemplates:
+            return self.modelTemplates[modelName]
+        else:
+            return None
+    def setupEditorButtons(self, editor=None, *args):
+        if not isinstance(editor, Editor):
             return
-        editor = args[0]
         b = editor._addButton
-        b("fullyConjugate", self.onFullyConjugateVerb, "",
-          shortcut(_("Fully Conjugate")), size=False, text=_("Fully Conjugate Verb..."),
+        ## TODO: Should only be visible for BASE_MODEL verbs        
+        ## TODO : canDisable=True means that the button starts disabled ( need a way to turn off visibility? )
+        b("fullyConjugate", partial(self.onFullyConjugateVerb, editor), "",
+          shortcut(_("Fully Conjugate")), size=False, text=_(u"Fully Conjugate Verb..."),
+          native=True, canDisable=False)
+        b("irregularConjugation", partial(self.onIrregularConjugateVerb, editor), "",
+          shortcut(_("Irregular Conjugate")), size=False, text=_(u"Irregular Conjugate Verb..."),
+          native=True, canDisable=False)
+        b("overrides", partial(self.onConjugationOverrides, editor), "",
+          shortcut(_(u"Conjugation Overrides")), size=False, text=_(u"Conjugation Overrides"),
           native=True, canDisable=False)
          
     def convertInfinitiveCardToConjugatedCards(self):
@@ -457,14 +525,14 @@ class AnkiIntegration_(object):
         
     def loadDictionary(self):
         Verb_Dictionary.load()
-        modelTemplate = ModelTemplate_.getModel(BASE_MODEL, create=True)
+        modelTemplate = self._getModelTemplateByName(BASE_MODEL)
         for key, verb in Verb_Dictionary.iteritems():
             note = modelTemplate.verbToNote(verb)
             mw.col.addNote(note)
 
     def initialize(self, *args):
         for modelName, modelDefinition in ModelDefinitions.iteritems():
-            modelTemplate = ModelTemplate_.getModel(modelName, collection=mw.col, create=True, **modelDefinition)
+            self.modelTemplates[modelName] = ModelTemplate_.getModel(modelName, collection=mw.col, create=True, **modelDefinition)
             
 #     def enterNewVerbInit(key, definition):
 #         global AnkiIntegration

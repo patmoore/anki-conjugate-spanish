@@ -46,7 +46,8 @@ class Verb():
             # (has to handle acordarse -> acordar and descacordarse -> acordarse )
             # Note: that the prefix can be u'' - usually for reflexive verbs. 
     '''
-    
+    # constant used to tell human that the verb is explicitly known to be a regular verb 
+    REGULAR_VERB = u'regular'
     def __init__(self, phrase_verb_string, definition=u'', conjugation_overrides=None, base_verb=None, manual_overrides=None, **kwargs):
         '''
         Constructor
@@ -114,11 +115,11 @@ class Verb():
             self.base_verb_str = None
                         
         self.manual_overrides_string = manual_overrides
-        if isinstance(conjugation_overrides, six.string_types) and conjugation_overrides != u'':
-            self.overrides_string = conjugation_overrides
+        if isinstance(conjugation_overrides, six.string_types) and conjugation_overrides != u'' and conjugation_overrides != Verb.REGULAR_VERB:
+            self.explicit_overrides_string = self.overrides_string = conjugation_overrides
             conjugation_overrides = conjugation_overrides.split(",")                
         else:
-            self.overrides_string = u''
+            self.explicit_overrides_string = self.overrides_string = u''
             
         if self.manual_overrides_string is not None and self.manual_overrides_string != u'': 
             self.manual_overrides_string = manual_overrides
@@ -135,13 +136,22 @@ class Verb():
                 
         # look for default overrides - apply to end so that user could explicitly turn off the override
         for conjugation_override in Standard_Overrides.itervalues():
-            if conjugation_override.auto_match != False and conjugation_override.is_match(self):
-                self.process_conjugation_override(conjugation_override)
+            if conjugation_override.auto_match != False and conjugation_override.is_match(self):                
+                applied = self.process_conjugation_override(conjugation_override)
+                if applied:
+                    if self.overrides_string == u'':
+                        self.overrides_string = conjugation_override.key
+                    else:
+                        self.overrides_string += u','+conjugation_override.key
                 
         for conjugation_override in Dependent_Standard_Overrides.itervalues():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
                 self.process_conjugation_override(conjugation_override)
-                
+            
+        ## HACK -- should be supplied when generating a card    
+        if self.overrides_string == u'':
+            self.overrides_string = Verb.REGULAR_VERB
+            
         self.process_conjugation_override(UniversalAccentFix)
                 
                 
@@ -708,9 +718,9 @@ class Verb():
         return result
     
     @property
-    def overrides_string(self):    
+    def complete_overrides_string(self):    
         """
-        so users can edit a note
+        so users can edit a note         
         """            
         if self.doNotApply is not None and self.doNotApply != []:
             result = u'-' + u',-'.join(self.doNotApply)
@@ -722,7 +732,7 @@ class Verb():
             else:
                 result = u','.join(self.appliedOverrides)
         if result is None:
-            return u'regular'
+            return Verb.REGULAR_VERB
         else:
             return result
         
@@ -758,16 +768,23 @@ class Verb():
                 self.__raise("no override with key ", lookup_key)
             if conjugation_override[0] == '-':
                 self.add_doNotApply(override.key)
-                return
+                return False
         else:
             #No override or blank
-            return
-        if override.key not in self.doNotApply and override.key not in self.appliedOverrides:
+            return False
+        if self.canApply(override):
             if override.key:
                 # Custom overrides do not always have keys
                 self.add_applied_override(override.key)
-            override.apply(self)        
+            override.apply(self)      
+            return True
+        else:
+            return False  
 
+    def canApply(self,override_or_key):
+        key = override_or_key if isinstance(override_or_key, six.string_types) else override_or_key.key
+        return key not in self.doNotApply and key not in self.appliedOverrides
+        
     @property
     def root_verb(self):
         if self.base_verb is None:
