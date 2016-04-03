@@ -171,7 +171,7 @@ class ModelTemplate_(object):
                         value = conjugations[tense] #verb.conjugate(tense)
                     else:
                         person = Persons.index(conjugation_match.group(2))
-                        value = conjugations[tense][person] # verb.conjugate(tense, person)
+                        value = conjugations[tense][person] if conjugations[tense] is not None else None
                     
             if value is None:
                 """
@@ -325,7 +325,7 @@ class CardTemplate_(object):
     def backAnswerFormat(self, bafmt):
         self.card[u'bafmt'] = bafmt
         
-SPANISH_PREFIX = u'Español:'
+SPANISH_PREFIX = ADDON_PREFIX
 BASE_MODEL = SPANISH_PREFIX+u'Verb'
 FULLY_CONJUGATED_MODEL = SPANISH_PREFIX+u'Fully Conjugated Verb'
 THIRD_PERSON_ONLY_MODEL = SPANISH_PREFIX+u'Third Person Only'

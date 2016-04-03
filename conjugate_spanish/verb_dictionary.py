@@ -11,13 +11,35 @@ from conjugation_override import ConjugationOverride
 import os
 
 class Espanol_Dictionary_(dict):
-    def add(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
+    def add_verb(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
         verb = Verb(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)  
         if phrase in self:
             print(phrase+" already in dictionary")
         else:      
             self[verb.full_phrase] = verb
         return verb
+
+    def load_verbs(self, fileName, verbs):
+        print("reading "+fileName)
+        with codecs.open(fileName, mode='r' ) as csvfile:
+            reader = csv.DictReader(csvfile, skipinitialspace=True)
+            try:
+                for line in reader:
+                    definition = {u'definition':u''}
+                    for key,value in line.iteritems():
+                        _value = make_unicode(value)
+                        if _value != u'' and _value is not None:
+                            definition[make_unicode(key)] = _value 
+                    try:
+                        verb = self.add_verb(**definition)
+                        verbs.append(verb.full_phrase)
+                        print (verb.full_phrase)
+                    except Exception as e:
+                        print("error reading "+fileName+": "+ repr(definition)+ repr(e))
+                        traceback.print_exc()            
+            except Exception as e:
+                print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
+                traceback.print_exc()
 
     def load(self):
         import special_cases
@@ -30,27 +52,8 @@ class Espanol_Dictionary_(dict):
             if fileNameBase == u'501verbs':
                 verbs.extend([u'hacer',u'ser',u'ir',u'irse',u'hacer',u'estar'])
             Verb_Dictionary_By[fileNameBase] = verbs
-            print("reading "+fileName)
-            with codecs.open(fileName, mode='r' ) as csvfile:
-                reader = csv.DictReader(csvfile, skipinitialspace=True)
-                try:
-                    for line in reader:
-                        definition = {u'definition':u''}
-                        for key,value in line.iteritems():
-                            _value = make_unicode(value)
-                            if _value != u'' and _value is not None:
-                                definition[make_unicode(key)] = _value 
-                        try:
-                            verb = self.add(**definition)
-                            verbs.append(verb.full_phrase)
-                            print (verb.full_phrase)
-                        except Exception as e:
-                            print("error reading "+fileName+": "+ repr(definition)+ repr(e))
-                            traceback.print_exc()            
-                except Exception as e:
-                    print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
-                    traceback.print_exc()
-
+            self.load_verbs(fileName, verbs)
+            
     def export(self, source, outputfile=None, testfn=lambda **kwargs:True):
         if outputfile is None:
             outputfile = source

@@ -16,4 +16,5 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides',
     'NonConjugatedPhrase',
     'Verb_Dictionary',
     'get_iterable',
-    'make_list']
+    'make_list',
+    ]

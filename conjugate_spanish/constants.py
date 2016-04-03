@@ -5,6 +5,8 @@ import re
 import sys
 import traceback
 
+# Used as prefix to actions, models, etc.
+ADDON_PREFIX = u'Español:'
 def re_compile(string_):
     """
     unicode, ignore case
