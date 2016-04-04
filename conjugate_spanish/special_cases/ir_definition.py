@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from conjugate_spanish import ConjugationOverride, Tenses, Persons, Standard_Conjugation_Endings, Infinitive_Endings
-from conjugate_spanish.verb_dictionary import Verb_Dictionary
+from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 
 Past_Tense_IR_CO = ConjugationOverride(parents=[u'unaccent_present_past'])
 Past_Tense_IR_CO.override_tense_stem(Tenses.past_tense, u'fu')

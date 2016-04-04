@@ -14,7 +14,7 @@ from verb import Verb
 import six
 from anki.notes import Note
 from anki.utils import intTime
-from verb_dictionary import Verb_Dictionary
+from espanol_dictionary import Verb_Dictionary
 from constants import *
 import anki.stdmodels
 import inspect
@@ -447,7 +447,9 @@ class AnkiIntegration_(object):
     def onConjugationOverrides(self, editor):
         from ui.overrides import OverridesDialog
         editor.saveNow()
-        OverridesDialog(editor.mw, editor.note, parent=editor.parentWindow)
+        verb_string = editor.note[ModelTemplate_.INFINITIVE_OR_PHRASE]
+        verb = Verb_Dictionary.get(verb_string)
+        OverridesDialog(editor.mw, editor.note, verb, parent=editor.parentWindow)
         
     def _getNoteModelTemplate(self, note):
         if note is not None and ModelTemplate_.isSpanishModel(note):

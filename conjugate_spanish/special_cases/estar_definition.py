@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from conjugate_spanish.conjugation_override import ConjugationOverride
 from conjugate_spanish.constants import Tenses
-from conjugate_spanish.verb_dictionary import Verb_Dictionary
+from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 
 # note the use_er must be before e_and_o
 _conjugation_overrides = ConjugationOverride(parents=[u'oy',u'use_er', u'e_and_o'])

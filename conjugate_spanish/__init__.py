@@ -3,7 +3,7 @@ from conjugation_override import ConjugationOverride, Standard_Overrides, Depend
 from standard_endings import Standard_Conjugation_Endings
 from verb import Verb
 from constants import Infinitive_Endings, Persons, get_iterable, make_list, Tenses, Persons_Indirect
-from verb_dictionary import Verb_Dictionary
+from espanol_dictionary import Espanol_Dictionary
 from anki_integration import AnkiIntegration
 from nonconjugated_phrase import NonConjugatedPhrase
 
@@ -14,7 +14,7 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides',
     'AnkiIntegration',
     'Verb',
     'NonConjugatedPhrase',
-    'Verb_Dictionary',
+    'Espanol_Dictionary',
     'get_iterable',
     'make_list',
     ]

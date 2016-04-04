@@ -540,7 +540,7 @@ Cir_After_Vowel_CO = make_std_override(inf_match=re_compile(u'['+Vowels.all+u']c
     documentation=u'verbs ending in -cer or -cir with a preceding vowel have c -> zc before o')
 for co in [ Cer_After_Vowel_CO, Cir_After_Vowel_CO]:
     co.override_tense_join(Tenses.present_tense, _v_ceir_check, Persons.first_person_singular)
-    # Exists to handle satisfacer: (e_and_o) verbs : May not to be so general?
+    # Exists to handle satisfacer/hacer: (e_and_o) verbs : May not to be so general?
     co.override_tense_join(Tenses.past_tense, _c2_z_check, Persons.third_person_singular)
   
 Cer_After_Const_CO = make_std_override(inf_match=re_compile(u'[^'+Vowels.all+u']cer$'),
