@@ -9,18 +9,22 @@ from constants import *
 
 from conjugation_override import ConjugationOverride
 import os
+from test.test_decimal import directory
 
-class Espanol_Dictionary_(dict):
-    def add_verb(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
-        verb = Verb(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)  
-        if phrase in self:
-            print(phrase+" already in dictionary")
-        else:      
-            self[verb.full_phrase] = verb
-        return verb
+"""
+load dictionaries/*-verbs.csv
+load dictionaries/*-phrases.csv
+----
+in user directory
+load cs_dictionaries/*-verbs.csv
+load cs_dictionari
+"""
+class Dictionary_(dict):
+    def __init__(self):
+        self.by = {}
 
-    def load_verbs(self, fileName, verbs):
-        print("reading "+fileName)
+    def load(self, fileName, source):
+        current = self.by[source] = []
         with codecs.open(fileName, mode='r' ) as csvfile:
             reader = csv.DictReader(csvfile, skipinitialspace=True)
             try:
@@ -31,15 +35,25 @@ class Espanol_Dictionary_(dict):
                         if _value != u'' and _value is not None:
                             definition[make_unicode(key)] = _value 
                     try:
-                        verb = self.add_verb(**definition)
-                        verbs.append(verb.full_phrase)
-                        print (verb.full_phrase)
+                        phrase = self.add(**definition)
+                        current.append(phrase.full_phrase)
+                        print (phrase.full_phrase)
                     except Exception as e:
                         print("error reading "+fileName+": "+ repr(definition)+ repr(e))
                         traceback.print_exc()            
             except Exception as e:
                 print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
                 traceback.print_exc()
+
+class Verb_Dictionary_(Dictionary_):
+                            
+    def add(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
+        verb = Verb(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)  
+        if phrase in self:
+            print(phrase+" already in dictionary")
+        else:      
+            self[verb.full_phrase] = verb
+        return verb
 
     def load(self):
         import special_cases
@@ -51,7 +65,7 @@ class Espanol_Dictionary_(dict):
             verbs = []
             if fileNameBase == u'501verbs':
                 verbs.extend([u'hacer',u'ser',u'ir',u'irse',u'hacer',u'estar'])
-            Verb_Dictionary_By[fileNameBase] = verbs
+            self.by[fileNameBase] = verbs
             self.load_verbs(fileName, verbs)
             
     def export(self, source, outputfile=None, testfn=lambda **kwargs:True):
@@ -68,7 +82,7 @@ class Espanol_Dictionary_(dict):
                     for person in Persons.all:
                         f.write(u','+Tenses[tense]+"_"+Persons[person])
             f.write(u'\n')
-            for phrase in Verb_Dictionary_By[source]:
+            for phrase in self.by[source]:
                 verb = self.get(phrase)
                 call = {u"verb":verb}
                 if testfn(**call):   
@@ -76,5 +90,30 @@ class Espanol_Dictionary_(dict):
                     f.write(verb.print_csv(False))
                     f.write(u"\n")
 
-Verb_Dictionary = Espanol_Dictionary_()
-Verb_Dictionary_By = {}
+class Phrase_Dictionary_(Dictionary_):
+    def add(self):
+        pass
+        
+class Espanol_Dictionary_():
+    VERBS_FILENAME = re_compile(u'(.*)-verbs.csv')
+    PHRASES_FILENAME = re_compile(u'(.*)-phrases.csv')
+    def __init__(self):
+        self.verbDictionary = Verb_Dictionary_()
+        self.phraseDictionary = Phrase_Dictionary_()
+        
+    def load(self):
+        basedir = os.path.dirname(os.path.realpath(__file__))
+        for path in [basedir, '.']:
+            filelist = os.listdir(path)
+            for fileName in filelist:
+                verbMatch = Espanol_Dictionary_.VERBS_FILENAME.match(fileName)
+                phraseMatch = Espanol_Dictionary_.PHRASES_FILENAME.match(fileName)
+                if verbMatch is not None:
+                    self.verbDictionary.load(fileName, verbMatch.group(1))
+                elif phraseMatch is not None:
+                    self.phraseDictionary.load(fileName, phraseMatch.group(1))
+
+
+Espanol_Dictionary = Espanol_Dictionary_()
+Verb_Dictionary = Espanol_Dictionary.verbDictionary
+Phrase_Dictionary = Espanol_Dictionary.phraseDictionary
