@@ -36,7 +36,7 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>220</y>
+     <y>270</y>
      <width>221</width>
      <height>71</height>
     </rect>
@@ -62,7 +62,7 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>300</y>
+     <y>350</y>
      <width>221</width>
      <height>80</height>
     </rect>
@@ -113,7 +113,7 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>90</y>
+     <y>130</y>
      <width>219</width>
      <height>131</height>
     </rect>
@@ -140,7 +140,7 @@
    <widget class="QCheckBox" name="oy_verb">
     <property name="geometry">
      <rect>
-      <x>100</x>
+      <x>90</x>
       <y>30</y>
       <width>85</width>
       <height>18</height>
@@ -228,19 +228,6 @@
     <string>Past Participle</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="standardEndingOverride">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>50</y>
-     <width>111</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>replace with ending</string>
-   </property>
-  </widget>
   <widget class="QGroupBox" name="adjectiveBox">
    <property name="geometry">
     <rect>
@@ -267,6 +254,32 @@
     </property>
     <property name="checked">
      <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="endingBasedBox">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>10</y>
+     <width>221</width>
+     <height>101</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Ending based</string>
+   </property>
+   <widget class="QCheckBox" name="standardEndingOverride">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>30</y>
+      <width>151</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>replace with ending</string>
     </property>
    </widget>
   </widget>
