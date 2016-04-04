@@ -49,7 +49,7 @@ class ModelTemplate_(object):
     ENGLISH_DEFINITION = u'English definition'
     CONJUGATION_OVERRIDES = u'Conjugation Overrides'
     MANUAL_CONJUGATION_OVERRIDES = u'Manual Conjugation Overrides'
-    KEY = u'key'
+    KEY = u'Key'
     ROOT_VERB = u'Root Verb'
     splitTensePerson = re_compile(u'(.*)/(.*)')
     """
@@ -433,6 +433,7 @@ class AnkiIntegration_(object):
                 word_phrase = Verb_Dictionary.get(word_phrase_str)
                 newNote = currentModelTemplate.verbToNote(word_phrase, irregularOnly)
                 mw.col.addNote(newNote)
+                
     def onFullyConjugateVerb(self, editor, *args):
         note = editor.note
         editor.saveNow()
@@ -464,13 +465,13 @@ class AnkiIntegration_(object):
         b = editor._addButton
         ## TODO: Should only be visible for BASE_MODEL verbs        
         ## TODO : canDisable=True means that the button starts disabled ( need a way to turn off visibility? )
-        b("fullyConjugate", partial(self.onFullyConjugateVerb, editor), "",
-          shortcut(_("Fully Conjugate")), size=False, text=_(u"Fully Conjugate Verb..."),
+        b(u"fullyConjugate", partial(self.onFullyConjugateVerb, editor), "",
+          shortcut(_(u"Fully Conjugate")), size=False, text=_(u"Fully Conjugate Verb..."),
           native=True, canDisable=False)
-        b("irregularConjugation", partial(self.onIrregularConjugateVerb, editor), "",
-          shortcut(_("Irregular Conjugate")), size=False, text=_(u"Irregular Conjugate Verb..."),
+        b(u"irregularConjugation", partial(self.onIrregularConjugateVerb, editor), "",
+          shortcut(_(u"Irregular Conjugate")), size=False, text=_(u"Irregular Conjugate Verb..."),
           native=True, canDisable=False)
-        b("overrides", partial(self.onConjugationOverrides, editor), "",
+        b(u"overrides", partial(self.onConjugationOverrides, editor), "",
           shortcut(_(u"Conjugation Overrides")), size=False, text=_(u"Conjugation Overrides"),
           native=True, canDisable=False)
          
