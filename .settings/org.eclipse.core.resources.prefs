@@ -1,6 +1,7 @@
 eclipse.preferences.version=1
 encoding//conjugate_spanish/__init__.py=utf-8
-encoding//conjugate_spanish/anki_integration.py=utf-8
+encoding//conjugate_spanish/anki_integration/__init__.py=utf-8
+encoding//conjugate_spanish/anki_integration/model_template.py=utf-8
 encoding//conjugate_spanish/cc.py=utf-8
 encoding//conjugate_spanish/conjugate_spanish.py=utf-8
 encoding//conjugate_spanish/conjugation_override.py=utf-8
