@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 # These are the standard words (special case)
 import codecs
 import traceback
 import csv
-from verb import Verb
-from constants import *
+from .verb import Verb
+from .constants import *
 
-from conjugation_override import ConjugationOverride
+from .conjugation_override import ConjugationOverride
 import os
 from test.test_decimal import directory
-from nonconjugated_phrase import NonConjugatedPhrase
+from .nonconjugated_phrase import NonConjugatedPhrase
 
 """
 load dictionaries/*-verbs.csv
@@ -30,10 +30,10 @@ class Dictionary_(dict):
             reader = csv.DictReader(csvfile, skipinitialspace=True)
             try:
                 for line in reader:
-                    definition = {u'definition':u''}
-                    for key,value in line.iteritems():
+                    definition = {'definition':''}
+                    for key,value in line.items():
                         _value = make_unicode(value)
-                        if _value != u'' and _value is not None:
+                        if _value != '' and _value is not None:
                             definition[make_unicode(key)] = _value 
                     try:
                         phrase = self.add(**definition)
@@ -72,24 +72,24 @@ class Verb_Dictionary_(Dictionary_):
     def export(self, source, outputfile=None, testfn=lambda **kwargs:True):
         if outputfile is None:
             outputfile = source
-        _outputfile = u'./conjugate_spanish/expanded/'+outputfile+u'-verbs-only.csv'
+        _outputfile = './conjugate_spanish/expanded/'+outputfile+'-verbs-only.csv'
         
-        with codecs.open(_outputfile, u"w", u"utf-8") as f:
-            f.write(u"full_phrase")
+        with codecs.open(_outputfile, "w", "utf-8") as f:
+            f.write("full_phrase")
             for tense in Tenses.all:
                 if tense in Tenses.Person_Agnostic:
-                    f.write(u','+Tenses[tense])
+                    f.write(','+Tenses[tense])
                 else:
                     for person in Persons.all:
-                        f.write(u','+Tenses[tense]+"_"+Persons[person])
-            f.write(u'\n')
+                        f.write(','+Tenses[tense]+"_"+Persons[person])
+            f.write('\n')
             for phrase in self.by[source]:
                 verb = self.get(phrase)
-                call = {u"verb":verb}
+                call = {"verb":verb}
                 if testfn(**call):   
-                    print(u"conjugating>>"+verb.full_phrase)
+                    print("conjugating>>"+verb.full_phrase)
                     f.write(verb.print_csv(False))
-                    f.write(u"\n")
+                    f.write("\n")
 
 class Phrase_Dictionary_(Dictionary_):
     def add(self,phrase, definition,associated_verbs=None,**kwargs):
@@ -102,23 +102,23 @@ class Phrase_Dictionary_(Dictionary_):
 
         
 class Espanol_Dictionary_():
-    VERBS_FILENAME = re_compile(u'(.*)-verbs.csv$')
-    PHRASES_FILENAME = re_compile(u'(.*)-phrases.csv$')
+    VERBS_FILENAME = re_compile('(.*)-verbs.csv$')
+    PHRASES_FILENAME = re_compile('(.*)-phrases.csv$')
     def __init__(self):
         self.verbDictionary = Verb_Dictionary_()
         self.phraseDictionary = Phrase_Dictionary_()
         
     def load(self):
         basedir = os.path.dirname(os.path.realpath(__file__))
-        for path in [basedir+u'/dictionaries', '.']:
+        for path in [basedir+'/dictionaries', '.']:
             filelist = os.listdir(path)
             for fileName in filelist:
                 verbMatch = Espanol_Dictionary_.VERBS_FILENAME.match(fileName)
                 phraseMatch = Espanol_Dictionary_.PHRASES_FILENAME.match(fileName)
                 if verbMatch is not None:
-                    self.verbDictionary.load(path+u'/'+fileName, verbMatch.group(1))
+                    self.verbDictionary.load(path+'/'+fileName, verbMatch.group(1))
                 elif phraseMatch is not None:
-                    self.phraseDictionary.load(path+u'/'+fileName, phraseMatch.group(1))
+                    self.phraseDictionary.load(path+'/'+fileName, phraseMatch.group(1))
 
     def add_verb(self, phrase, definition, **kwargs):
         self.verbDictionary.add(phrase, definition, **kwargs)

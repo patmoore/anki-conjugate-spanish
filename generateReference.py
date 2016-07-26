@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 import conjugate_spanish
 from conjugate_spanish.verb_dictionary import Verb_Dictionary
 from conjugate_spanish.conjugation_override import Standard_Overrides
 Verb_Dictionary.load()
 
-Verb_Dictionary.export(u'501verbs')
-Verb_Dictionary.export(u'501verbs', outputfile=u'regular', testfn=lambda verb: verb.is_regular)
-for override in Standard_Overrides.itervalues():
+Verb_Dictionary.export('501verbs')
+Verb_Dictionary.export('501verbs', outputfile='regular', testfn=lambda verb: verb.is_regular)
+for override in Standard_Overrides.values():
     filename = override.key.replace(':','2')
-    Verb_Dictionary.export(u'501verbs', outputfile=filename, testfn=lambda verb: verb.has_override_applied(override.key))
+    Verb_Dictionary.export('501verbs', outputfile=filename, testfn=lambda verb: verb.has_override_applied(override.key))
 def find_print_verb(verb_inf, print_all=False):
     verb = Verb_Dictionary.get(verb_inf)
     if verb is None:

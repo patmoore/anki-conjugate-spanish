@@ -2,4 +2,4 @@
 __all__ = [
 	"overrides",
 ]
-import overrides
+from . import overrides

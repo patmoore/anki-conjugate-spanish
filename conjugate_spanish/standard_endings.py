@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from constants import Tenses,Persons,Infinitive_Endings
+from .constants import Tenses,Persons,Infinitive_Endings
 
 Standard_Conjugation_Endings = [ [ [] for t in range(len(Tenses)) ] for v in range(len(Infinitive_Endings))]
 
@@ -7,74 +7,74 @@ Standard_Conjugation_Endings = [ [ [] for t in range(len(Tenses)) ] for v in ran
 present tense
 """ 
 Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_tense] = [
-     u"o",
-     u"as",
-     u"a",
-     u"amos",
-     u"áis",
-     u"an"
+     "o",
+     "as",
+     "a",
+     "amos",
+     "áis",
+     "an"
     ]  
 Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.present_tense] = [
     Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_tense][Persons.first_person_singular],
-     u'es',
-     u'e',
-     u'emos',
-     u'éis',
-     u'en'
+     'es',
+     'e',
+     'emos',
+     'éis',
+     'en'
     ]  
 Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.present_tense] = list(Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.present_tense])
-Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.present_tense][Persons.first_person_plural] =  u'imos'
-Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.present_tense][Persons.second_person_plural] =  u'ís'
+Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.present_tense][Persons.first_person_plural] =  'imos'
+Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.present_tense][Persons.second_person_plural] =  'ís'
 
 """
 imperfect tense
 """
 Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.incomplete_past_tense] = [
-     u'aba',
-     u'abas',
-     u'aba',
-     u'ábamos',
-     u'abais',
-     u'aban'
+     'aba',
+     'abas',
+     'aba',
+     'ábamos',
+     'abais',
+     'aban'
     ]
 Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.incomplete_past_tense] = Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.incomplete_past_tense] = [
-     u'ía',
-     u'ías',
-     u'ía',
-     u'íamos',
-     u'íais',
-     u'ían'
+     'ía',
+     'ías',
+     'ía',
+     'íamos',
+     'íais',
+     'ían'
     ]
 """
 past tense
 """
 Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.past_tense] = [
-         u'é',
-         u'aste',
-         u'ó',
+         'é',
+         'aste',
+         'ó',
         Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_tense][Persons.first_person_plural],
-         u'asteis',
-         u'aron' 
+         'asteis',
+         'aron' 
     ]
 Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.past_tense] = Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.past_tense] =  [
-         u'í',
-         u'iste',
-         u'ió',
+         'í',
+         'iste',
+         'ió',
         Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.present_tense][Persons.first_person_plural],
-         u'isteis',
-         u'ieron' 
+         'isteis',
+         'ieron' 
     ]
 """
 Future - present tense endings for haber
 """
 Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.future_tense] = \
     Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.future_tense] = Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.future_tense] =  [
-         u'é',
-         u'ás',
-         u'á',
-         u'emos',
-         u'éis',
-         u'án' 
+         'é',
+         'ás',
+         'á',
+         'emos',
+         'éis',
+         'án' 
     ]
  
 Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.conditional_tense] = \
@@ -82,19 +82,19 @@ Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.conditional_tens
     Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.incomplete_past_tense]
  
 Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_subjective_tense] = list(Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.present_tense])
-Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_subjective_tense][Persons.first_person_singular] =  u'e'     
+Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_subjective_tense][Persons.first_person_singular] =  'e'     
 Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.present_subjective_tense] = Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.present_subjective_tense] =\
     list(Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.present_tense])
-Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.present_subjective_tense][Persons.first_person_singular] =  u'a'       
+Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.present_subjective_tense][Persons.first_person_singular] =  'a'       
  
 Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.past_subjective_tense] =\
 Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.past_subjective_tense] = Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.past_subjective_tense] = [
-     u'ra',
-     u'ras',
-     u'ra',
-     u'ramos',
-     u'rais',
-     u'ran'
+     'ra',
+     'ras',
+     'ra',
+     'ramos',
+     'rais',
+     'ran'
     ]
 
 """
@@ -105,14 +105,14 @@ for inf in range(len(Infinitive_Endings)):
     Standard_Conjugation_Endings[inf][Tenses.imperative_negative] = [None] * len(Persons)
     
 # -ing verb
-Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.gerund] = u'ando'
-Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.gerund] = u'iendo'
-Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.gerund] = u'iendo'
+Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.gerund] = 'ando'
+Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.gerund] = 'iendo'
+Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.gerund] = 'iendo'
 # -ed verb
 Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.past_participle] = \
-  Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.adjective] = u'ado'
+  Standard_Conjugation_Endings[Infinitive_Endings.ar_verb][Tenses.adjective] = 'ado'
 Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.past_participle] = \
   Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.adjective] = \
   Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.past_participle] = \
-  Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.adjective] = u'ido'
+  Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.adjective] = 'ido'
 

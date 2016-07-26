@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import collections
-import six
+from . import six
 import re
 import sys
 import traceback
 
 # Used as prefix to actions, models, etc.
-ADDON_PREFIX = u'Español:'
+ADDON_PREFIX = 'Español:'
 def re_compile(string_):
     """
     unicode, ignore case
@@ -16,7 +16,7 @@ def re_compile(string_):
 class BaseConsts_(list):
     @property
     def all(self):
-        return range(len(self))
+        return list(range(len(self)))
     def all_except(self, _except):
         if not isinstance(_except, list):
             _except = [ _except ]
@@ -28,9 +28,9 @@ class Infinitive_Endings_(BaseConsts_):
     ir_verb = 2
      
 Infinitive_Endings = Infinitive_Endings_( [
-    u'ar',
-    u'er',
-    u'ir'
+    'ar',
+    'er',
+    'ir'
 ])
 
 class Tenses_(BaseConsts_):
@@ -57,21 +57,21 @@ class Tenses_(BaseConsts_):
     
 # names also used in manually defined override files
 Tenses = Tenses_([
-    u'present',
-    u'incomplete_past',
-    u'past',
-    u'future',
-    u'conditional',
-    u'present_subjective',
-    u'past_subjective',
-    u'imperative_positive',
-    u'imperative_negative',
-    u'gerund',
-    u'past_participle',
+    'present',
+    'incomplete_past',
+    'past',
+    'future',
+    'conditional',
+    'present_subjective',
+    'past_subjective',
+    'imperative_positive',
+    'imperative_negative',
+    'gerund',
+    'past_participle',
     #usually it is same as past participle: However,
     #The boy is cursed. --> el niño está maldito. (adjective)
     #The boy has been cursed --> el niño ha sido maldecido ( one of the perfect tenses)
-    u'adjective'
+    'adjective'
 ])
 
 class Persons_(BaseConsts_):
@@ -89,21 +89,21 @@ class Persons_(BaseConsts_):
     third_person = [ third_person_singular, third_person_plural]    
 
 Persons = Persons_([
-    u'yo',
-    u'tú',
-    u'usted',
-    u'nosotros',
-    u'vosotros',
-    u'ustedes'
+    'yo',
+    'tú',
+    'usted',
+    'nosotros',
+    'vosotros',
+    'ustedes'
 ])
 
 Persons_Indirect = [
-    u'me',
-    u'te',
-    u'se',
-    u'nos',
-    u'os',
-    u'se'
+    'me',
+    'te',
+    'se',
+    'nos',
+    'os',
+    'se'
     ]
 
 
@@ -130,7 +130,7 @@ def make_unicode(inputStr):
     :returns: original inputStr if inputStr is not a string or inputStr is already a unicode. This means None and random
     objects can be passed
     """
-    if isinstance(inputStr, six.string_types) and type(inputStr) != unicode:
+    if isinstance(inputStr, six.string_types) and type(inputStr) != str:
         result = inputStr.decode('utf-8')
         return result
     else:
@@ -144,17 +144,17 @@ def pick(dictionary, key, default_value):
 
 ## for convenience with creating strings
 class Vowels_(list):
-    a = u'a'
-    e = u'e'
-    i = u'i'
-    o = u'o'
-    u = u'u'
-    a_a = u'á'
-    e_a = u'é'
-    i_a = u'í'
-    o_a = u'ó'
-    u_a = u'ú'
-    u_u = u'ü'
+    a = 'a'
+    e = 'e'
+    i = 'i'
+    o = 'o'
+    u = 'u'
+    a_a = 'á'
+    e_a = 'é'
+    i_a = 'í'
+    o_a = 'ó'
+    u_a = 'ú'
+    u_u = 'ü'
     a_any = a + a_a
     e_any = e + e_a
     i_any = i + i_a
@@ -176,22 +176,22 @@ class Vowels_(list):
         return vowel
     @classmethod
     def re_any_string(cls, string_):
-        regex_str = u''
+        regex_str = ''
         for char in string_:
             reg_chars = Vowels_.any(char)
             if len(reg_chars) == 1:
                 regex_str += reg_chars
             else:
-                regex_str += u'['+reg_chars+u']'
+                regex_str += '['+reg_chars+']'
         return regex_str    
-    dipthong_regex_pattern = u'(?:(?:[iu]?h?[aeo])|(?:[aeo]h?[iu]?))'
+    dipthong_regex_pattern = '(?:(?:[iu]?h?[aeo])|(?:[aeo]h?[iu]?))'
     
     accent_rules = [
         # word ends in strong vowel, dipthong or n,s
-        re_compile(u'^(.*?)('+dipthong_regex_pattern+u')([^'+all+u']*)('+dipthong_regex_pattern+u'[ns]{0,2})$'),
+        re_compile('^(.*?)('+dipthong_regex_pattern+')([^'+all+']*)('+dipthong_regex_pattern+'[ns]{0,2})$'),
         # word ends in weak vowel or n,s
-        re_compile(u'^(.*?)('+dipthong_regex_pattern+u')([^'+all+u']*)([iu]?[ns]{0,2})$'),
-        re_compile(u'^(.*?)('+u'[iu]'+u')([^'+all+u']*)([ns]{0,2})$'),
+        re_compile('^(.*?)('+dipthong_regex_pattern+')([^'+all+']*)([iu]?[ns]{0,2})$'),
+        re_compile('^(.*?)('+'[iu]'+')([^'+all+']*)([ns]{0,2})$'),
     ]
     #TODO needs more work
     # need to pick out the exact vowel to accent.
@@ -205,13 +205,13 @@ class Vowels_(list):
         
     
 Vowels = Vowels_([
-    u'a',
-    u'e',
-    u'i',
-    u'o',
-    u'u'
+    'a',
+    'e',
+    'i',
+    'o',
+    'u'
 ])
-accented_vowel_check = re_compile(u'['+Vowels.accented+u']')
+accented_vowel_check = re_compile('['+Vowels.accented+']')
 def accent_at(string_, index_=None):
     """
     allow the vowel to already be accented
@@ -233,11 +233,11 @@ def accent_at(string_, index_=None):
     return result
 
 _replace_accents = [
-    [ re.compile(u'á'), u'a' ],
-    [ re.compile(u'é'), u'e' ],
-    [ re.compile(u'í'), u'i' ],
-    [ re.compile(u'ó'), u'o' ],
-    [ re.compile(u'ú'), u'u' ]
+    [ re.compile('á'), 'a' ],
+    [ re.compile('é'), 'e' ],
+    [ re.compile('í'), 'i' ],
+    [ re.compile('ó'), 'o' ],
+    [ re.compile('ú'), 'u' ]
 ]    
 def remove_accent(string_):       
     result = string_ 

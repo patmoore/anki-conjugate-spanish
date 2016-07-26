@@ -7,7 +7,7 @@
 import re
 from aqt import mw
 from aqt.utils import showInfo
-from anki_integration import AnkiIntegration
+from .anki_integration import AnkiIntegration
 # FEATURES = {
 #     "clozeEachWord" : True,
 #     "forNewCards" : False, # TODO: not yet implemented

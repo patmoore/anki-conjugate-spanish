@@ -3,20 +3,20 @@
 
 @author: patmoore
 '''
-from __future__ import print_function
+
 import inspect
 import sys
-from conjugation_override import *
-from constants import *
+from .conjugation_override import *
+from .constants import *
 import traceback
 
 # UTF8Writer = codecs.getwriter('utf8')
 # sys.stdout = UTF8Writer(sys.stdout)
-from standard_endings import Standard_Conjugation_Endings
+from .standard_endings import Standard_Conjugation_Endings
 
-_ending_vowel_check = re_compile(u'['+Vowels.all+u']$')
+_ending_vowel_check = re_compile('['+Vowels.all+']$')
 # check for word with only a single vowel ( used in imperative conjugation )
-_single_vowel_re = re.compile(u'^([^'+Vowels.all+u']*)(['+Vowels.all+u'])([^'+Vowels.all+u']*)$', re.IGNORECASE+re.UNICODE)
+_single_vowel_re = re.compile('^([^'+Vowels.all+']*)(['+Vowels.all+'])([^'+Vowels.all+']*)$', re.IGNORECASE+re.UNICODE)
 #
 # Parse up the infinitive string: 
 # group 1 = prefix words (if present)
@@ -27,7 +27,7 @@ _single_vowel_re = re.compile(u'^([^'+Vowels.all+u']*)(['+Vowels.all+u'])([^'+Vo
 # group 6 = suffix words
 # use '-' to separate out the prefix from the base verb
 # use '/' to force the selection of the verb in complex cases or for cases where prefix words end in -ir,-ar,-er
-_phrase_parsing = re.compile(u'^\s*([^/]*?)[\s/]*([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?[/\s]*(.*?)\s*$', re.UNICODE)
+_phrase_parsing = re.compile('^\s*([^/]*?)[\s/]*([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?[/\s]*(.*?)\s*$', re.UNICODE)
 PREFIX_WORDS = 1
 PREFIX_CHARS = 2
 CORE_VERB = 3
@@ -47,8 +47,8 @@ class Verb():
             # Note: that the prefix can be u'' - usually for reflexive verbs. 
     '''
     # constant used to tell human that the verb is explicitly known to be a regular verb 
-    REGULAR_VERB = u'regular'
-    def __init__(self, phrase_verb_string, definition=u'', conjugation_overrides=None, base_verb=None, manual_overrides=None, **kwargs):
+    REGULAR_VERB = 'regular'
+    def __init__(self, phrase_verb_string, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, **kwargs):
         '''
         Constructor
         :param phrase_verb_string:
@@ -71,18 +71,18 @@ class Verb():
         self.prefix = phrase_match.group(PREFIX_CHARS)
         self.core_characters = phrase_match.group(CORE_VERB)
         self.inf_ending = phrase_match.group(INF_ENDING)
-        self.reflexive = phrase_match.group(REFLEXIVE_ENDING) is not None and phrase_match.group(REFLEXIVE_ENDING) != u''        
+        self.reflexive = phrase_match.group(REFLEXIVE_ENDING) is not None and phrase_match.group(REFLEXIVE_ENDING) != ''        
         self.suffix_words = phrase_match.group(SUFFIX_WORDS)
         self.manualOverrides = None # TODO: be able to save manual overrides as a string for display/editting
 
         _base_verb = make_unicode(base_verb)
-        if _base_verb == u'':
+        if _base_verb == '':
             _base_verb = None
         if _base_verb is not None:        
             if isinstance(_base_verb, Verb):
                 self.base_verb = _base_verb
                 self.base_verb_str = _base_verb.inf_verb_string
-            elif isinstance(_base_verb, six.string_types) and _base_verb != u'':
+            elif isinstance(_base_verb, six.string_types) and _base_verb != '':
                 # TODO strip leading/trailing white space
                 self.base_verb_str = _base_verb 
             else:
@@ -93,7 +93,7 @@ class Verb():
             base_verb_index = self.core_characters.find(_base_verb_parse.group(CORE_VERB))
             if base_verb_index <0:
                 self.__raise(repr(self.base_verb_str)+ " is not in core characters"+repr(self.core_characters))
-            if self.prefix == u'' or self.prefix is None:
+            if self.prefix == '' or self.prefix is None:
                 self.prefix = self.core_characters[:base_verb_index]
                 self.core_characters = self.core_characters[base_verb_index:]
             elif base_verb_index != 0 and self.prefix != self.core_characters[:base_verb_index]:
@@ -103,7 +103,7 @@ class Verb():
         elif self.is_phrase:
             # a phrase means the base verb is the actual verb being conjugated.
             self.base_verb_str = self.inf_verb_string
-        elif self.prefix != u'' or phrase_match.group(REFLEXIVE_ENDING) == '-se':
+        elif self.prefix != '' or phrase_match.group(REFLEXIVE_ENDING) == '-se':
             # explicit base verb formed by '-' embedded in the verb
             self.base_verb_str = self.core_characters + self.inf_ending
             if phrase_match.group(REFLEXIVE_ENDING) == 'se':
@@ -115,13 +115,13 @@ class Verb():
             self.base_verb_str = None
                         
         self.manual_overrides_string = manual_overrides
-        if isinstance(conjugation_overrides, six.string_types) and conjugation_overrides != u'' and conjugation_overrides != Verb.REGULAR_VERB:
+        if isinstance(conjugation_overrides, six.string_types) and conjugation_overrides != '' and conjugation_overrides != Verb.REGULAR_VERB:
             self.explicit_overrides_string = self.overrides_string = conjugation_overrides
             conjugation_overrides = conjugation_overrides.split(",")                
         else:
-            self.explicit_overrides_string = self.overrides_string = u''
+            self.explicit_overrides_string = self.overrides_string = ''
             
-        if self.manual_overrides_string is not None and self.manual_overrides_string != u'': 
+        if self.manual_overrides_string is not None and self.manual_overrides_string != '': 
             self.manual_overrides_string = manual_overrides
             manual_conjugation_override = ConjugationOverride.create_from_json(self.manual_overrides_string, key=phrase_verb_string+"_irregular")
         
@@ -135,21 +135,21 @@ class Verb():
                 self.process_conjugation_override(conjugation_override) 
                 
         # look for default overrides - apply to end so that user could explicitly turn off the override
-        for conjugation_override in Standard_Overrides.itervalues():
+        for conjugation_override in Standard_Overrides.values():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):                
                 applied = self.process_conjugation_override(conjugation_override)
                 if applied:
-                    if self.overrides_string == u'':
+                    if self.overrides_string == '':
                         self.overrides_string = conjugation_override.key
                     else:
-                        self.overrides_string += u','+conjugation_override.key
+                        self.overrides_string += ','+conjugation_override.key
                 
-        for conjugation_override in Dependent_Standard_Overrides.itervalues():
+        for conjugation_override in Dependent_Standard_Overrides.values():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
                 self.process_conjugation_override(conjugation_override)
             
         ## HACK -- should be supplied when generating a card    
-        if self.overrides_string == u'':
+        if self.overrides_string == '':
             self.overrides_string = Verb.REGULAR_VERB
             
         self.process_conjugation_override(UniversalAccentFix)
@@ -185,26 +185,26 @@ class Verb():
                     print()
 
     def print_csv(self, full_info=True):
-        result = u'"'+self.full_phrase+u'"'
+        result = '"'+self.full_phrase+'"'
         if full_info:
             if len(self.appliedOverrides) > 0:
-                result+=u',"'+repr(self.appliedOverrides)+u'"'
+                result+=',"'+repr(self.appliedOverrides)+'"'
             if len(self.doNotApply) > 0:
-                result +=u',"'+repr(self.doNotApply)+u'"'
+                result +=',"'+repr(self.doNotApply)+'"'
             if self.base_verb_str is not None:
-                result += u',"'+self.base_verb_str+u'"'
+                result += ',"'+self.base_verb_str+'"'
         
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
                 conjugation = self.conjugate(tense)
-                result += u',"'+conjugation+u'"'
+                result += ',"'+conjugation+'"'
             else:
                 for person in Persons.all:
                     conjugation = self.conjugate(tense, person)
                     if conjugation is None:
-                        result += u','
+                        result += ','
                     else:
-                        result += u',"'+conjugation+u'"'
+                        result += ',"'+conjugation+'"'
         return result
     
     def conjugate_irregular_tenses(self):        
@@ -359,7 +359,7 @@ class Verb():
         elif _reflexive and tense not in Tenses.Person_Agnostic:
             returned_conjugation = Persons_Indirect[person] +" "+ _conjugation
         elif _reflexive and tense == Tenses.gerund:
-            returned_conjugation = self.__explicit_accent(_conjugation)+u'se'
+            returned_conjugation = self.__explicit_accent(_conjugation)+'se'
         else:
             returned_conjugation = _conjugation
         return returned_conjugation
@@ -465,12 +465,12 @@ class Verb():
         https://en.wikipedia.org/wiki/Spanish_irregular_verbs
         Remember that the presence of a silent h does not break a diphthong, so a written accent is needed anyway in rehúso.
         """
-        _strong_vowel = [u'a', u'e', u'o']
-        _weak_vowel = [u'i', u'u']
+        _strong_vowel = ['a', 'e', 'o']
+        _weak_vowel = ['i', 'u']
         if accented_vowel_check.search(conjugation_string):
             return conjugation_string
         else:            
-            if conjugation_string[-1] in [u'n', u's'] or conjugation_string[-1] in _strong_vowel or conjugation_string[-1] in _weak_vowel:
+            if conjugation_string[-1] in ['n', 's'] or conjugation_string[-1] in _strong_vowel or conjugation_string[-1] in _weak_vowel:
                 # skip the first vowel for words ending in s or n or a vowel
                 vowel_skip = 1
             else:
@@ -494,7 +494,7 @@ class Verb():
                         elif index >= 1 and conjugation_string[index-1] in _strong_vowel:
                             # accent should be on strong vowel immediately before the weak vowel (so skip the current weak vowel)                           
                             continue
-                        elif index >= 1 and conjugation_string[index-1:index+1] in [u'qu',u'gu' ]:
+                        elif index >= 1 and conjugation_string[index-1:index+1] in ['qu','gu' ]:
                             # qu is a dipthong ( see accent rules on acercarse : 1st person plural and 3rd person plural imperative  ) 
                             continue
                         else:
@@ -556,7 +556,7 @@ class Verb():
                 _conjugation = self.conjugate(Tenses.present_tense, Persons.third_person_singular)
             elif person == Persons.second_person_plural and tense == Tenses.imperative_positive:                
                 # remove 'r' from infinitive - and replace it with 'd'
-                _conjugation = _replace_last_letter_of_stem(self.inf_verb_string, u'r', u'd')
+                _conjugation = _replace_last_letter_of_stem(self.inf_verb_string, 'r', 'd')
             else:
                 self.__raise("Missed case"+tense+" "+person)  
         else:
@@ -580,7 +580,7 @@ class Verb():
                 returned_conjugation = handle_explicit_accent_() + Persons_Indirect[person]
             elif person == Persons.first_person_plural:
                 # mostly simple (same as third person except trailing 's' is dropped before adding the indirect pronoun
-                returned_conjugation = _replace_last_letter_of_stem(handle_explicit_accent_(), u's', Persons_Indirect[person])
+                returned_conjugation = _replace_last_letter_of_stem(handle_explicit_accent_(), 's', Persons_Indirect[person])
             elif tense == Tenses.imperative_negative:
                 # second person negative : simple as well!
                 # reflexive pronoun is a separate word in front of the verb. (i.e. 'no te abstengas')
@@ -595,20 +595,20 @@ class Verb():
                 # TODO look for single vowel in conjugation for model verb.
                 # TODO : Would like to make this a conjugation override - but conjugation overrides are not applied on derived verbs
                 if self.verb_ending_index == Infinitive_Endings.ir_verb:
-                    if conjugation[-2:] == u'id':
+                    if conjugation[-2:] == 'id':
                         # ir verbs need the i (in ir) accented rule k and l
                         # this makes sense because otherwise the os would be accented.
                         # example ¡Vestíos! - Get Dressed!
                         # we don't need to worry about accenting the -ir verbs that already have the i accented ( example reírse )
                         # what about verbs that already have explicit accent?
-                        returned_conjugation = remove_accent(conjugation[:-2]) + u'í' + Persons_Indirect[Persons.second_person_plural]
-                    elif conjugation[-2:] == u'íd':
-                        returned_conjugation = _replace_last_letter_of_stem(conjugation, u'd', Persons_Indirect[Persons.second_person_plural])
+                        returned_conjugation = remove_accent(conjugation[:-2]) + 'í' + Persons_Indirect[Persons.second_person_plural]
+                    elif conjugation[-2:] == 'íd':
+                        returned_conjugation = _replace_last_letter_of_stem(conjugation, 'd', Persons_Indirect[Persons.second_person_plural])
                     else:
-                        self.__raise(u"don't know how to handle:"+conjugation, tense, person)
+                        self.__raise("don't know how to handle:"+conjugation, tense, person)
                 else:
                     # ex: ¡Sentaos! - Sit down! ( the spoken accent will be on the ending a )
-                    returned_conjugation = _replace_last_letter_of_stem(remove_accent(conjugation), u'd', Persons_Indirect[Persons.second_person_plural])
+                    returned_conjugation = _replace_last_letter_of_stem(remove_accent(conjugation), 'd', Persons_Indirect[Persons.second_person_plural])
         else:
             returned_conjugation = conjugation
         return returned_conjugation
@@ -616,9 +616,9 @@ class Verb():
     def __conjugation_present_subjective_stem(self, tense, person):
         options = { 'force_conjugation': True }
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
-        if first_person_conjugation[-1:] ==u'o':
+        if first_person_conjugation[-1:] =='o':
             conjugation_stem = first_person_conjugation[:-1]            
-        elif first_person_conjugation[-2:] == u'oy':
+        elif first_person_conjugation[-2:] == 'oy':
             # estoy, doy, voy, etc.
             conjugation_stem = first_person_conjugation[:-2]
         else:
@@ -633,7 +633,7 @@ class Verb():
         """
         options = { 'force_conjugation': True }
         third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options)
-        if third_person_plural_conjugation[-3:] == u'ron':
+        if third_person_plural_conjugation[-3:] == 'ron':
             conjugation_stem = third_person_plural_conjugation[:-3]
             if person == Persons.first_person_plural:
                 # accent on last vowel                                
@@ -658,7 +658,7 @@ class Verb():
             elif isinstance(override, six.string_types):
                 return override                        
             else:
-                self.__raise(u"Override must be function or string not"+type(override),tense)           
+                self.__raise("Override must be function or string not"+type(override),tense)           
             
         if not hasattr(self, attr_name):
             self_overrides = [ None ] * len(Tenses)
@@ -710,11 +710,11 @@ class Verb():
     def overrides_applied(self):
         result = {}
         if self.appliedOverrides is not None and self.appliedOverrides != []:
-            result[u'applied']= self.appliedOverrides
+            result['applied']= self.appliedOverrides
         if self.doNotApply is not None and self.doNotApply != []:
-            result[u'excluded'] = self.doNotApply
+            result['excluded'] = self.doNotApply
         if self.base_verb_str is not None:
-            result[u'base_verb'] = self.base_verb_str
+            result['base_verb'] = self.base_verb_str
         return result
     
     @property
@@ -723,14 +723,14 @@ class Verb():
         so users can edit a note         
         """            
         if self.doNotApply is not None and self.doNotApply != []:
-            result = u'-' + u',-'.join(self.doNotApply)
+            result = '-' + ',-'.join(self.doNotApply)
         else:
             result = None
         if self.appliedOverrides is not None and self.appliedOverrides != []:
             if result is not None:
-                result += u',' + u','.join(self.appliedOverrides)
+                result += ',' + ','.join(self.appliedOverrides)
             else:
-                result = u','.join(self.appliedOverrides)
+                result = ','.join(self.appliedOverrides)
         if result is None:
             return Verb.REGULAR_VERB
         else:
@@ -763,7 +763,7 @@ class Verb():
             elif lookup_key in Dependent_Standard_Overrides:
                 override = Dependent_Standard_Overrides[lookup_key]
             else:
-                self.__raise(lookup_key+": override is not one of "+repr(Standard_Overrides.keys())+" or "+repr(Dependent_Standard_Overrides.keys()))
+                self.__raise(lookup_key+": override is not one of "+repr(list(Standard_Overrides.keys()))+" or "+repr(list(Dependent_Standard_Overrides.keys())))
             if override is None:
                 self.__raise("no override with key ", lookup_key)
             if conjugation_override[0] == '-':
@@ -799,7 +799,7 @@ class Verb():
         elif not hasattr(self, '_base_verb'):
             # some verbs are based off of others (tener)
             # TODO: maldecir has different tu affirmative than decir        
-            from espanol_dictionary import Verb_Dictionary
+            from .espanol_dictionary import Verb_Dictionary
             _base_verb = Verb_Dictionary.get(self.base_verb_str)
             if _base_verb is None:
                 # TODO - may not be in dictionary yet?
@@ -812,7 +812,7 @@ class Verb():
     @property
     def full_prefix(self):
         if self.base_verb is None:
-            return u''
+            return ''
         elif self.prefix is not None:
             return self.prefix + self.base_verb.full_prefix
         else:
@@ -838,20 +838,20 @@ class Verb():
         
     @property
     def full_phrase(self):
-        if self.prefix_words != u'':
-            result = self.prefix_words + u' '
+        if self.prefix_words != '':
+            result = self.prefix_words + ' '
         else:
-            result = u''
+            result = ''
         result += self.inf_verb_string
         if self.reflexive:
-            result += u'se'
-        if self.suffix_words != u'':
-            result += u' ' + self.suffix_words
+            result += 'se'
+        if self.suffix_words != '':
+            result += ' ' + self.suffix_words
         return result
         
     @property
     def verb_ending_index(self):
-        if self.inf_ending == u'ír':
+        if self.inf_ending == 'ír':
             # special casing for eír verbs which have accented i
             return Infinitive_Endings.ir_verb
         else:
@@ -859,7 +859,7 @@ class Verb():
            
     @property
     def is_phrase(self):
-        return self.prefix_words != u'' or self.suffix_words != u''
+        return self.prefix_words != '' or self.suffix_words != ''
     
     @property
     def is_regular(self):
@@ -906,5 +906,5 @@ class Verb():
                 self.__raise("Too many accents in "+conjugation, tense, person)
                 
     def __raise(self, msg, tense=None, person=None, traceback_=None):
-        msg_ = u"{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
-        raise Exception, msg_, traceback_
+        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
+        raise Exception(msg_).with_traceback(traceback_)

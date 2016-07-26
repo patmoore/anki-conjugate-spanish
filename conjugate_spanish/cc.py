@@ -5,8 +5,8 @@
 # Also available for Anki at https://ankiweb.net/shared/info/546020849
 
 import re
-from PyQt4.QtCore import SIGNAL
-from PyQt4.QtGui import QAction, QProgressDialog
+from PyQt5.QtCore import SIGNAL
+from PyQt5.QtGui import QAction, QProgressDialog
 
 from anki.hooks import addHook, wrap
 from aqt import mw
@@ -22,8 +22,8 @@ FEATURES = {
     "nonBreakingSpaces" : True,
 }
 
-ADD_BLANKS_MENU_TEXT = _(u"PAT:Add blanks to cloze notes")
-CLOZE_WORDS_MENU_TEXT = _(u"Make each word into a cloze")
+ADD_BLANKS_MENU_TEXT = _("PAT:Add blanks to cloze notes")
+CLOZE_WORDS_MENU_TEXT = _("Make each word into a cloze")
 
 def addClozeBlanksToNewCards(self):
     pass
@@ -37,10 +37,10 @@ def clozeEachWordForSelectedCards(browser):
     _clozeEachWord(nids)
 
 def addClozeBlanksToExistingCards():
-    _forExistingCards(u"Add blanks to ALL cloze cards?", _addClozeBlanksToNotes)
+    _forExistingCards("Add blanks to ALL cloze cards?", _addClozeBlanksToNotes)
 
 def clozeEachWordForExistingCards():
-    _forExistingCards(u"Make each word into a cloze for ALL cards?", _clozeEachWord)
+    _forExistingCards("Make each word into a cloze for ALL cards?", _clozeEachWord)
 
 def _forExistingCards(prompt, funcForExistingCards):
     if not askUser(_(prompt)):
@@ -64,7 +64,7 @@ def _addClozeBlanksToTextMatch(match):
 
 def _addClozeBlanksToText(num, text):
     words = text.split(" ")
-    space = u"\u00a0" if FEATURES["nonBreakingSpaces"] else " "
+    space = "\u00a0" if FEATURES["nonBreakingSpaces"] else " "
 
     if FEATURES["includeFirstLetter"]:
         blanks = space.join([word[0] + ("_" * max(1, len(word)/2)) for word in words])
@@ -72,7 +72,7 @@ def _addClozeBlanksToText(num, text):
         blanks = space.join(["_" * max(1, len(word)/2) for word in words])
 
     # Need to escape curly-braces.
-    return u"{{{{c{0}::{1}::{2}}}}}".format(num, text, blanks)
+    return "{{{{c{0}::{1}::{2}}}}}".format(num, text, blanks)
 
 def _clozeEachWord(nids):
     def process(text):
@@ -111,7 +111,7 @@ def _updateExistingCards(checkpoint, nids, processFunc):
     spacesNotice = ""
     if FEATURES["nonBreakingSpaces"]:
         spacesNotice = " and replaced spaces inside clozes with non-breaking spaces"
-    showInfo(u"Updated {0} cards (from {1} cloze notes){2}.".format(
+    showInfo("Updated {0} cards (from {1} cloze notes){2}.".format(
         updatedCount, len(nids), spacesNotice))
 
 

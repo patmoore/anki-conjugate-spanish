@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from constants import make_unicode
-import six
+from .constants import make_unicode
+from . import six
 
 class NonConjugatedPhrase(object):
     """

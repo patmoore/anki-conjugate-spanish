@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from PyQt4.QtCore import SIGNAL
-from PyQt4.QtGui import QAction, QProgressDialog
+from PyQt5.QtCore import pyqtSignal
+from aqt.qt import QAction, QProgressDialog
 
 from anki.hooks import addHook, wrap
 from aqt import mw
@@ -19,7 +19,7 @@ from conjugate_spanish.constants import *
 import anki.stdmodels
 import inspect
 from functools import partial
-from model_template import *
+from .model_template import *
 
 __all__ = [ 'AnkiIntegration']
 """
@@ -38,16 +38,16 @@ class AnkiIntegration_(object):
         addHook('setupEditorButtons', self.setupEditorButtons)
         addHook('editFocusLost', self.onFocusLost)
         
-    def createNewDeck(self, deckName=u'Español Verbs'):
+    def createNewDeck(self, deckName='Español Verbs'):
         """
         TODO figure out how to refresh the main window screen.
         """
-        deckName += unicode(intTime())
+        deckName += str(intTime())
         # will create deck if it doesn't exist (mw.col.decks is a DeckManager)
         did = mw.col.decks.id(deckName)
     
     def createDefaultConjugationOverride(self, note):        
-        note[u'Conjugation Overrides'] = Verb(note[u'Text']).overrides_string
+        note['Conjugation Overrides'] = Verb(note['Text']).overrides_string
         
     def conjugateCurrentNote(self):
         pass
@@ -71,7 +71,7 @@ class AnkiIntegration_(object):
         modelTemplate = ModelTemplate_(note.model())
         inf_field = modelTemplate.getFieldIndex(ModelTemplate_.INFINITIVE_OR_PHRASE)
         conjugationoverrides_field = modelTemplate.getFieldIndex(ModelTemplate_.CONJUGATION_OVERRIDES)
-        if currentFieldIndex == inf_field and note.fields[inf_field] != u'' and note.fields[conjugationoverrides_field] == u'':
+        if currentFieldIndex == inf_field and note.fields[inf_field] != '' and note.fields[conjugationoverrides_field] == '':
             # don't generate unless leaving infinitive field
             verb = Verb(note.fields[inf_field])
             note.fields[conjugationoverrides_field] = verb.overrides_string
@@ -79,7 +79,7 @@ class AnkiIntegration_(object):
         return flag
          
     def isConjugationNote(self, note):
-        return isinstance(note, Note) and note.model()[u'name'] == self.modelName
+        return isinstance(note, Note) and note.model()['name'] == self.modelName
     
     def _createNote(self, note, derivedModelName, irregularOnly):        
         modelTemplate = self._getNoteModelTemplate(note)
@@ -111,7 +111,7 @@ class AnkiIntegration_(object):
         
     def _getNoteModelTemplate(self, note):
         if note is not None and ModelTemplate_.isSpanishModel(note):
-            modelName = note.model()[u'name']
+            modelName = note.model()['name']
             return self._getModelTemplateByName(modelName)
         
     def _getModelTemplateByName(self, modelName):
@@ -125,14 +125,14 @@ class AnkiIntegration_(object):
         b = editor._addButton
         ## TODO: Should only be visible for BASE_MODEL verbs        
         ## TODO : canDisable=True means that the button starts disabled ( need a way to turn off visibility? )
-        b(u"fullyConjugate", partial(self.onFullyConjugateVerb, editor), "",
-          shortcut(_(u"Fully Conjugate")), size=False, text=_(u"Fully Conjugate Verb..."),
+        b("fullyConjugate", partial(self.onFullyConjugateVerb, editor), "",
+          shortcut(_("Fully Conjugate")), size=False, text=_("Fully Conjugate Verb..."),
           native=True, canDisable=False)
-        b(u"irregularConjugation", partial(self.onIrregularConjugateVerb, editor), "",
-          shortcut(_(u"Irregular Conjugate")), size=False, text=_(u"Irregular Conjugate Verb..."),
+        b("irregularConjugation", partial(self.onIrregularConjugateVerb, editor), "",
+          shortcut(_("Irregular Conjugate")), size=False, text=_("Irregular Conjugate Verb..."),
           native=True, canDisable=False)
-        b(u"overrides", partial(self.onConjugationOverrides, editor), "",
-          shortcut(_(u"Conjugation Overrides")), size=False, text=_(u"Conjugation Overrides"),
+        b("overrides", partial(self.onConjugationOverrides, editor), "",
+          shortcut(_("Conjugation Overrides")), size=False, text=_("Conjugation Overrides"),
           native=True, canDisable=False)
          
     def convertInfinitiveCardToConjugatedCards(self):
@@ -157,7 +157,7 @@ class AnkiIntegration_(object):
     def setDeckNoteType(self, deck):
         model = self.getModel(self.modelName)
         deck_ = self._getDeck(deck)
-        deck_[u'mid'] = model[u'id']
+        deck_['mid'] = model['id']
         self._saveDeck(deck_)
     
     def _getDeck(self, deck):
@@ -180,7 +180,7 @@ class AnkiIntegration_(object):
         # create a new menu item, "test"
         action = QAction(menuString, mw)
         # set it to call testFunction when it's clicked
-        mw.connect(action, SIGNAL("triggered()"), func)
+        mw.connect(action, pyqtSignal("triggered()"), func)
         # and add it to the tools menu
         mw.form.menuTools.addAction(action)        
         
@@ -192,7 +192,7 @@ class AnkiIntegration_(object):
 #             mw.col.addNote(note)
 
     def initialize(self, *args):
-        for modelName, modelDefinition in ModelDefinitions.iteritems():
+        for modelName, modelDefinition in ModelDefinitions.items():
             self.modelTemplates[modelName] = ModelTemplate_.getModel(modelName, collection=mw.col, create=True, **modelDefinition)
             
 #     def enterNewVerbInit(key, definition):
@@ -223,27 +223,27 @@ class AnkiIntegration_(object):
 #                 u'init': self.createNewDeckMenu,
 #                 u'disable': True
 #             },
-            u'conjugate_note': {
-                u'menu': u'Conjugate a note',            
-                u'init': self.createConjugateMenu,
+            'conjugate_note': {
+                'menu': 'Conjugate a note',            
+                'init': self.createConjugateMenu,
             },
-            u'load_dictionary': {
-                u'menu': u'Load a dictionary',            
-                u'init': self.createLoadMenu,
+            'load_dictionary': {
+                'menu': 'Load a dictionary',            
+                'init': self.createLoadMenu,
             },
         }
     
-        for key,value in FEATURES.iteritems():
-            if u'disable' not in value or value[u'disable'] == False:
-                value[u'init'](key, value)
+        for key,value in FEATURES.items():
+            if 'disable' not in value or value['disable'] == False:
+                value['init'](key, value)
 #     def createNewDeckMenu(self, key, definition):
 #         self.addMenuItem(definition[u'menu'], self.createNewDeck)
     
     def createConjugateMenu(self, key, definition):
-        self.addMenuItem(definition[u'menu'], self.conjugateCurrentNote)
+        self.addMenuItem(definition['menu'], self.conjugateCurrentNote)
         
     def createLoadMenu(self, key, definition):
-        self.addMenuItem(definition[u'menu'], self.loadDictionary)
+        self.addMenuItem(definition['menu'], self.loadDictionary)
 
     def _addSchema(self, db):
         # "phrase","definition","conjugation_overrides","manual_overrides","synonyms","notes"
@@ -268,7 +268,7 @@ class AnkiIntegration_(object):
         mw.col.db.executemany()
         
 AnkiIntegration = AnkiIntegration_()
-addHook(u'profileLoaded', AnkiIntegration.initialize)
+addHook('profileLoaded', AnkiIntegration.initialize)
 
 
 ## TODO: I saw code like this in the japanese addon : but the models are not created 

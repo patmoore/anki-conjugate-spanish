@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt5.QtCore import SIGNAL
-from PyQt5.QtGui import QAction, QProgressDialog
+from aqt.qt import QAction, QProgressDialog
 
 from anki.hooks import addHook, wrap
 from aqt import mw
@@ -21,36 +20,36 @@ from functools import partial
 
 __all__ = [ 'ModelTemplate_', "CardTemplate_", 'BASE_MODEL','FULLY_CONJUGATED_MODEL', 'ModelDefinitions']
 MODEL_FIELDS = {
-    u'font': u'Arial',
-    u'media': [],
-    u'name': u'phraseField',
-    u'ord': 0,
-    u'rtl': False,
-    u'size': 20,
-    u'sticky': False
+    'font': 'Arial',
+    'media': [],
+    'name': 'phraseField',
+    'ord': 0,
+    'rtl': False,
+    'size': 20,
+    'sticky': False
 }
 
 
 def addToList(list_, item):
-    item[u'ord'] = len(list_)
+    item['ord'] = len(list_)
     list_.append(item)
     
 def td(string_):
-    return u'<td>' + string_ + u'</td>'
+    return '<td>' + string_ + '</td>'
 
 def iftest(variable, string_ = None):
     if string_ is None:
-        string_ = u'{{' + variable +u'}}'
-    return u'{{#'+variable+u'}}'+string_+u'{{/'+variable+u'}}'
+        string_ = '{{' + variable +'}}'
+    return '{{#'+variable+'}}'+string_+'{{/'+variable+'}}'
 
 class ModelTemplate_(object):
-    INFINITIVE_OR_PHRASE = u'Infinitive or Phrase'
-    ENGLISH_DEFINITION = u'English definition'
-    CONJUGATION_OVERRIDES = u'Conjugation Overrides'
-    MANUAL_CONJUGATION_OVERRIDES = u'Manual Conjugation Overrides'
-    KEY = u'Key'
-    ROOT_VERB = u'Root Verb'
-    splitTensePerson = re_compile(u'(.*)/(.*)')
+    INFINITIVE_OR_PHRASE = 'Infinitive or Phrase'
+    ENGLISH_DEFINITION = 'English definition'
+    CONJUGATION_OVERRIDES = 'Conjugation Overrides'
+    MANUAL_CONJUGATION_OVERRIDES = 'Manual Conjugation Overrides'
+    KEY = 'Key'
+    ROOT_VERB = 'Root Verb'
+    splitTensePerson = re_compile('(.*)/(.*)')
     """
     Used to create custom models for verbs
     """
@@ -64,13 +63,13 @@ class ModelTemplate_(object):
         self._changed = False       
         if fields is not None:
             for fieldDefinition in fields:
-                fieldName = fieldDefinition[u'name']
+                fieldName = fieldDefinition['name']
                 if not self.hasField(fieldName):
                     self._changed = True
                     field = self.createField(fieldName)
                     self.addField(field)
         
-        self.model[u'sortf'] = self.getFieldIndex(ModelTemplate_.KEY)
+        self.model['sortf'] = self.getFieldIndex(ModelTemplate_.KEY)
         self._createTemplates()
         if self._changed: 
             self.save()
@@ -89,7 +88,7 @@ class ModelTemplate_(object):
     @classmethod        
     def fieldName(cls, tense, person=None):
         if tense in Tenses.Person_Agnostic:
-            return Tenses[tense]+u'/-'
+            return Tenses[tense]+'/-'
         elif tense not in Tenses.imperative or person != Persons.first_person_singular:
             return Tenses[tense]+'/'+Persons[person]
         else:
@@ -147,8 +146,8 @@ class ModelTemplate_(object):
     def verbToNote(self, verb, irregularOnly=True):
         conjugations = verb.conjugate_irregular_tenses() if irregularOnly else verb.conjugate_all_tenses()        
         note = Note(self.collection, model=self.model )
-        for field in self.model[u'flds']:
-            fieldName = field[u'name']
+        for field in self.model['flds']:
+            fieldName = field['name']
             if fieldName == ModelTemplate_.KEY:
                 # TODO Some key
                 value = verb.key
@@ -185,7 +184,7 @@ class ModelTemplate_(object):
                     return "\x1f".join(list)
                 TypeError: sequence item 3: expected string or Unicode, NoneType found
                 """
-                value = u''
+                value = ''
             note[fieldName] = value
         return note
     
@@ -201,14 +200,14 @@ class ModelTemplate_(object):
             verb = Verb_Dictionary.add(key, definition, conjugation_overrides, manual_overrides=manual_overrides)
 
     def save(self):
-        if u'id' in self.model and self.model[u'id'] is not None:
+        if 'id' in self.model and self.model['id'] is not None:
             self.modelManager.update(self.model)
         else:
             self.modelManager.add(self.model)
             
     def getCard(self, cardName, create=False):
-        for template in self.model[u'tmpls']:
-            if template[u'name'] == cardName:
+        for template in self.model['tmpls']:
+            if template['name'] == cardName:
                 return CardTemplate_(template)
         if create:
             card = self.modelManager.newTemplate(name=cardName)
@@ -220,11 +219,11 @@ class ModelTemplate_(object):
     
     @classmethod
     def isSpanishModel(cls, note):
-        return note.model()[u'name'].find(SPANISH_PREFIX) >=0
+        return note.model()['name'].find(SPANISH_PREFIX) >=0
     
     @property
     def name(self):
-        return self.model[u'name']
+        return self.model['name']
     
     @property
     def isBaseModel(self):
@@ -236,15 +235,15 @@ class ModelTemplate_(object):
             card = self.createTenseCard(tense)
     
     def createConjugationOverrideCard(self):
-        cardName=u'Conjugation Overrides'
+        cardName='Conjugation Overrides'
         def _create(cardTemplate):                
-            cardTemplate.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'
-            answer = u'{{' + ModelTemplate_.ENGLISH_DEFINITION+u'}}' +\
-                u'<br/>' + \
+            cardTemplate.questionFormat = '{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+'}}'
+            answer = '{{' + ModelTemplate_.ENGLISH_DEFINITION+'}}' +\
+                '<br/>' + \
                 iftest(ModelTemplate_.CONJUGATION_OVERRIDES) +\
-                u'<br/>' +\
+                '<br/>' +\
                 iftest(ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES) +\
-                u'<br/>' +\
+                '<br/>' +\
                 iftest(ModelTemplate_.ROOT_VERB)  
             cardTemplate.answerFormat = answer
             self.addCard(cardTemplate)
@@ -255,30 +254,30 @@ class ModelTemplate_(object):
 
     def createTenseCard(self, tense):   
         def addCell(person):
-            return iftest(Tenses[tense]+u' '+Persons[person],td(Persons[person])+ td(u'{{'+Tenses[tense]+u' '+Persons[person]+u'}}'))
+            return iftest(Tenses[tense]+' '+Persons[person],td(Persons[person])+ td('{{'+Tenses[tense]+' '+Persons[person]+'}}'))
         cardName = Tenses[tense]
         def _create(cardTemplate):
-            cardTemplate.questionFormat = u'{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+u'}}'+u'<br>'+Tenses[tense]
-            answer = u'<table>\n'
-            answer += u'<tr>'
+            cardTemplate.questionFormat = '{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+'}}'+'<br>'+Tenses[tense]
+            answer = '<table>\n'
+            answer += '<tr>'
             if tense in Tenses.Person_Agnostic:            
-                answer += iftest(Tenses[tense], td(u'{{'+Tenses[tense]+u'}}'))            
+                answer += iftest(Tenses[tense], td('{{'+Tenses[tense]+'}}'))            
             else:
                 if tense in Tenses.imperative:
-                    answer+=td(u'')+addCell(Persons.first_person_plural)
+                    answer+=td('')+addCell(Persons.first_person_plural)
                 else:
                     for person in Persons.first_person:
                         answer += addCell(person)
-                answer += u'</tr>\n'
-                answer += u'<tr>'
+                answer += '</tr>\n'
+                answer += '<tr>'
                 for person in Persons.second_person:
                     answer += addCell(person)
-                answer += u'</tr>\n'
-                answer += u'<tr>'
+                answer += '</tr>\n'
+                answer += '<tr>'
                 for person in Persons.third_person:
                     answer += addCell(person)
-            answer += u'</tr>\n'
-            answer += u'</table>'
+            answer += '</tr>\n'
+            answer += '</table>'
             cardTemplate.answerFormat = answer
             self.addCard(cardTemplate)
             self._changed = True
@@ -286,7 +285,7 @@ class ModelTemplate_(object):
         return cardTemplate
     
 class CardTemplate_(object):
-    STD_ANSWER_FORMAT = u'{{FrontSide}}\n\n<hr id=answer>\n\n'
+    STD_ANSWER_FORMAT = '{{FrontSide}}\n\n<hr id=answer>\n\n'
     """
     This class is mostly here to document the way that anki works.
     """
@@ -295,70 +294,70 @@ class CardTemplate_(object):
         
     @property
     def name(self):
-        return self.card[u'name']
+        return self.card['name']
     @name.setter
     def name(self, name):
-        self.card[u'name'] = name
+        self.card['name'] = name
     @property
     def questionFormat(self):
-        return self.card[u'qfmt']
+        return self.card['qfmt']
     @questionFormat.setter
     def questionFormat(self, qfmt):
-        self.card[u'qfmt'] = qfmt
+        self.card['qfmt'] = qfmt
     @property
     def answerFormat(self):
-        return self.card[u'afmt']
+        return self.card['afmt']
     @answerFormat.setter
     def answerFormat(self, afmt):
-        self.card[u'afmt'] = CardTemplate_.STD_ANSWER_FORMAT + afmt
+        self.card['afmt'] = CardTemplate_.STD_ANSWER_FORMAT + afmt
     @property
     def backQuestionFormat(self):
-        return self.card[u'bqfmt']
+        return self.card['bqfmt']
     @backQuestionFormat.setter
     def backQuestionFormat(self, bqfmt):
-        self.card[u'bqfmt'] = bqfmt
+        self.card['bqfmt'] = bqfmt
     @property
     def backAnswerFormat(self):
-        return self.card[u'bafmt']
+        return self.card['bafmt']
     @backAnswerFormat.setter
     def backAnswerFormat(self, bafmt):
-        self.card[u'bafmt'] = bafmt
+        self.card['bafmt'] = bafmt
         
 SPANISH_PREFIX = ADDON_PREFIX
-BASE_MODEL = SPANISH_PREFIX+u'Verb'
-FULLY_CONJUGATED_MODEL = SPANISH_PREFIX+u'Fully Conjugated Verb'
-THIRD_PERSON_ONLY_MODEL = SPANISH_PREFIX+u'Third Person Only'
+BASE_MODEL = SPANISH_PREFIX+'Verb'
+FULLY_CONJUGATED_MODEL = SPANISH_PREFIX+'Fully Conjugated Verb'
+THIRD_PERSON_ONLY_MODEL = SPANISH_PREFIX+'Third Person Only'
 
 ModelDefinitions = { }
 for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
     ModelDefinitions[modelName] = {
-        u'fields': [
-            {u'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
-            {u'name': ModelTemplate_.ENGLISH_DEFINITION},
-            {u'name': ModelTemplate_.CONJUGATION_OVERRIDES},
-            {u'name': ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES},
-            {u'name': ModelTemplate_.ROOT_VERB},
-            {u'name': ModelTemplate_.KEY},
+        'fields': [
+            {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
+            {'name': ModelTemplate_.ENGLISH_DEFINITION},
+            {'name': ModelTemplate_.CONJUGATION_OVERRIDES},
+            {'name': ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES},
+            {'name': ModelTemplate_.ROOT_VERB},
+            {'name': ModelTemplate_.KEY},
         ]
     }
 
-ModelDefinitions[BASE_MODEL][u'menuName'] = u'Conjugate Spanish:Basic'
-ModelDefinitions[FULLY_CONJUGATED_MODEL][u'menuName'] = u'Conjugate Spanish:Full Conjugation'
-ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'menuName'] = u'Conjugate Spanish:Third party only verbs'
+ModelDefinitions[BASE_MODEL]['menuName'] = 'Conjugate Spanish:Basic'
+ModelDefinitions[FULLY_CONJUGATED_MODEL]['menuName'] = 'Conjugate Spanish:Full Conjugation'
+ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['menuName'] = 'Conjugate Spanish:Third party only verbs'
 for tense in Tenses.All_Persons:
     for person in Persons.all:
-        ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
+        ModelDefinitions[FULLY_CONJUGATED_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.imperative:
     for person in Persons.all_except(Persons.first_person_singular):
-        ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
+        ModelDefinitions[FULLY_CONJUGATED_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.Person_Agnostic:
-    ModelDefinitions[FULLY_CONJUGATED_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense)})
+    ModelDefinitions[FULLY_CONJUGATED_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense)})
 
 for tense in Tenses.All_Persons:
     for person in Persons.third_person:
-        ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
+        ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.imperative:
     for person in Persons.third_person:
-        ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
+        ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.Person_Agnostic:
-    ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense)})
+    ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense)})

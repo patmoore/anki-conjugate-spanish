@@ -5,26 +5,26 @@ from conjugate_spanish.verb_dictionary import Verb_Dictionary
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect
 
 All_Infinitive_Endings= list(Infinitive_Endings)
-All_Infinitive_Endings.append(u'ír')
+All_Infinitive_Endings.append('ír')
 Verb_Dictionary.load()
 #
 # complex tener based derivations
 #
-tener = Verb_Dictionary.get(u'tener')
+tener = Verb_Dictionary.get('tener')
 # Note: need to add to dictionary in order to do base_string lookup
 # TODO : levels of dictionary so we can drop a dictionary
-faketener = Verb_Dictionary.add(u'faketener', u"fake tener", base_verb=tener)
-faketenerse = Verb_Dictionary.add(u'faketenerse', u"fake tener", base_verb=u'tener')
+faketener = Verb_Dictionary.add('faketener', "fake tener", base_verb=tener)
+faketenerse = Verb_Dictionary.add('faketenerse', "fake tener", base_verb='tener')
 
 # tests double derivatives
 # real world example: desacordarse -> acordarse -> acordar
-descfaketenerse = Verb_Dictionary.add(u'descfaketenerse', u"fake tener", base_verb=faketenerse)
-faketenerse_1 = Verb(u'faketenerse', u"fake tener", base_verb=faketener)
+descfaketenerse = Verb_Dictionary.add('descfaketenerse', "fake tener", base_verb=faketenerse)
+faketenerse_1 = Verb('faketenerse', "fake tener", base_verb=faketener)
 
-fakeacordar = Verb_Dictionary.add(u"fakeacordar", u"fake acordar", "o:ue")
+fakeacordar = Verb_Dictionary.add("fakeacordar", "fake acordar", "o:ue")
 #derive just because of reflexive/non-reflexive
-fakeacordarse = Verb_Dictionary.add(u"fakeacordarse", u"fake acordarse")
-descfakeacordarse = Verb_Dictionary.add(u"descfakeacordarse", u"fake acordarse", base_verb=fakeacordarse)
+fakeacordarse = Verb_Dictionary.add("fakeacordarse", "fake acordarse")
+descfakeacordarse = Verb_Dictionary.add("descfakeacordarse", "fake acordarse", base_verb=fakeacordarse)
 
 class TestDerivedVerb(unittest.TestCase):
     def test_tener_setup(self):
@@ -45,11 +45,11 @@ class TestDerivedVerb(unittest.TestCase):
         this tests overriding the stem and conjugation because if this doesn't work the other tests will not work
         """
         conjugation = tener.conjugate(Tenses.present_tense, Persons.first_person_singular)
-        self.assertEqual(u'tengo', conjugation, "Make sure that the override of the first person stem change happens")
+        self.assertEqual('tengo', conjugation, "Make sure that the override of the first person stem change happens")
         conjugation = tener.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
-        self.assertEqual(u'ten', conjugation, "Make sure that the override of the first person stem change happens")
+        self.assertEqual('ten', conjugation, "Make sure that the override of the first person stem change happens")
         conjugation = tener.conjugate(Tenses.imperative_positive, Persons.first_person_plural)
-        self.assertEqual(u'tengamos', conjugation, "Make sure that the override of the first_person_plural stem change happens")
+        self.assertEqual('tengamos', conjugation, "Make sure that the override of the first_person_plural stem change happens")
          
     def test_tener_most_tenses_non_reflexive(self):
         """
@@ -86,9 +86,9 @@ class TestDerivedVerb(unittest.TestCase):
                 
         tense = Tenses.gerund             
         tail = faketenerse.conjugate(tense)
-        self.assertEqual(u'faketeniéndose', tail, tail+":tense="+Tenses[tense])
+        self.assertEqual('faketeniéndose', tail, tail+":tense="+Tenses[tense])
         tail = faketenerse_1.conjugate(tense)
-        self.assertEqual(u'faketeniéndose', tail, tail+":tense="+Tenses[tense])
+        self.assertEqual('faketeniéndose', tail, tail+":tense="+Tenses[tense])
         
         for tense in Tenses.past_part_adj:             
             tail = faketenerse.conjugate_tense(tense)[4:]
@@ -108,15 +108,15 @@ class TestDerivedVerb(unittest.TestCase):
             actual = faketener.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
             tail = actual[4:]
 #             print repr(tail).decode("unicode-escape") 
-            self.assertEqual(u"tén", tail)
+            self.assertEqual("tén", tail)
 
     def test_tener_imperatives_reflexive_special_case(self):
         """
         Tests for the case where tener based verbs have 2nd person singular 'ten' as the base ( accents are applied to the 'ten' )
         Also tests the multiple level of derivation case (faketenserse -> faketener -> tener )
         """
-        expected_positive = [ None, u'faketente', u'faketéngase', u'faketengámonos', u'faketeneos',  u'faketénganse']
-        expected_negative = [ None, u'te faketengas', u'faketéngase', u'faketengámonos', u'os faketengáis',  u'faketénganse']
+        expected_positive = [ None, 'faketente', 'faketéngase', 'faketengámonos', 'faketeneos',  'faketénganse']
+        expected_negative = [ None, 'te faketengas', 'faketéngase', 'faketengámonos', 'os faketengáis',  'faketénganse']
         for tense in Tenses.imperative:
             expected = expected_negative if tense == Tenses.imperative_negative else expected_positive
             for person in Persons.all_except([Persons.first_person_singular]):                
@@ -130,8 +130,8 @@ class TestDerivedVerb(unittest.TestCase):
         Tests for the case where tener based verbs have 2nd person singular 'ten' as the base ( accents are applied to the 'ten' )
         Also tests the multiple level of derivation case (faketenserse -> faketener -> tener )
         """
-        expected_positive = [ None, u'descfaketente', u'descfaketéngase', u'descfaketengámonos', u'descfaketeneos',  u'descfaketénganse']
-        expected_negative = [ None, u'te descfaketengas', u'descfaketéngase', u'descfaketengámonos', u'os descfaketengáis',  u'descfaketénganse']
+        expected_positive = [ None, 'descfaketente', 'descfaketéngase', 'descfaketengámonos', 'descfaketeneos',  'descfaketénganse']
+        expected_negative = [ None, 'te descfaketengas', 'descfaketéngase', 'descfaketengámonos', 'os descfaketengáis',  'descfaketénganse']
         for tense in Tenses.imperative:
             expected = expected_negative if tense == Tenses.imperative_negative else expected_positive
             for person in Persons.all_except([Persons.first_person_singular]):                
@@ -142,8 +142,8 @@ class TestDerivedVerb(unittest.TestCase):
         """
         tests the multiple level of derivation case (faketenserse -> faketener -> tener )
         """
-        expected_positive = [ None, u'descfakeacuérdate', u'descfakeacuérdese', u'descfakeacordémonos', u'descfakeacordaos',  u'descfakeacuérdense']
-        expected_negative = [ None, u'te descfakeacuerdes', u'descfakeacuérdese', u'descfakeacordémonos', u'os descfakeacordéis',  u'descfakeacuérdense']
+        expected_positive = [ None, 'descfakeacuérdate', 'descfakeacuérdese', 'descfakeacordémonos', 'descfakeacordaos',  'descfakeacuérdense']
+        expected_negative = [ None, 'te descfakeacuerdes', 'descfakeacuérdese', 'descfakeacordémonos', 'os descfakeacordéis',  'descfakeacuérdense']
         for tense in Tenses.imperative:
             expected = expected_negative if tense == Tenses.imperative_negative else expected_positive
             for person in Persons.all_except([Persons.first_person_singular]):                
