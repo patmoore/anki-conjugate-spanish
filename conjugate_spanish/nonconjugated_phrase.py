@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from constants import make_unicode
+import six
 
 class NonConjugatedPhrase(object):
     """
@@ -7,12 +8,16 @@ class NonConjugatedPhrase(object):
     
     For example: 'cerca de' is related to 'acercar' but is not conjugated
     """
-    def __init__(self, phrase_string, definition, associated_verbs=[]):
+    def __init__(self, phrase_string, definition, associated_verbs=None):
         self.phrase_string = make_unicode(phrase_string)
         self.definition = make_unicode(definition)
-        
+        if isinstance(associated_verbs, six.string_types):
+            self.associated_verbs = associated_verbs.split(",")
+        else:
+            self.associated_verbs = associated_verbs
+                
     @property
     def full_phrase(self):
         return self.phrase_string
     
-
+    

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from PyQt4.QtCore import SIGNAL
-from PyQt4.QtGui import QAction, QProgressDialog
+from PyQt5.QtCore import SIGNAL
+from PyQt5.QtGui import QAction, QProgressDialog
 
 from anki.hooks import addHook, wrap
 from aqt import mw
@@ -11,7 +11,6 @@ from aqt.utils import askUser, showInfo, shortcut
 # import all of the Qt GUI library
 from aqt.qt import *
 import six
-from anki.notes import Note
 from anki.utils import intTime
 from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from conjugate_spanish.verb import Verb
@@ -20,7 +19,7 @@ import anki.stdmodels
 import inspect
 from functools import partial
 
-__all__ = [ 'ModelTemplate_']
+__all__ = [ 'ModelTemplate_', "CardTemplate_", 'BASE_MODEL','FULLY_CONJUGATED_MODEL', 'ModelDefinitions']
 MODEL_FIELDS = {
     u'font': u'Arial',
     u'media': [],
@@ -363,4 +362,3 @@ for tense in Tenses.imperative:
         ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.Person_Agnostic:
     ModelDefinitions[THIRD_PERSON_ONLY_MODEL][u'fields'].append({u'name':ModelTemplate_.fieldName(tense)})
-

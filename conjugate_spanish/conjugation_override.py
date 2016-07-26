@@ -67,7 +67,8 @@ class ConjugationOverride(object):
             try:
                 manual_overrides = json.loads(make_unicode(json_string), u'utf-8')
             except ValueError as e:
-                print(u"while parsing json manual_overrides "+ json_string + u" to verb_dictionary", repr(e))       
+                print(u"while parsing json manual_overrides "+ json_string + u" to verb_dictionary", repr(e))
+                raise       
         conjugation_override = ConjugationOverride(key=key,manual_overrides=manual_overrides) 
         return conjugation_override   
             

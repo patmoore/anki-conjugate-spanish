@@ -245,12 +245,35 @@ class AnkiIntegration_(object):
     def createLoadMenu(self, key, definition):
         self.addMenuItem(definition[u'menu'], self.loadDictionary)
 
+    def _addSchema(self, db):
+        # "phrase","definition","conjugation_overrides","manual_overrides","synonyms","notes"
+        db.executescript("""
+            create table if not exists cs_verb (
+                id                       integer primary key,
+                phrase                   text not null,
+                definition               text not null,
+                manual_overrides         text,
+                synonyms                 text,
+                notes                    text
+            );
+            create table if not exists cs_conjugation_overrides (
+                id                           integer primary key,
+                cs_conjugation_overrides_key text not null,
+                cs_verb_id                  integer,  
+                FOREIGN KEY(cs_verb_id) REFERENCES cs_verb(id)
+            );
+        """)
+        
+    def addPhraseToDb(self):
+        mw.col.db.executemany()
+        
 AnkiIntegration = AnkiIntegration_()
 addHook(u'profileLoaded', AnkiIntegration.initialize)
 
+
 ## TODO: I saw code like this in the japanese addon : but the models are not created 
 ## maybe only on installation?
-for modelName, modelDefinition in ModelDefinitions.iteritems():
-    def __makecall(modelName, modelDefinition):
-        return lambda col: ModelTemplate_(modelName, collection=col, **modelDefinition)
-    anki.stdmodels.models.append((_(modelName), __makecall(modelName, modelDefinition)))
+# for modelName, modelDefinition in ModelDefinitions.iteritems():
+#     def __makecall(modelName, modelDefinition):
+#         return lambda col: ModelTemplate_(modelName, collection=col, **modelDefinition)
+#     anki.stdmodels.models.append((_(modelName), __makecall(modelName, modelDefinition)))
