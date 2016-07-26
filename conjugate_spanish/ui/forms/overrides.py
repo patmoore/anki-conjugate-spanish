@@ -2,99 +2,86 @@
 
 # Form implementation generated from reading ui file 'designer/overrides.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
-        Dialog.setObjectName(_fromUtf8("Dialog"))
+        Dialog.setObjectName("Dialog")
         Dialog.resize(395, 761)
-        self.buttonBox = QtGui.QDialogButtonBox(Dialog)
+        self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setGeometry(QtCore.QRect(290, 20, 81, 241))
         self.buttonBox.setOrientation(QtCore.Qt.Vertical)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.pastTenseBox = QtGui.QGroupBox(Dialog)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.pastTenseBox = QtWidgets.QGroupBox(Dialog)
         self.pastTenseBox.setGeometry(QtCore.QRect(30, 270, 221, 71))
-        self.pastTenseBox.setObjectName(_fromUtf8("pastTenseBox"))
-        self.checkBox = QtGui.QCheckBox(self.pastTenseBox)
+        self.pastTenseBox.setObjectName("pastTenseBox")
+        self.checkBox = QtWidgets.QCheckBox(self.pastTenseBox)
         self.checkBox.setGeometry(QtCore.QRect(20, 30, 85, 18))
-        self.checkBox.setObjectName(_fromUtf8("checkBox"))
-        self.futureAndConditionalBox = QtGui.QGroupBox(Dialog)
+        self.checkBox.setObjectName("checkBox")
+        self.futureAndConditionalBox = QtWidgets.QGroupBox(Dialog)
         self.futureAndConditionalBox.setGeometry(QtCore.QRect(30, 350, 221, 80))
-        self.futureAndConditionalBox.setObjectName(_fromUtf8("futureAndConditionalBox"))
-        self.futureAndCondEnding = QtGui.QComboBox(self.futureAndConditionalBox)
+        self.futureAndConditionalBox.setObjectName("futureAndConditionalBox")
+        self.futureAndCondEnding = QtWidgets.QComboBox(self.futureAndConditionalBox)
         self.futureAndCondEnding.setGeometry(QtCore.QRect(100, 20, 104, 26))
-        self.futureAndCondEnding.setObjectName(_fromUtf8("futureAndCondEnding"))
-        self.futureAndCondEnding.addItem(_fromUtf8(""))
-        self.futureAndCondEnding.addItem(_fromUtf8(""))
-        self.futureAndCondEnding.addItem(_fromUtf8(""))
-        self.label_2 = QtGui.QLabel(self.futureAndConditionalBox)
+        self.futureAndCondEnding.setObjectName("futureAndCondEnding")
+        self.futureAndCondEnding.addItem("")
+        self.futureAndCondEnding.addItem("")
+        self.futureAndCondEnding.addItem("")
+        self.label_2 = QtWidgets.QLabel(self.futureAndConditionalBox)
         self.label_2.setGeometry(QtCore.QRect(30, 30, 56, 13))
-        self.label_2.setObjectName(_fromUtf8("label_2"))
-        self.presentTenseBox = QtGui.QGroupBox(Dialog)
+        self.label_2.setObjectName("label_2")
+        self.presentTenseBox = QtWidgets.QGroupBox(Dialog)
         self.presentTenseBox.setGeometry(QtCore.QRect(30, 130, 219, 131))
-        self.presentTenseBox.setObjectName(_fromUtf8("presentTenseBox"))
-        self.go_verb = QtGui.QCheckBox(self.presentTenseBox)
+        self.presentTenseBox.setObjectName("presentTenseBox")
+        self.go_verb = QtWidgets.QCheckBox(self.presentTenseBox)
         self.go_verb.setGeometry(QtCore.QRect(20, 30, 85, 18))
-        self.go_verb.setObjectName(_fromUtf8("go_verb"))
-        self.oy_verb = QtGui.QCheckBox(self.presentTenseBox)
+        self.go_verb.setObjectName("go_verb")
+        self.oy_verb = QtWidgets.QCheckBox(self.presentTenseBox)
         self.oy_verb.setGeometry(QtCore.QRect(90, 30, 85, 18))
-        self.oy_verb.setObjectName(_fromUtf8("oy_verb"))
-        self.label = QtGui.QLabel(self.presentTenseBox)
+        self.oy_verb.setObjectName("oy_verb")
+        self.label = QtWidgets.QLabel(self.presentTenseBox)
         self.label.setGeometry(QtCore.QRect(10, 60, 141, 21))
-        self.label.setObjectName(_fromUtf8("label"))
-        self.radicalStemChanging = QtGui.QComboBox(self.presentTenseBox)
+        self.label.setObjectName("label")
+        self.radicalStemChanging = QtWidgets.QComboBox(self.presentTenseBox)
         self.radicalStemChanging.setGeometry(QtCore.QRect(100, 80, 104, 26))
-        self.radicalStemChanging.setObjectName(_fromUtf8("radicalStemChanging"))
-        self.radicalStemChanging.addItem(_fromUtf8(""))
-        self.radicalStemChanging.addItem(_fromUtf8(""))
-        self.radicalStemChanging.addItem(_fromUtf8(""))
-        self.radicalStemChanging.addItem(_fromUtf8(""))
-        self.radicalStemChanging.addItem(_fromUtf8(""))
-        self.gerundBox = QtGui.QGroupBox(Dialog)
+        self.radicalStemChanging.setObjectName("radicalStemChanging")
+        self.radicalStemChanging.addItem("")
+        self.radicalStemChanging.addItem("")
+        self.radicalStemChanging.addItem("")
+        self.radicalStemChanging.addItem("")
+        self.radicalStemChanging.addItem("")
+        self.gerundBox = QtWidgets.QGroupBox(Dialog)
         self.gerundBox.setGeometry(QtCore.QRect(30, 430, 221, 80))
-        self.gerundBox.setObjectName(_fromUtf8("gerundBox"))
-        self.pastParticiple = QtGui.QGroupBox(Dialog)
+        self.gerundBox.setObjectName("gerundBox")
+        self.pastParticiple = QtWidgets.QGroupBox(Dialog)
         self.pastParticiple.setGeometry(QtCore.QRect(30, 520, 221, 80))
-        self.pastParticiple.setObjectName(_fromUtf8("pastParticiple"))
-        self.adjectiveBox = QtGui.QGroupBox(Dialog)
+        self.pastParticiple.setObjectName("pastParticiple")
+        self.adjectiveBox = QtWidgets.QGroupBox(Dialog)
         self.adjectiveBox.setGeometry(QtCore.QRect(30, 610, 221, 80))
-        self.adjectiveBox.setObjectName(_fromUtf8("adjectiveBox"))
-        self.adjUsePastParticiple = QtGui.QCheckBox(self.adjectiveBox)
+        self.adjectiveBox.setObjectName("adjectiveBox")
+        self.adjUsePastParticiple = QtWidgets.QCheckBox(self.adjectiveBox)
         self.adjUsePastParticiple.setGeometry(QtCore.QRect(10, 30, 171, 18))
         self.adjUsePastParticiple.setChecked(True)
-        self.adjUsePastParticiple.setObjectName(_fromUtf8("adjUsePastParticiple"))
-        self.endingBasedBox = QtGui.QGroupBox(Dialog)
+        self.adjUsePastParticiple.setObjectName("adjUsePastParticiple")
+        self.endingBasedBox = QtWidgets.QGroupBox(Dialog)
         self.endingBasedBox.setGeometry(QtCore.QRect(30, 10, 221, 101))
-        self.endingBasedBox.setObjectName(_fromUtf8("endingBasedBox"))
-        self.standardEndingOverride = QtGui.QCheckBox(self.endingBasedBox)
+        self.endingBasedBox.setObjectName("endingBasedBox")
+        self.standardEndingOverride = QtWidgets.QCheckBox(self.endingBasedBox)
         self.standardEndingOverride.setGeometry(QtCore.QRect(30, 30, 151, 18))
-        self.standardEndingOverride.setObjectName(_fromUtf8("standardEndingOverride"))
+        self.standardEndingOverride.setObjectName("standardEndingOverride")
 
         self.retranslateUi(Dialog)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Dialog.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Dialog.reject)
+        self.buttonBox.accepted.connect(Dialog.accept)
+        self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
+        _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_("Overrides for ____"))
         Dialog.setAccessibleName(_("Overrides"))
         self.pastTenseBox.setTitle(_("Past Tense"))
