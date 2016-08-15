@@ -14,15 +14,18 @@ from conjugate_spanish.verb import Verb
 import six
 from anki.notes import Note
 from anki.utils import intTime
-from conjugate_spanish.espanol_dictionary import Verb_Dictionary
+from conjugate_spanish.espanol_dictionary import Espanol_Dictionary
 from conjugate_spanish.constants import *
 import anki.stdmodels
 import inspect
 from functools import partial
 from .model_template import *
+from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
 
 __all__ = [ 'AnkiIntegration']
 """
+Plan: non conjugated phrases -- just create cards for the non-conjugated phrases
+
 Plan:
 1. Define standard espanol card conjugation: stores fields that are represented in the Verb card. (string representations of co)
 2. conjugation cards have parent card id stored.
@@ -31,9 +34,11 @@ NOTES: Anki Note objects have the information. Anki Card" are generated from Not
 """
 class AnkiIntegration_(object):
     
+    
     def __init__(self, modelName=BASE_MODEL):
         self.modelName = modelName
         self.modelTemplates = {}
+        self.mw = mw
         addHook('editFocusGained', self.editFocusGained)
         addHook('setupEditorButtons', self.setupEditorButtons)
         addHook('editFocusLost', self.onFocusLost)
@@ -88,7 +93,7 @@ class AnkiIntegration_(object):
                 modelName = FULLY_CONJUGATED_MODEL
                 currentModelTemplate = self._getModelTemplateByName(derivedModelName)
                 word_phrase_str = note[ModelTemplate_.INFINITIVE_OR_PHRASE]
-                word_phrase = Verb_Dictionary.get(word_phrase_str)
+                word_phrase = Espanol_Dictionary.verbDictionary.get(word_phrase_str)
                 newNote = currentModelTemplate.verbToNote(word_phrase, irregularOnly)
                 mw.col.addNote(newNote)
                 
@@ -102,12 +107,12 @@ class AnkiIntegration_(object):
         editor.saveNow()
         self._createNote(note, FULLY_CONJUGATED_MODEL, True)
         
-    def onConjugationOverrides(self, editor):
-        from ui.overrides import OverridesDialog
+    def onConjugationOverrides(self, editor):      
+        from conjugate_spanish.ui.forms.overrides import Ui_Dialog  
         editor.saveNow()
         verb_string = editor.note[ModelTemplate_.INFINITIVE_OR_PHRASE]
-        verb = Verb_Dictionary.get(verb_string)
-        OverridesDialog(editor.mw, editor.note, verb, parent=editor.parentWindow)
+        verb = Espanol_Dictionary.verbDictionary.get(verb_string)
+        Ui_Dialog(editor.mw, editor.note, verb, parent=editor.parentWindow)
         
     def _getNoteModelTemplate(self, note):
         if note is not None and ModelTemplate_.isSpanishModel(note):
@@ -120,9 +125,11 @@ class AnkiIntegration_(object):
         else:
             return None
     def setupEditorButtons(self, editor=None, *args):
+        import pdb; pdb.set_trace()
         if not isinstance(editor, Editor):
             return
         b = editor._addButton
+        print("setting up editor")
         ## TODO: Should only be visible for BASE_MODEL verbs        
         ## TODO : canDisable=True means that the button starts disabled ( need a way to turn off visibility? )
         b("fullyConjugate", partial(self.onFullyConjugateVerb, editor), "",
@@ -176,22 +183,24 @@ class AnkiIntegration_(object):
         mw.col.decks.save(deck)
         
     def addMenuItem(self, menuString, func):
-        from aqt import mw
         # create a new menu item, "test"
-        action = QAction(menuString, mw)
+        action = QAction(menuString, self.mw, triggered=lambda x: func(x))
         # set it to call testFunction when it's clicked
-        mw.connect(action, pyqtSignal("triggered()"), func)
-        # and add it to the tools menu
-        mw.form.menuTools.addAction(action)        
+        self.menu_.addAction(action)     
         
-    def loadDictionary(self):
-        Verb_Dictionary.load()
+    def loadDictionary(self,x):
+        print("load_dic", x)
+        Espanol_Dictionary.load()
+        self.upsertPhrasesToDb(Espanol_Dictionary.phraseDictionary.values())
+        self.upsertVerbsToDb(Espanol_Dictionary.verbDictionary.values())
 #         modelTemplate = self._getModelTemplateByName(BASE_MODEL)
 #         for key, verb in Verb_Dictionary.iteritems():
 #             note = modelTemplate.verbToNote(verb)
 #             mw.col.addNote(note)
 
     def initialize(self, *args):
+        print("conjugate spanish :: initialize")
+        self.menu_ = self.mw.form.menuPlugins.addMenu("CONJUGATE")
         for modelName, modelDefinition in ModelDefinitions.items():
             self.modelTemplates[modelName] = ModelTemplate_.getModel(modelName, collection=mw.col, create=True, **modelDefinition)
             
@@ -233,25 +242,35 @@ class AnkiIntegration_(object):
             },
         }
     
+        self._addSchema()
         for key,value in FEATURES.items():
             if 'disable' not in value or value['disable'] == False:
                 value['init'](key, value)
 #     def createNewDeckMenu(self, key, definition):
 #         self.addMenuItem(definition[u'menu'], self.createNewDeck)
     
-    def createConjugateMenu(self, key, definition):
+    def createConjugateMenu(self, key, definition):        
         self.addMenuItem(definition['menu'], self.conjugateCurrentNote)
         
     def createLoadMenu(self, key, definition):
         self.addMenuItem(definition['menu'], self.loadDictionary)
 
-    def _addSchema(self, db):
+    def _addSchema(self):
+        from aqt import mw
+        print("cs:: addSchema")
         # "phrase","definition","conjugation_overrides","manual_overrides","synonyms","notes"
-        db.executescript("""
-            create table if not exists cs_verb (
+        self.mw.col.db.executescript("""
+            drop table """+Verb.table_name()+""";
+            create table if not exists """+Verb.table_name()+""" (
                 id                       integer primary key,
                 phrase                   text not null,
                 definition               text not null,
+                prefix_words             text,
+                prefix                    text,
+                core_characters           text,
+                inf_ending                text,
+                reflexive                text,
+                suffix_words             text,
                 manual_overrides         text,
                 synonyms                 text,
                 notes                    text
@@ -262,11 +281,40 @@ class AnkiIntegration_(object):
                 cs_verb_id                  integer,  
                 FOREIGN KEY(cs_verb_id) REFERENCES cs_verb(id)
             );
+            drop table """+NonConjugatedPhrase.table_name()+""";
+            create table if not exists """+NonConjugatedPhrase.table_name()+""" (
+                id                           integer primary key,
+                phrase                       text not null,
+                definition                   text not null
+            );
         """)
+        mw.reset()
         
-    def addPhraseToDb(self):
-        mw.col.db.executemany()
-        
+    def generate_insert_sql(self, table_columns):
+        table_columns_names = ",".join(table_columns)
+        questions = ",".join(["?"] * len(table_columns))
+        insert_sql = "insert into "+NonConjugatedPhrase.table_name()+"("+table_columns_names+") values ("+questions+")"
+        return insert_sql
+    
+    def batch_insert(self, insert_sql, dbobjects):
+        data = map(lambda dbobject: dbobject.sql_insert_values(), dbobjects)
+        print(" insert_sql=",insert_sql)
+        mw.col.db.executemany(insert_sql, data)
+    
+    def upsertPhrasesToDb(self, nonConjugatedPhrases):
+        table_columns = NonConjugatedPhrase.table_columns()
+        insert_sql = self.generate_insert_sql(table_columns)
+        self.batch_insert(insert_sql, nonConjugatedPhrases)
+        for count in mw.col.db.execute("select count(*) from "+NonConjugatedPhrase.table_name()):
+            print("Count = ",count)
+ 
+    def upsertVerbsToDb(self, verbs):
+        table_columns = Verb.table_columns()
+        insert_sql = self.generate_insert_sql(table_columns)
+        self.batch_insert(insert_sql, verbs)
+        for count in mw.col.db.execute("select count(*) from "+Verb.table_name()):
+            print("Count = ",count)
+    
 AnkiIntegration = AnkiIntegration_()
 addHook('profileLoaded', AnkiIntegration.initialize)
 

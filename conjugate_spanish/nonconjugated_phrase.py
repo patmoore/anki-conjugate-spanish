@@ -20,4 +20,14 @@ class NonConjugatedPhrase(object):
     def full_phrase(self):
         return self.phrase_string
     
+    def sql_insert_values(self):
+        return [self.full_phrase, self.definition]
     
+    @classmethod
+    def table_name(cls):
+        return "cs_nonconjugated_phrase"
+    @classmethod
+    def table_columns(cls):
+        return ["phrase","definition"]
+
+            

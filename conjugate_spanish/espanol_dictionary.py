@@ -26,9 +26,11 @@ class Dictionary_(dict):
 
     def load(self, fileName, source):
         current = self.by[source] = []
+        print("conjugate_spanish::loading dictionary "+fileName)
         with codecs.open(fileName, mode='r' ) as csvfile:
             reader = csv.DictReader(csvfile, skipinitialspace=True)
             try:
+                count = 0
                 for line in reader:
                     definition = {'definition':''}
                     for key,value in line.items():
@@ -38,20 +40,21 @@ class Dictionary_(dict):
                     try:
                         phrase = self.add(**definition)
                         current.append(phrase.full_phrase)
-                        print (phrase.full_phrase)
+                        count = count +1
                     except Exception as e:
                         print("error reading "+fileName+": "+ repr(definition)+ repr(e))
                         traceback.print_exc()            
             except Exception as e:
                 print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
                 traceback.print_exc()
+        print("conjugate_spanish::loaded dictionary "+fileName+ " ("+str(count)+" items)")
 
 class Verb_Dictionary_(Dictionary_):
                             
     def add(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
         verb = Verb(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)  
         if phrase in self:
-            print(phrase+" already in dictionary")
+            print("Verb_Dictionary :"+ phrase+" already in dictionary")
         else:      
             self[verb.full_phrase] = verb
         return verb
@@ -95,7 +98,7 @@ class Phrase_Dictionary_(Dictionary_):
     def add(self,phrase, definition,associated_verbs=None,**kwargs):
         phraseObj = NonConjugatedPhrase(phrase, definition,associated_verbs,**kwargs)
         if phrase in self:
-            print(phrase+" already in dictionary")
+            print("Phrase_Dictionary :" + phrase+" already in dictionary")
         else:      
             self[phraseObj.full_phrase] = phraseObj
         return phraseObj
@@ -122,8 +125,9 @@ class Espanol_Dictionary_():
 
     def add_verb(self, phrase, definition, **kwargs):
         self.verbDictionary.add(phrase, definition, **kwargs)
+    def add_phrase(self, phrase, definition, **kwargs):
+        self.phraseDictionary.add(phrase, definition, **kwargs)
 
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary
 Phrase_Dictionary = Espanol_Dictionary.phraseDictionary
-Espanol_Dictionary.load()

@@ -908,3 +908,12 @@ class Verb():
     def __raise(self, msg, tense=None, person=None, traceback_=None):
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
         raise Exception(msg_).with_traceback(traceback_)
+    
+    @classmethod
+    def table_columns(cls):
+        return ["phrase","definition", "prefix_words", "prefix", "core_characters", "inf_ending", "reflexive", "suffix_words"]
+    @classmethod
+    def table_name(cls):
+        return "cs_verb"
+
+    
