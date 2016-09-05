@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from .constants import make_unicode
-from . import six
 
 class NonConjugatedPhrase(object):
     """
@@ -8,10 +7,10 @@ class NonConjugatedPhrase(object):
     
     For example: 'cerca de' is related to 'acercar' but is not conjugated
     """
-    def __init__(self, phrase_string, definition, associated_verbs=None):
+    def __init__(self, phrase_string, definition, associated_verbs=None):        
         self.phrase_string = make_unicode(phrase_string)
         self.definition = make_unicode(definition)
-        if isinstance(associated_verbs, six.string_types):
+        if isinstance(associated_verbs, str):
             self.associated_verbs = associated_verbs.split(",")
         else:
             self.associated_verbs = associated_verbs
@@ -24,10 +23,17 @@ class NonConjugatedPhrase(object):
         return [self.full_phrase, self.definition]
     
     @classmethod
-    def table_name(cls):
-        return "cs_nonconjugated_phrase"
-    @classmethod
     def table_columns(cls):
         return ["phrase","definition"]
-
-            
+    
+    @classmethod
+    def table_name(cls):
+        return "cs_nonconjugated_phrase"
+    
+    def make_note(self):
+        from aqt import mw
+#         from anki.notes import Note 
+#         from aqt.qt import debug; 
+#         debug()
+#         note = Note(mw.col)
+#         note.flush()

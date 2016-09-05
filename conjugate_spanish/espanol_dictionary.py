@@ -11,6 +11,7 @@ from .conjugation_override import ConjugationOverride
 import os
 from test.test_decimal import directory
 from .nonconjugated_phrase import NonConjugatedPhrase
+from .utils import cs_debug
 
 """
 load dictionaries/*-verbs.csv
@@ -26,12 +27,12 @@ class Dictionary_(dict):
 
     def load(self, fileName, source):
         current = self.by[source] = []
-        print("conjugate_spanish::loading dictionary "+fileName)
-        with codecs.open(fileName, mode='r' ) as csvfile:
+        cs_debug("loading dictionary",fileName)
+        with codecs.open(fileName, mode='r',encoding="utf-8" ) as csvfile:
             reader = csv.DictReader(csvfile, skipinitialspace=True)
-            try:
-                count = 0
-                for line in reader:
+            count = 0
+            for line in reader:
+                try:
                     definition = {'definition':''}
                     for key,value in line.items():
                         _value = make_unicode(value)
@@ -42,22 +43,24 @@ class Dictionary_(dict):
                         current.append(phrase.full_phrase)
                         count = count +1
                     except Exception as e:
-                        print("error reading "+fileName+": "+ repr(definition)+ repr(e))
+                        cs_debug("error reading ",fileName+": ", repr(definition),repr(e))
                         traceback.print_exc()            
-            except Exception as e:
-                print("error reading "+fileName+": "+e.message+" line="+repr(line), repr(e))
-                traceback.print_exc()
-        print("conjugate_spanish::loaded dictionary "+fileName+ " ("+str(count)+" items)")
+                except Exception as e:
+                    cs_debug("error reading ",fileName,": line=",repr(line), repr(e))
+                    traceback.print_exc()
+        cs_debug("loaded dictionary",fileName," (",str(count),"items)")
 
 class Verb_Dictionary_(Dictionary_):
-                            
+    VERBS_FILENAME = re_compile('(.*)-verbs.csv$')                            
     def add(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
         verb = Verb(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)  
         if phrase in self:
-            print("Verb_Dictionary :"+ phrase+" already in dictionary")
+            cs_debug("Verb_Dictionary :", phrase,"already in dictionary")
         else:      
             self[verb.full_phrase] = verb
         return verb
+    def filename_match(self, fileName):
+        return Verb_Dictionary_.VERBS_FILENAME.match(fileName) 
 
 #     def load(self):
 #         import special_cases
@@ -95,6 +98,7 @@ class Verb_Dictionary_(Dictionary_):
                     f.write("\n")
 
 class Phrase_Dictionary_(Dictionary_):
+    PHRASES_FILENAME = re_compile('(.*)-phrases.csv$')
     def add(self,phrase, definition,associated_verbs=None,**kwargs):
         phraseObj = NonConjugatedPhrase(phrase, definition,associated_verbs,**kwargs)
         if phrase in self:
@@ -102,11 +106,10 @@ class Phrase_Dictionary_(Dictionary_):
         else:      
             self[phraseObj.full_phrase] = phraseObj
         return phraseObj
-
+    def filename_match(self, fileName):
+        return Phrase_Dictionary_.PHRASES_FILENAME.match(fileName) 
         
 class Espanol_Dictionary_():
-    VERBS_FILENAME = re_compile('(.*)-verbs.csv$')
-    PHRASES_FILENAME = re_compile('(.*)-phrases.csv$')
     def __init__(self):
         self.verbDictionary = Verb_Dictionary_()
         self.phraseDictionary = Phrase_Dictionary_()
@@ -116,8 +119,8 @@ class Espanol_Dictionary_():
         for path in [basedir+'/dictionaries', '.']:
             filelist = os.listdir(path)
             for fileName in filelist:
-                verbMatch = Espanol_Dictionary_.VERBS_FILENAME.match(fileName)
-                phraseMatch = Espanol_Dictionary_.PHRASES_FILENAME.match(fileName)
+                verbMatch = self.verbDictionary.filename_match(fileName)
+                phraseMatch = self.phraseDictionary.filename_match(fileName)
                 if verbMatch is not None:
                     self.verbDictionary.load(path+'/'+fileName, verbMatch.group(1))
                 elif phraseMatch is not None:

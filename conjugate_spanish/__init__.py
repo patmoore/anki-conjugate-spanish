@@ -7,6 +7,7 @@ from .espanol_dictionary import Espanol_Dictionary
 from . import anki_integration
 from .nonconjugated_phrase import NonConjugatedPhrase
 from .storage import Storage
+from .utils import cs_debug
 
 __all__ = ['ConjugationOverride', 'Standard_Overrides',
     'Infinitive_Endings',
@@ -18,4 +19,5 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides',
     'Espanol_Dictionary',
     'get_iterable',
     'make_list',
+    'cs_debug'
     ]
