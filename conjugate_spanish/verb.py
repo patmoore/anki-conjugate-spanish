@@ -9,7 +9,9 @@ import sys
 from .conjugation_override import *
 from .constants import *
 import traceback
-
+from .utils import cs_debug
+import types
+from .phrase import Phrase
 # UTF8Writer = codecs.getwriter('utf8')
 # sys.stdout = UTF8Writer(sys.stdout)
 from .standard_endings import Standard_Conjugation_Endings
@@ -35,7 +37,7 @@ INF_ENDING = 4
 REFLEXIVE_ENDING = 5
 SUFFIX_WORDS = 6
 
-class Verb():
+class Verb(Phrase):
     '''
     verb conjugation
     instance properties:
@@ -54,7 +56,7 @@ class Verb():
         :param phrase_verb_string:
         :param base_verb: used as base verb for conjugation
         '''
-        self.definition = make_unicode(definition)
+        super().__init__(phrase_verb_string, definition, True)   
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self._doNotApply = []
         self._appliedOverrides = []
@@ -73,7 +75,6 @@ class Verb():
         self.inf_ending = phrase_match.group(INF_ENDING)
         self.reflexive = phrase_match.group(REFLEXIVE_ENDING) is not None and phrase_match.group(REFLEXIVE_ENDING) != ''        
         self.suffix_words = phrase_match.group(SUFFIX_WORDS)
-        self.manualOverrides = None # TODO: be able to save manual overrides as a string for display/editting
 
         _base_verb = make_unicode(base_verb)
         if _base_verb == '':
@@ -81,18 +82,18 @@ class Verb():
         if _base_verb is not None:        
             if isinstance(_base_verb, Verb):
                 self.base_verb = _base_verb
-                self.base_verb_str = _base_verb.inf_verb_string
-            elif isinstance(_base_verb, six.string_types) and _base_verb != '':
+                self.base_verb_str_ = _base_verb.inf_verb_string
+            elif isinstance(_base_verb, str) and _base_verb != '':
                 # TODO strip leading/trailing white space
-                self.base_verb_str = _base_verb 
+                self.base_verb_str_ = _base_verb 
             else:
                 self.__raise("base_verb must be Verb or string")
             # example abatir has base: batir
-            _base_verb_parse = _phrase_parsing.match(self.base_verb_str)
+            _base_verb_parse = _phrase_parsing.match(self.base_verb_str_)
             # "abat".find("bat")
             base_verb_index = self.core_characters.find(_base_verb_parse.group(CORE_VERB))
             if base_verb_index <0:
-                self.__raise(repr(self.base_verb_str)+ " is not in core characters"+repr(self.core_characters))
+                self.__raise(repr(self.base_verb_str_)+ " is not in core characters"+repr(self.core_characters))
             if self.prefix == '' or self.prefix is None:
                 self.prefix = self.core_characters[:base_verb_index]
                 self.core_characters = self.core_characters[base_verb_index:]
@@ -102,20 +103,21 @@ class Verb():
                 self.__raise("core_characters already="+self.core_characters+" but should be "+_base_verb_parse.group(CORE_VERB))
         elif self.is_phrase:
             # a phrase means the base verb is the actual verb being conjugated.
-            self.base_verb_str = self.inf_verb_string
+            self.base_verb_str_ = self.inf_verb_string
         elif self.prefix != '' or phrase_match.group(REFLEXIVE_ENDING) == '-se':
             # explicit base verb formed by '-' embedded in the verb
-            self.base_verb_str = self.core_characters + self.inf_ending
+            self.base_verb_str_ = self.core_characters + self.inf_ending
             if phrase_match.group(REFLEXIVE_ENDING) == 'se':
-                self.base_verb_str += 'se'
+                self.base_verb_str_ += 'se'
         elif self.reflexive:
             # base verb is without the 'se' ( no prefix)
-            self.base_verb_str = self.core_characters + self.inf_ending
+            self.base_verb_str_ = self.core_characters + self.inf_ending
         else:
-            self.base_verb_str = None
+            self.base_verb_str_ = None
                         
         self.manual_overrides_string = manual_overrides
-        if isinstance(conjugation_overrides, six.string_types) and conjugation_overrides != '' and conjugation_overrides != Verb.REGULAR_VERB:
+        # even for derived verbs we need to allow for the possibility that the derived verb has different overrides        
+        if isinstance(conjugation_overrides, str) and conjugation_overrides != '' and conjugation_overrides != Verb.REGULAR_VERB:
             self.explicit_overrides_string = self.overrides_string = conjugation_overrides
             conjugation_overrides = conjugation_overrides.split(",")                
         else:
@@ -191,8 +193,8 @@ class Verb():
                 result+=',"'+repr(self.appliedOverrides)+'"'
             if len(self.doNotApply) > 0:
                 result +=',"'+repr(self.doNotApply)+'"'
-            if self.base_verb_str is not None:
-                result += ',"'+self.base_verb_str+'"'
+            if self.base_verb_str_ is not None:
+                result += ',"'+self.base_verb_str_+'"'
         
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
@@ -268,7 +270,7 @@ class Verb():
             
             if conjugation_overrides is not None:
                 for conjugation_override in conjugation_overrides:
-                    if isinstance(conjugation_override, six.string_types):
+                    if isinstance(conjugation_override, str):
                         conjugation = conjugation_override
                     elif conjugation_override is not None:
                         override_call = { 'tense': tense, 'person': person, "options":options }
@@ -367,7 +369,7 @@ class Verb():
         
     def conjugate_stem(self, tense, person, current_conjugation_ending):
         def __check_override(override, current_conjugation_stem):
-            if isinstance(override, six.string_types):
+            if isinstance(override, str):
                 current_conjugation_stem = override
             elif override is not None:
                 override_call = { 'tense': tense, 'person': person, 'stem': current_conjugation_stem, 'ending' : current_conjugation_ending }
@@ -405,7 +407,7 @@ class Verb():
         
     def conjugate_ending(self, tense, person):
         def __check_override(override, current_conjugation_ending):
-            if isinstance(override, six.string_types):
+            if isinstance(override, str):
                 current_conjugation_ending = override
             elif override:
                 override_call = { 'tense': tense, 'person': person, 'stem': self.stem, 'ending' : current_conjugation_ending }
@@ -448,9 +450,9 @@ class Verb():
         if overrides is not None:
             for override in get_iterable(overrides):
                 [current_conjugation_stem, current_conjugation_ending]  = __check_override(override, current_conjugation_stem, current_conjugation_ending)
-                if not isinstance(current_conjugation_stem, six.string_types):
+                if not isinstance(current_conjugation_stem, str):
                     self.__raise("stem is not string", tense, person)
-                if not isinstance(current_conjugation_ending, six.string_types):
+                if not isinstance(current_conjugation_ending, str):
                     self.__raise("ending is not string", tense, person) 
  
         return current_conjugation_stem+current_conjugation_ending
@@ -653,9 +655,9 @@ class Verb():
         """        
         def __convert_to_self_function(override):            
             if inspect.isfunction(override) or inspect.ismethod(override):
-                boundfunc = six.create_bound_method(override, self)
+                boundfunc = types.MethodType(override, self)
                 return boundfunc                
-            elif isinstance(override, six.string_types):
+            elif isinstance(override, str):
                 return override                        
             else:
                 self.__raise("Override must be function or string not"+type(override),tense)           
@@ -668,7 +670,7 @@ class Verb():
             
         if tense in Tenses.Person_Agnostic:
             override_ = __convert_to_self_function(overrides)
-            if isinstance(override_, six.string_types) or self_overrides[tense] is None:
+            if isinstance(override_, str) or self_overrides[tense] is None:
                 self_overrides[tense] = [ override_ ]
             else:
                 self_overrides[tense].append(override_)
@@ -676,7 +678,7 @@ class Verb():
         
         if persons is None:
             _persons = Persons
-        elif isinstance(persons, six.integer_types):
+        elif isinstance(persons, int):
             _persons = [ persons ]
         elif isinstance(persons, list):
             _persons = persons
@@ -686,10 +688,10 @@ class Verb():
         if self_overrides[tense] is None:
             self_overrides[tense] = [None] * len(Persons)
             
-        if isinstance(overrides, six.string_types) or inspect.isfunction(overrides) or inspect.ismethod(overrides):            
+        if isinstance(overrides, str) or inspect.isfunction(overrides) or inspect.ismethod(overrides):            
             fn = __convert_to_self_function(overrides)
             for person in _persons:
-                if isinstance(fn, six.string_types) or self_overrides[tense][person] is None:
+                if isinstance(fn, str) or self_overrides[tense][person] is None:
                     # if a hard replacement (string), previous overrides are discarded because they will be replaced.
                     # or this is the first override
                     self_overrides[tense][person] = [fn]
@@ -700,7 +702,7 @@ class Verb():
             for person, override in enumerate(overrides):
                 if override is not None:
                     fn = __convert_to_self_function(override)
-                    if isinstance(fn, six.string_types) or self_overrides[tense][person] is None:
+                    if isinstance(fn, str) or self_overrides[tense][person] is None:
                         # if a hard replacement (string), previous overrides are discarded because they will be replaced.
                         # or this is the first override
                         self_overrides[tense][person] = [fn]
@@ -713,8 +715,8 @@ class Verb():
             result['applied']= self.appliedOverrides
         if self.doNotApply is not None and self.doNotApply != []:
             result['excluded'] = self.doNotApply
-        if self.base_verb_str is not None:
-            result['base_verb'] = self.base_verb_str
+        if self.base_verb_str_ is not None:
+            result['base_verb'] = self.base_verb_str_
         return result
     
     @property
@@ -776,13 +778,13 @@ class Verb():
             if override.key:
                 # Custom overrides do not always have keys
                 self.add_applied_override(override.key)
-            override.apply(self)      
+            override.apply(self)
             return True
         else:
             return False  
 
     def canApply(self,override_or_key):
-        key = override_or_key if isinstance(override_or_key, six.string_types) else override_or_key.key
+        key = override_or_key if isinstance(override_or_key, str) else override_or_key.key
         return key not in self.doNotApply and key not in self.appliedOverrides
         
     @property
@@ -794,13 +796,13 @@ class Verb():
             
     @property
     def base_verb(self):
-        if self.base_verb_str is None:
+        if not self.is_derived:
             return None
         elif not hasattr(self, '_base_verb'):
             # some verbs are based off of others (tener)
             # TODO: maldecir has different tu affirmative than decir        
             from .espanol_dictionary import Verb_Dictionary
-            _base_verb = Verb_Dictionary.get(self.base_verb_str)
+            _base_verb = Verb_Dictionary.get(self.base_verb_str_)
             if _base_verb is None:
                 # TODO - may not be in dictionary yet?
                 return None 
@@ -808,6 +810,14 @@ class Verb():
                 self._base_verb = _base_verb
                 
         return self._base_verb
+    
+    @property
+    def is_derived(self):
+        return self.base_verb_str_ is not None
+    
+    @property
+    def base_verb_str(self):
+        return self.base_verb_str_
     
     @property
     def full_prefix(self):
@@ -909,13 +919,24 @@ class Verb():
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
         raise Exception(msg_).with_traceback(traceback_)
         
-    @classmethod
-    def table_name(cls):
-        return "cs_verb"
+    def __str__(self):
+        s= ''
+        for k,v in zip(Verb.table_columns(),self.sql_insert_values()):
+            if v is not None and v != '':
+                s = s + str(k)+'='+str(v)+';'
+        return s
+    
+    def __repr__(self):
+        return self.__str__()
+
     @classmethod
     def table_columns(cls):
-        return ["phrase","definition", "prefix_words", "prefix", "core_characters", "inf_ending", "reflexive", "suffix_words"]
+        table_columns_ = super().table_columns()
+        table_columns_.extend( ["prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "explicit_overrides", "overrides","applied_overrides","manual_overrides"])
+        return table_columns_
+                       
     def sql_insert_values(self):
-        return [self.full_phrase, self.definition,self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.reflexive, self.suffix_words]
-
+        insert_values_ = super().sql_insert_values()
+        insert_values_.extend( [self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive, self.suffix_words, self.explicit_overrides_string, self.overrides_string, ",".join(self.appliedOverrides), self.manual_overrides_string])    
+        return insert_values_
     

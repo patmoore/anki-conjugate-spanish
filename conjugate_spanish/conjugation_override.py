@@ -46,7 +46,7 @@ class ConjugationOverride(object):
             self.parent = None
         else:
             _parents = parents if isinstance(parents, list) else [ parents ]
-            self.parent = [ Standard_Overrides[parent] if isinstance(parent, six.string_types) else parent for parent in _parents] 
+            self.parent = [ Standard_Overrides[parent] if isinstance(parent, str) else parent for parent in _parents] 
         
         self.inf_match = inf_match
         self.documentation = []
@@ -63,7 +63,7 @@ class ConjugationOverride(object):
         
     @staticmethod
     def create_from_json(json_string, key=None):
-        if isinstance(json_string, six.string_types) and json_string != '':
+        if isinstance(json_string, str) and json_string != '':
             try:
                 manual_overrides = json.loads(make_unicode(json_string), 'utf-8')
             except ValueError as e:
@@ -110,7 +110,7 @@ class ConjugationOverride(object):
             else:
                 self_overrides = getattr(self, attr_name)
                 
-            if isinstance(overrides, six.string_types) or inspect.isfunction(overrides):
+            if isinstance(overrides, str) or inspect.isfunction(overrides):
                 if tense in Tenses.Person_Agnostic:
                     # person is not relevant for gerund and past participle
                     self_overrides[tense] = overrides
@@ -118,7 +118,7 @@ class ConjugationOverride(object):
                     if self_overrides[tense] is None:
                         self_overrides[tense] = [None] * len(Persons)
                         
-                    if isinstance(persons, six.integer_types):
+                    if isinstance(persons, int):
                         # a single person has an override
                         self_overrides[tense][persons] = overrides
                     else:
@@ -180,7 +180,7 @@ class ConjugationOverride(object):
             self_overrides = getattr(self, attr_name)
             if self_overrides[tense] is not None:
             # some overrides exist for this tense        
-                if isinstance(self_overrides[tense], six.string_types):
+                if isinstance(self_overrides[tense], str):
                     # a single different stem for the entire tense
                     overrides.extend( self_overrides[tense])
                 elif self_overrides[tense][person] is not None:

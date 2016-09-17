@@ -125,7 +125,7 @@ class ModelTemplate_(object):
         
         if isinstance(model, ModelTemplate_):
             return model
-        elif isinstance(model, six.string_types):
+        elif isinstance(model, str):
             modelName = model
             model_ = mw.col.models.byName(modelName)
             if model_ is None:

@@ -19,5 +19,6 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides',
     'Espanol_Dictionary',
     'get_iterable',
     'make_list',
-    'cs_debug'
+    'cs_debug',
+    'Storage'
     ]

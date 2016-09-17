@@ -112,7 +112,7 @@ def get_iterable(x):
     except ... a string is iterable :-(
     http://stackoverflow.com/a/6711233/20161
     """
-    if not isinstance(x, six.string_types) and isinstance(x, collections.Iterable):
+    if not isinstance(x, str) and isinstance(x, collections.Iterable):
         return x
     else:
         return (x,)
@@ -130,7 +130,7 @@ def make_unicode(inputStr):
     :returns: original inputStr if inputStr is not a string or inputStr is already a unicode. This means None and random
     objects can be passed
     """
-    if isinstance(inputStr, six.string_types) and type(inputStr) != str:
+    if isinstance(inputStr, str) and type(inputStr) != str:
         result = inputStr.decode('utf-8')
         return result
     else:

@@ -24,6 +24,7 @@ from .model_template import *
 from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
 import conjugate_spanish
 from conjugate_spanish.utils import cs_debug
+from conjugate_spanish.storage import Storage
 
 __all__ = [ 'AnkiIntegration']
 """
@@ -173,9 +174,9 @@ class AnkiIntegration_(object):
     
     def _getDeck(self, deck):
         from aqt import mw
-        if isinstance(deck, six.string_types):
+        if isinstance(deck, str):
             deckId = mw.col.decks.id(deck)             
-        elif isinstance(deck, six.integer_types):
+        elif isinstance(deck, int):
             deckId = deckId
         else:            
             return deck
@@ -195,8 +196,8 @@ class AnkiIntegration_(object):
     def loadDictionary(self,x):
         print("load_dic", x)
         Espanol_Dictionary.load()
-        self.upsertPhrasesToDb(Espanol_Dictionary.phraseDictionary.values())
-        self.upsertVerbsToDb(Espanol_Dictionary.verbDictionary.values())
+        Storage.upsertPhrasesToDb(Espanol_Dictionary.phraseDictionary.values())
+        Storage.upsertVerbsToDb(Espanol_Dictionary.verbDictionary.values())
 #         modelTemplate = self._getModelTemplateByName(BASE_MODEL)
 #         for key, verb in Verb_Dictionary.iteritems():
 #             note = modelTemplate.verbToNote(verb)
@@ -246,7 +247,7 @@ class AnkiIntegration_(object):
             },
         }
     
-        self._addSchema()
+        Storage.initialize()
         for key,value in FEATURES.items():
             if 'disable' not in value or value['disable'] == False:
                 value['init'](key, value)
@@ -259,87 +260,6 @@ class AnkiIntegration_(object):
     def createLoadMenu(self, key, definition):
         self.addMenuItem(definition['menu'], self.loadDictionary)
 
-    def _addSchema(self):        
-        # "phrase","definition", "prefix_words", "prefix", "core_characters", "inf_ending", "reflexive", "suffix_words"
-        cs_debug(__file__, "addSchema")
-        # "phrase","definition","conjugation_overrides","manual_overrides","synonyms","notes"
-        dbFormatString = Template("""
-            drop table if exists $conjugated_table_name;
-            create table if not exists $conjugated_table_name (
-                id                       integer primary key,
-                phrase                   text not null unique,
-                definition               text not null,
-                prefix_words             text,
-                prefix                   text,
-                core_characters          text,
-                inf_ending               text,
-                reflexive                boolean,
-                suffix_words             text,
-                manual_overrides         text,
-                synonyms                 text,
-                notes                    text
-            );
-            drop table if exists ${table_prefix}conjugated_associations;
-            create table if not exists ${table_prefix}conjugated_associations (
-                ${conjugated_table_name}_root_id        integer null,
-                ${conjugated_table_name}_root_phrase    text not null,
-                ${conjugated_table_name}_derived_id     integer not null,
-                FOREIGN KEY(${conjugated_table_name}_root_id) REFERENCES ${conjugated_table_name}(id),
-                FOREIGN KEY(${conjugated_table_name}_derived_id) REFERENCES ${conjugated_table_name}(id)
-            );
-            drop table if exists ${table_prefix}conjugation_overrides;
-            create table if not exists ${table_prefix}conjugation_overrides (
-                id                           integer primary key,
-                ${table_prefix}conjugation_overrides_key text not null,
-                ${conjugated_table_name}_id                  integer,  
-                FOREIGN KEY(${conjugated_table_name}_id) REFERENCES ${conjugated_table_name}(id)
-            );
-            drop table if exists ${nonconjugated_table_name};
-            create table if not exists ${nonconjugated_table_name} (
-                id                           integer primary key,
-                phrase                       text not null unique,
-                definition                   text not null
-            );
-            drop table if exists ${table_prefix}nonconjugated_associations;
-            create table if not exists ${table_prefix}nonconjugated_associations(
-                ${conjugated_table_name}_root_id        integer null,
-                ${conjugated_table_name}_root_phrase    text not null,
-                ${nonconjugated_table_name}_derived_id     integer not null,
-                FOREIGN KEY(${conjugated_table_name}_root_id) REFERENCES ${conjugated_table_name}(id),
-                FOREIGN KEY(${nonconjugated_table_name}_derived_id) REFERENCES ${nonconjugated_table_name}(id)
-            );
-        """)
-        table_prefix="cs_"
-        dbString = dbFormatString.substitute(conjugated_table_name=Verb.table_name(), nonconjugated_table_name=NonConjugatedPhrase.table_name(), table_prefix=table_prefix)
-        cs_debug("dbString=",dbString)
-        self.mw.col.db.executescript(dbString)
-        mw.reset()
-        
-    def generate_insert_sql(self, cls):
-        table_columns = cls.table_columns()
-        table_columns_names = ",".join(table_columns)
-        questions = ",".join(["?"] * len(cls.table_columns()))
-        insert_sql = "insert or replace into "+cls.table_name()+"("+table_columns_names+") values ("+questions+")"
-        return insert_sql
-    
-    def batch_insert(self, insert_sql, dbobjects):
-        data = map(lambda dbobject: dbobject.sql_insert_values(), dbobjects)
-        print(" insert_sql=",insert_sql)
-        mw.col.db.executemany(insert_sql, data)
-    
-    def upsertPhrasesToDb(self, nonConjugatedPhrases):
-        insert_sql = self.generate_insert_sql(NonConjugatedPhrase)
-        self.batch_insert(insert_sql, nonConjugatedPhrases)
-        for nc in nonConjugatedPhrases:
-            "insert or replace into select id from nc where"
-        for count in mw.col.db.execute("select count(*) from "+NonConjugatedPhrase.table_name()):
-            cs_debug("Count = ",count)
- 
-    def upsertVerbsToDb(self, verbs):
-        insert_sql = self.generate_insert_sql(Verb)
-        self.batch_insert(insert_sql, verbs)
-        for count in mw.col.db.execute("select count(*) from "+Verb.table_name()):
-            cs_debug("Count = ",count)
     
 AnkiIntegration = AnkiIntegration_()
 addHook('profileLoaded', AnkiIntegration.initialize)
