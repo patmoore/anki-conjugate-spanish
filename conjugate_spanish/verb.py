@@ -69,8 +69,8 @@ class Verb(Phrase):
         if phrase_match is None:
             self.__raise(_phrase_verb_string+": does not appear to be a verb or phrase with verb infinitive in it.")            
 
-        self.prefix_words = phrase_match.group(PREFIX_WORDS)
-        self.prefix = phrase_match.group(PREFIX_CHARS)
+        self.prefix__words = phrase_match.group(PREFIX_WORDS)
+        self.prefix_ = phrase_match.group(PREFIX_CHARS)
         self.core_characters = phrase_match.group(CORE_VERB)
         self.inf_ending = phrase_match.group(INF_ENDING)
         self.reflexive = phrase_match.group(REFLEXIVE_ENDING) is not None and phrase_match.group(REFLEXIVE_ENDING) != ''        
@@ -94,17 +94,17 @@ class Verb(Phrase):
             base_verb_index = self.core_characters.find(_base_verb_parse.group(CORE_VERB))
             if base_verb_index <0:
                 self.__raise(repr(self.base_verb_str_)+ " is not in core characters"+repr(self.core_characters))
-            if self.prefix == '' or self.prefix is None:
-                self.prefix = self.core_characters[:base_verb_index]
+            if self.prefix_ == '' or self.prefix_ is None:
+                self.prefix_ = self.core_characters[:base_verb_index]
                 self.core_characters = self.core_characters[base_verb_index:]
-            elif base_verb_index != 0 and self.prefix != self.core_characters[:base_verb_index]:
-                self.__raise("prefix already="+self.prefix+" but should be "+self.core_characters[:base_verb_index])
+            elif base_verb_index != 0 and self.prefix_ != self.core_characters[:base_verb_index]:
+                self.__raise("prefix already="+self.prefix_+" but should be "+self.core_characters[:base_verb_index])
             elif self.core_characters != _base_verb_parse.group(CORE_VERB):
                 self.__raise("core_characters already="+self.core_characters+" but should be "+_base_verb_parse.group(CORE_VERB))
         elif self.is_phrase:
             # a phrase means the base verb is the actual verb being conjugated.
             self.base_verb_str_ = self.inf_verb_string
-        elif self.prefix != '' or phrase_match.group(REFLEXIVE_ENDING) == '-se':
+        elif self.prefix_ != '' or phrase_match.group(REFLEXIVE_ENDING) == '-se':
             # explicit base verb formed by '-' embedded in the verb
             self.base_verb_str_ = self.core_characters + self.inf_ending
             if phrase_match.group(REFLEXIVE_ENDING) == 'se':
@@ -795,6 +795,10 @@ class Verb(Phrase):
             return self.base_verb.root_verb
             
     @property
+    def prefix(self):
+        return self.prefix_
+    
+    @property
     def base_verb(self):
         if not self.is_derived:
             return None
@@ -819,16 +823,27 @@ class Verb(Phrase):
     def base_verb_str(self):
         return self.base_verb_str_
     
+    # return the verbs this verb is de
+    @property
+    def derived_from(self):
+        if self.is_derived:
+            if self.reflexive:
+                return [ self.base_verb_str, self.inf_verb_string ]
+            else:
+                return [ self.base_verb_str ]
+        else:
+            return None
+        
     @property
     def full_prefix(self):
         if self.base_verb is None:
             return ''
-        elif self.prefix is not None:
-            return self.prefix + self.base_verb.full_prefix
+        elif self.prefix_ is not None:
+            return self.prefix_ + self.base_verb.full_prefix
         else:
             # basically self is a reflexive verb with a base verb that adds a prefix
             return self.base_verb.full_prefix
-    
+
     def is_child(self, ancestor_verb):
         if self.base_verb == None or ancestor_verb is None:
             return False
@@ -840,7 +855,7 @@ class Verb(Phrase):
         
     @property
     def stem(self):
-        return self.prefix + self.core_characters
+        return self.prefix_ + self.core_characters
     
     @property
     def inf_verb_string(self):
@@ -848,8 +863,8 @@ class Verb(Phrase):
         
     @property
     def full_phrase(self):
-        if self.prefix_words != '':
-            result = self.prefix_words + ' '
+        if self.prefix__words != '':
+            result = self.prefix__words + ' '
         else:
             result = ''
         result += self.inf_verb_string
@@ -869,7 +884,7 @@ class Verb(Phrase):
            
     @property
     def is_phrase(self):
-        return self.prefix_words != '' or self.suffix_words != ''
+        return self.prefix__words != '' or self.suffix_words != ''
     
     @property
     def is_regular(self):
@@ -937,6 +952,6 @@ class Verb(Phrase):
                        
     def sql_insert_values(self):
         insert_values_ = super().sql_insert_values()
-        insert_values_.extend( [self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive, self.suffix_words, self.explicit_overrides_string, self.overrides_string, ",".join(self.appliedOverrides), self.manual_overrides_string])    
+        insert_values_.extend( [self.prefix__words, self.prefix_, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive, self.suffix_words, self.explicit_overrides_string, self.overrides_string, ",".join(self.appliedOverrides), self.manual_overrides_string])    
         return insert_values_
     

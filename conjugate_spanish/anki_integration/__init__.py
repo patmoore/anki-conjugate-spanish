@@ -56,12 +56,7 @@ class AnkiIntegration_(object):
     
     def createDefaultConjugationOverride(self, note):        
         note['Conjugation Overrides'] = Verb(note['Text']).overrides_string
-        
-    def conjugateCurrentNote(self, *args, **kwargs):
-        cs_debug(args)
-        cs_debug(kwargs.items())
-        pass
-    
+            
     def showQuestion(self):
         pass
     
@@ -193,19 +188,9 @@ class AnkiIntegration_(object):
         # set it to call testFunction when it's clicked
         self.menu_.addAction(action)     
         
-    def loadDictionary(self,x):
-        print("load_dic", x)
-        Espanol_Dictionary.load()
-        Storage.upsertPhrasesToDb(Espanol_Dictionary.phraseDictionary.values())
-        Storage.upsertVerbsToDb(Espanol_Dictionary.verbDictionary.values())
-#         modelTemplate = self._getModelTemplateByName(BASE_MODEL)
-#         for key, verb in Verb_Dictionary.iteritems():
-#             note = modelTemplate.verbToNote(verb)
-#             mw.col.addNote(note)
-
     def initialize(self, *args):
         print("conjugate spanish :: initialize")
-        self.menu_ = self.mw.form.menuPlugins.addMenu("CONJUGATE")
+        self.menu_ = self.mw.form.menuPlugins.addMenu("Español Conjugation")
         for modelName, modelDefinition in ModelDefinitions.items():
             self.modelTemplates[modelName] = ModelTemplate_.getModel(modelName, collection=mw.col, create=True, **modelDefinition)
             
@@ -245,6 +230,10 @@ class AnkiIntegration_(object):
                 'menu': 'Load a dictionary',            
                 'init': self.createLoadMenu,
             },
+            'create_all_notes': {
+                'menu': 'create all notes',            
+                'init': self.createAllNotesMenu,
+            },
         }
     
         Storage.initialize()
@@ -253,13 +242,33 @@ class AnkiIntegration_(object):
                 value['init'](key, value)
 #     def createNewDeckMenu(self, key, definition):
 #         self.addMenuItem(definition[u'menu'], self.createNewDeck)
-    
-    def createConjugateMenu(self, key, definition):        
-        self.addMenuItem(definition['menu'], self.conjugateCurrentNote)
-        
-    def createLoadMenu(self, key, definition):
-        self.addMenuItem(definition['menu'], self.loadDictionary)
+    def menu_conjugateCurrentNote(self, *args, **kwargs):
+        cs_debug(args)
+        cs_debug(kwargs.items())
+        pass
 
+    def createConjugateMenu(self, key, definition):        
+        self.addMenuItem(definition['menu'], self.menu_conjugateCurrentNote)
+        
+    def menu_loadDictionary(self,x):
+        print("load_dic", x)
+        Espanol_Dictionary.load()
+        Storage.upsertPhrasesToDb(Espanol_Dictionary.phraseDictionary.values())
+        Storage.upsertVerbsToDb(Espanol_Dictionary.verbDictionary.values())
+
+    def createLoadMenu(self, key, definition):
+        self.addMenuItem(definition['menu'], self.menu_loadDictionary)
+
+    def menu_createNotes(self, *args, **kwargs):
+        cs_debug(args)
+        cs_debug(kwargs.items())
+        modelTemplate = self._getModelTemplateByName(BASE_MODEL)
+        for key, verb in Espanol_Dictionary.verbDictionary.values():
+            note = modelTemplate.verbToNote(verb)
+            mw.col.addNote(note)
+            
+    def createAllNotesMenu(self, key, definition):
+        self.addMenuItem(definition['menu'], self.menu_createNotes)
     
 AnkiIntegration = AnkiIntegration_()
 addHook('profileLoaded', AnkiIntegration.initialize)

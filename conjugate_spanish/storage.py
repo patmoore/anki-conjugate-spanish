@@ -124,9 +124,10 @@ class Storage_(object):
                 cs_debug("associations",insert_overrides_data)
                 self.db.executemany(self.insert_override_sql_, insert_overrides_data)
             
-            if verb.base_verb_str is not None:
+            if verb.is_derived:
                 cs_debug("association:",verb.base_verb_str, verb.full_phrase)
-                insert_associations_data.append([verb.base_verb_str, verb.full_phrase])                
+                for derived in verb.derived_from:
+                    insert_associations_data.append([derived, verb.full_phrase])                
             
         cs_debug(self.insert_association_sql_)
         self.db.executemany(self.insert_association_sql_, insert_associations_data)
