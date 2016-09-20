@@ -50,26 +50,26 @@ class Verb(Phrase):
     '''
     # constant used to tell human that the verb is explicitly known to be a regular verb 
     REGULAR_VERB = 'regular'
-    def __init__(self, phrase_verb_string, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, **kwargs):
+    def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, **kwargs):
         '''
         Constructor
-        :param phrase_verb_string:
+        :param phrase:
         :param base_verb: used as base verb for conjugation
         '''
-        super().__init__(phrase_verb_string, definition, True)   
+        super().__init__(phrase, definition, True, **kwargs)   
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self._doNotApply = []
         self._appliedOverrides = []
  
         # need to preserve with the / and - so that we can go from Note objects back to Verb objects
-        self.key = _phrase_verb_string = make_unicode(phrase_verb_string)
+        self.key = _phrase_verb_string = make_unicode(phrase)
                             
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
         phrase_match = _phrase_parsing.match(_phrase_verb_string)
         if phrase_match is None:
             self.__raise(_phrase_verb_string+": does not appear to be a verb or phrase with verb infinitive in it.")            
 
-        self.prefix__words = phrase_match.group(PREFIX_WORDS)
+        self.prefix_words = phrase_match.group(PREFIX_WORDS)
         self.prefix_ = phrase_match.group(PREFIX_CHARS)
         self.core_characters = phrase_match.group(CORE_VERB)
         self.inf_ending = phrase_match.group(INF_ENDING)
@@ -125,7 +125,7 @@ class Verb(Phrase):
             
         if self.manual_overrides_string is not None and self.manual_overrides_string != '': 
             self.manual_overrides_string = manual_overrides
-            manual_conjugation_override = ConjugationOverride.create_from_json(self.manual_overrides_string, key=phrase_verb_string+"_irregular")
+            manual_conjugation_override = ConjugationOverride.create_from_json(self.manual_overrides_string, key=phrase+"_irregular")
         
             if conjugation_overrides is None:
                 conjugation_overrides = [manual_conjugation_override]
@@ -798,6 +798,10 @@ class Verb(Phrase):
     def prefix(self):
         return self.prefix_
     
+    @prefix.setter
+    def prefix(self, prefix):
+        self.prefix_ = prefix
+    
     @property
     def base_verb(self):
         if not self.is_derived:
@@ -823,9 +827,11 @@ class Verb(Phrase):
     def base_verb_str(self):
         return self.base_verb_str_
     
-    # return the verbs this verb is de
     @property
     def derived_from(self):
+        """
+        return derived from
+        """
         if self.is_derived:
             if self.reflexive:
                 return [ self.base_verb_str, self.inf_verb_string ]
@@ -863,8 +869,8 @@ class Verb(Phrase):
         
     @property
     def full_phrase(self):
-        if self.prefix__words != '':
-            result = self.prefix__words + ' '
+        if self.prefix_words != '':
+            result = self.prefix_words + ' '
         else:
             result = ''
         result += self.inf_verb_string
@@ -884,7 +890,7 @@ class Verb(Phrase):
            
     @property
     def is_phrase(self):
-        return self.prefix__words != '' or self.suffix_words != ''
+        return self.prefix_words != '' or self.suffix_words != ''
     
     @property
     def is_regular(self):
@@ -952,6 +958,6 @@ class Verb(Phrase):
                        
     def sql_insert_values(self):
         insert_values_ = super().sql_insert_values()
-        insert_values_.extend( [self.prefix__words, self.prefix_, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive, self.suffix_words, self.explicit_overrides_string, self.overrides_string, ",".join(self.appliedOverrides), self.manual_overrides_string])    
+        insert_values_.extend( [self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive, self.suffix_words, self.explicit_overrides_string, self.overrides_string, ",".join(self.appliedOverrides), self.manual_overrides_string])    
         return insert_values_
     

@@ -7,8 +7,8 @@ class NonConjugatedPhrase(Phrase):
     
     For example: 'cerca de' is related to 'acercar' but is not conjugated
     """
-    def __init__(self, phrase_string, definition, associated_verbs=None):  
-        super().__init__(phrase_string, definition, False)      
+    def __init__(self, phrase, definition, associated_verbs=None, **kwargs):  
+        super().__init__(phrase, definition, False, **kwargs)      
         if isinstance(associated_verbs, str):
             self.associated_verbs = associated_verbs.split(",")
         else:
@@ -21,6 +21,14 @@ class NonConjugatedPhrase(Phrase):
     @classmethod
     def table_columns(cls):
         return super().table_columns()
+    
+    @property
+    def is_derived(self):
+        return self.associated_verbs is not None
+    
+    @property
+    def derived_from(self):
+        return self.associated_verbs
     
     def make_note(self):
         from aqt import mw

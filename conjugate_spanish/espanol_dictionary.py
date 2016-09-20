@@ -12,6 +12,7 @@ import os
 from test.test_decimal import directory
 from .nonconjugated_phrase import NonConjugatedPhrase
 from .utils import cs_debug
+from .storage import Storage
 
 """
 load dictionaries/*-verbs.csv
@@ -130,6 +131,11 @@ class Espanol_Dictionary_():
         self.verbDictionary.add(phrase, definition, **kwargs)
     def add_phrase(self, phrase, definition, **kwargs):
         self.phraseDictionary.add(phrase, definition, **kwargs)
+        
+    def get_phrases(self):
+        return Storage.get_phrases(False)
+    def get_verbs(self):
+        return Storage.get_phrases(True)
 
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary

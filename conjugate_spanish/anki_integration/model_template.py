@@ -144,7 +144,8 @@ class ModelTemplate_(object):
         return modelTemplate
     
     def verbToNote(self, verb, irregularOnly=True):
-        conjugations = verb.conjugate_irregular_tenses() if irregularOnly else verb.conjugate_all_tenses()        
+        conjugations = verb.conjugate_irregular_tenses() if irregularOnly else verb.conjugate_all_tenses()
+        # TODO:         
         note = Note(self.collection, model=self.model )
         for field in self.model['flds']:
             fieldName = field['name']
@@ -158,7 +159,7 @@ class ModelTemplate_(object):
             elif fieldName == ModelTemplate_.CONJUGATION_OVERRIDES:
                 value = verb.overrides_string
             elif fieldName == ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES:
-                value = verb.manualOverrides
+                value = verb.manual_overrides_string
             elif fieldName == ModelTemplate_.ROOT_VERB:
                 value = verb.base_verb_str
             else:
@@ -329,8 +330,10 @@ FULLY_CONJUGATED_MODEL = SPANISH_PREFIX+'Fully Conjugated Verb'
 THIRD_PERSON_ONLY_MODEL = SPANISH_PREFIX+'Third Person Only'
 
 ModelDefinitions = { }
+
 for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
     ModelDefinitions[modelName] = {
+        'modelName': modelName,
         'fields': [
             {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
             {'name': ModelTemplate_.ENGLISH_DEFINITION},

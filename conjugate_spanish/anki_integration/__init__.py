@@ -234,6 +234,10 @@ class AnkiIntegration_(object):
                 'menu': 'create all notes',            
                 'init': self.createAllNotesMenu,
             },
+            'resetdb': {
+                'menu': 'reset database',            
+                'init': self.resetDbMenu,
+            },
         }
     
         Storage.initialize()
@@ -263,12 +267,29 @@ class AnkiIntegration_(object):
         cs_debug(args)
         cs_debug(kwargs.items())
         modelTemplate = self._getModelTemplateByName(BASE_MODEL)
-        for key, verb in Espanol_Dictionary.verbDictionary.values():
+        for verb in Espanol_Dictionary.get_verbs():
             note = modelTemplate.verbToNote(verb)
             mw.col.addNote(note)
             
+    def menu_createVerbNotes(self, *args, **kwargs):
+        cs_debug(args)
+        cs_debug(kwargs.items())
+        modelTemplate = self._getModelTemplateByName(BASE_MODEL)
+        for verb in Espanol_Dictionary.get_verbs():
+            note = modelTemplate.verbToNote(verb)
+            mw.col.addNote(note)            
+            
     def createAllNotesMenu(self, key, definition):
         self.addMenuItem(definition['menu'], self.menu_createNotes)
+    
+    def createAllVerbNotesMenu(self, key, definition):
+        self.addMenuItem(definition['menu'], self.menu_createVerbNotes)
+         
+    def resetDb_(self):
+        Storage.resetDb()
+
+    def resetDbMenu(self, key, definition):
+        self.addMenuItem(definition['menu'], self.resetDb_)
     
 AnkiIntegration = AnkiIntegration_()
 addHook('profileLoaded', AnkiIntegration.initialize)
