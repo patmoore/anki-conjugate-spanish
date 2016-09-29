@@ -16,6 +16,8 @@ from conjugate_spanish.constants import *
 import anki.stdmodels
 import inspect
 from functools import partial
+from conjugate_spanish.conjugation_override import Standard_Overrides
+from conjugate_spanish.utils import cs_debug
 
 __all__ = [ 'ModelTemplate_', "CardTemplate_", 'BASE_MODEL','FULLY_CONJUGATED_MODEL', 'ModelDefinitions']
 MODEL_FIELDS = {
@@ -48,6 +50,8 @@ class ModelTemplate_(object):
     MANUAL_CONJUGATION_OVERRIDES = 'Manual Conjugation Overrides'
     KEY = 'Key'
     ROOT_VERB = 'Root Verb'
+    CONJUGATION_OVERRIDES_DESCRIPTION = 'Conjugation Overrides Description'
+    # see fieldName 
     splitTensePerson = re_compile('(.*)/(.*)')
     """
     Used to create custom models for verbs
@@ -70,6 +74,10 @@ class ModelTemplate_(object):
         
         self.model['sortf'] = self.getFieldIndex(ModelTemplate_.KEY)
         self._createTemplates()
+        cs_debug("model=",model)
+        # NOTE: using '::' can be used to create sub decks
+        deck_id(self.model, self.collection.decks.id(self.name))
+        self._changed = True # HACK for now
         if self._changed: 
             self.save()
             self._changed = False           
@@ -86,6 +94,7 @@ class ModelTemplate_(object):
         
     @classmethod        
     def fieldName(cls, tense, person=None):
+        # see splitTensePerson regex for use of '/'
         if tense in Tenses.Person_Agnostic:
             return Tenses[tense]+'/-'
         elif tense not in Tenses.imperative or person != Persons.first_person_singular:
@@ -119,8 +128,9 @@ class ModelTemplate_(object):
         self.modelManager.addTemplate(self.model, cardTemplate.card)
         
     @classmethod
-    def getModel(cls, model, create=False, **kwargs):
+    def getModelTemplate(cls, model, create=False, **kwargs):
         global mw
+        do_save = False
         
         if isinstance(model, ModelTemplate_):
             return model
@@ -134,20 +144,25 @@ class ModelTemplate_(object):
             modelName = BASE_MODEL
             
         if model_ is None:
+            do_save = True
             model_ = mw.col.models.new(name=modelName)
+            deck_id(model_, mw.col.decks.id(modelName))
             
         if modelName in ModelDefinitions:            
             kwargs.update(ModelDefinitions[modelName])
             
         modelTemplate = ModelTemplate_(model=model_, **kwargs)
+        if do_save:
+            modelTemplate.save()
         return modelTemplate
     
     def verbToNote(self, verb, irregularOnly=True):
-        conjugations = verb.conjugate_irregular_tenses() if irregularOnly else verb.conjugate_all_tenses()
+        conjugations = None        
         # TODO:         
-        note = Note(self.collection, model=self.model )
+        note = Note(self.collection, model=self.model )        
         for field in self.model['flds']:
             fieldName = field['name']
+            value = None            
             if fieldName == ModelTemplate_.KEY:
                 # TODO Some key
                 value = verb.key
@@ -155,13 +170,21 @@ class ModelTemplate_(object):
                 value = verb.full_phrase
             elif fieldName == ModelTemplate_.ENGLISH_DEFINITION:
                 value = verb.definition
-            elif fieldName == ModelTemplate_.CONJUGATION_OVERRIDES:
-                value = verb.overrides_string
-            elif fieldName == ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES:
-                value = verb.manual_overrides_string
             elif fieldName == ModelTemplate_.ROOT_VERB:
-                value = verb.base_verb_str
-            else:
+                value = verb.base_verb_str if verb.is_derived else None
+                
+            elif isinstance(verb, Verb):
+                if fieldName == ModelTemplate_.CONJUGATION_OVERRIDES:
+                    value = verb.overrides_string
+                elif fieldName == ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES:
+                    value = verb.manual_overrides_string
+                elif fieldName == ModelTemplate_.CONJUGATION_OVERRIDES_DESCRIPTION:
+                    value_ = Standard_Overrides.human_documentation(verb.conjugation_overrides)
+                    if value_ is not None:
+                        value = "<br>".join(value_)
+            
+                if conjugations is None:
+                    conjugations = verb.conjugate_irregular_tenses() if irregularOnly else verb.conjugate_all_tenses()
                 conjugation_match = ModelTemplate_.splitTensePerson.match(fieldName)
                 if conjugation_match is not None:
                     tense = Tenses.index(conjugation_match.group(1))
@@ -186,6 +209,9 @@ class ModelTemplate_(object):
                 """
                 value = ''
             note[fieldName] = value
+        if verb.has_tags :
+            for tag in verb.tags:
+                note.addTag(tag)
         return note
     
     def noteToVerb(self,note):
@@ -323,16 +349,28 @@ class CardTemplate_(object):
     def backAnswerFormat(self, bafmt):
         self.card['bafmt'] = bafmt
         
-SPANISH_PREFIX = ADDON_PREFIX
+# NOTE: using '::' can be used to create sub decks
+SPANISH_PREFIX = ADDON_PREFIX+"::"
 BASE_MODEL = SPANISH_PREFIX+'Verb'
+VERB_SHORT_MODEL= SPANISH_PREFIX+'Verb (Short)'
 FULLY_CONJUGATED_MODEL = SPANISH_PREFIX+'Fully Conjugated Verb'
 THIRD_PERSON_ONLY_MODEL = SPANISH_PREFIX+'Third Person Only'
+PHRASE_MODEL = SPANISH_PREFIX+'Phrase'
 
-ModelDefinitions = { }
-
+class ModelDefinitions_(dict):
+    def find_by_model_key(self, model_template_key):
+        for model_template in self.values():
+            if model_template.model_template_key == model_template_key:
+                return model_template
+        return None
+    
+ModelDefinitions = ModelDefinitions_()
+model_template_key = 1
 for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
     ModelDefinitions[modelName] = {
-        'modelName': modelName,
+        # constant to help if the model gets deleted.
+        'model_template_key': model_template_key,
+        'modelName': modelName,        
         'fields': [
             {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
             {'name': ModelTemplate_.ENGLISH_DEFINITION},
@@ -342,9 +380,11 @@ for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
             {'name': ModelTemplate_.KEY},
         ]
     }
+    model_template_key += 1
 
 ModelDefinitions[BASE_MODEL]['menuName'] = 'Conjugate Spanish:Basic'
 ModelDefinitions[FULLY_CONJUGATED_MODEL]['menuName'] = 'Conjugate Spanish:Full Conjugation'
+
 ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['menuName'] = 'Conjugate Spanish:Third party only verbs'
 for tense in Tenses.All_Persons:
     for person in Persons.all:
@@ -363,3 +403,27 @@ for tense in Tenses.imperative:
         ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense,person)})
 for tense in Tenses.Person_Agnostic:
     ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense)})
+
+model_template_key += 1
+ModelDefinitions[PHRASE_MODEL] = {
+        'modelName': PHRASE_MODEL,
+        # constant to help if the model gets deleted.
+        'model_template_key': model_template_key,
+        'fields': [
+            {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
+            {'name': ModelTemplate_.ENGLISH_DEFINITION},
+            {'name': ModelTemplate_.ROOT_VERB},
+        ]
+    }
+model_template_key += 1
+ModelDefinitions[VERB_SHORT_MODEL] = {
+        'modelName': VERB_SHORT_MODEL,
+        # constant to help if the model gets deleted.
+        'model_template_key': model_template_key,
+        'fields': [
+            {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
+            {'name': ModelTemplate_.ENGLISH_DEFINITION},
+            {'name': ModelTemplate_.ROOT_VERB},
+            {'name': ModelTemplate_.CONJUGATION_OVERRIDES_DESCRIPTION},
+        ]
+    }

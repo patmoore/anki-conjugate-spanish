@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import collections
-from . import six
 import re
 import sys
 import traceback
 
 # Used as prefix to actions, models, etc.
-ADDON_PREFIX = 'Español:'
+ADDON_PREFIX = 'EspañolConjugator'
 def re_compile(string_):
     """
     unicode, ignore case
@@ -250,3 +249,18 @@ def dump_trace(e, message):
     traceback.print_tb(tb)
     formatted = traceback.format_exception(extype, ex, tb)[-1]
 
+
+#####
+# some standard methods to help document the cryptic keys used by anki
+#####
+def deck_id(dict_, value=None):
+    if value == None:
+        return dict_.get('did', None)
+    else:
+        dict_['did'] = value
+        
+def model_id(dict_, value=None):
+    if value == None:
+        return dict_.get('mid', None)
+    else:
+        dict_['mid'] = value

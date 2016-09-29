@@ -24,6 +24,7 @@ from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
 import conjugate_spanish
 from conjugate_spanish.utils import cs_debug
 from conjugate_spanish.storage import Storage
+from conjugate_spanish.anki_integration.model_template import PHRASE_MODEL, VERB_SHORT_MODEL
 
 __all__ = [ 'AnkiIntegration']
 """
@@ -45,13 +46,14 @@ class AnkiIntegration_(object):
         addHook('setupEditorButtons', self.setupEditorButtons)
         addHook('editFocusLost', self.onFocusLost)
         
-    def createNewDeck(self, deckName='Español Verbs'):
+    def createNewDeck(self, deckName):
         """
         TODO figure out how to refresh the main window screen.
         """
-        deckName += str(intTime())
+#         deckName += str(intTime())
         # will create deck if it doesn't exist (mw.col.decks is a DeckManager)
-        did = mw.col.decks.id(deckName)
+        deck_id = mw.col.decks.id(deckName)
+        return deck_id
     
     def createDefaultConjugationOverride(self, note):        
         note['Conjugation Overrides'] = Verb(note['Text']).overrides_string
@@ -77,8 +79,13 @@ class AnkiIntegration_(object):
         conjugationoverrides_field = modelTemplate.getFieldIndex(ModelTemplate_.CONJUGATION_OVERRIDES)
         if currentFieldIndex == inf_field and note.fields[inf_field] != '' and note.fields[conjugationoverrides_field] == '':
             # don't generate unless leaving infinitive field
-            verb = Verb(note.fields[inf_field])
-            note.fields[conjugationoverrides_field] = verb.overrides_string
+            if Verb.is_verb(note.fields[inf_field]):
+                phrase = Verb(note.fields[inf_field]) 
+                note.fields[conjugationoverrides_field] = phrase.overrides_string
+            else:
+                phrase = NonConjugatedPhrase(note.fields[inf_field])
+                
+            ##TODO: save() <<<,
             return True
         return flag
          
@@ -119,10 +126,8 @@ class AnkiIntegration_(object):
             return self._getModelTemplateByName(modelName)
         
     def _getModelTemplateByName(self, modelName):
-        if modelName in self.modelTemplates:
-            return self.modelTemplates[modelName]
-        else:
-            return None
+        return self.modelTemplates.get(modelName, None)
+    
     def setupEditorButtons(self, editor=None, *args):
         import pdb; pdb.set_trace()
         if not isinstance(editor, Editor):
@@ -161,7 +166,7 @@ class AnkiIntegration_(object):
         pass
         
     def setDeckNoteType(self, deck):
-        model = self.getModel(self.modelName)
+        model = self.getModelTemplate(self.modelName)
         deck_ = self._getDeck(deck)
         deck_['mid'] = model['id']
         self._saveDeck(deck_)
@@ -188,10 +193,13 @@ class AnkiIntegration_(object):
         self.menu_.addAction(action)     
         
     def initialize(self, *args):
-        print("conjugate spanish :: initialize")
+        cs_debug("initialize")
         self.menu_ = self.mw.form.menuPlugins.addMenu("Español Conjugation")
+        
+        # Make sure our standard models are defined.
         for modelName, modelDefinition in ModelDefinitions.items():
-            self.modelTemplates[modelName] = ModelTemplate_.getModel(modelName, collection=mw.col, create=True, **modelDefinition)
+            cs_debug("model ",modelName)
+            self.modelTemplates[modelName] = ModelTemplate_.getModelTemplate(modelName, collection=mw.col, create=True, **modelDefinition)
             
 #     def enterNewVerbInit(key, definition):
 #         global AnkiIntegration
@@ -209,7 +217,7 @@ class AnkiIntegration_(object):
 #             showInfo("Card count: {0}, deck id={1}".format(cardCount,did))
 #         
 #         AnkiIntegration.addMenuItem(definition[u'menu'], testFunction)
-        FEATURES = {
+        FEATURES = [
 #         u'new_verb': {
 #             u'menu': u'Enter new verb or phrase',
 #             u'help': u'create a new verb',
@@ -221,73 +229,87 @@ class AnkiIntegration_(object):
 #                 u'init': self.createNewDeckMenu,
 #                 u'disable': True
 #             },
-            'conjugate_note': {
-                'menu': 'Conjugate a note',            
+            {
+                'key': 'conjugate_note',
+                'menu': 'Conjugate a note',  
+                'disable': True,          
                 'init': self.createConjugateMenu,
             },
-            'load_dictionary': {
+            {
+                'key': 'load_dictionary',
                 'menu': 'Load a dictionary',            
                 'init': self.createLoadMenu,
             },
-            'create_all_notes': {
-                'menu': 'create all notes',            
+            {
+                'key': 'create_phrase_notes',
+                'menu': 'create phrase notes',            
                 'init': self.createAllNotesMenu,
             },
-            'resetdb': {
+            {
+                'key': 'create_verb_notes',
+                'menu': 'create verb notes',            
+                'init': self.createAllVerbNotesMenu,
+            },
+            {
+                'key':'resetdb',
                 'menu': 'reset database',            
                 'init': self.resetDbMenu,
-            },
-        }
+            }
+        ]
     
         Storage.initialize()
-        for key,value in FEATURES.items():
-            if 'disable' not in value or value['disable'] == False:
-                value['init'](key, value)
+        for value in FEATURES:
+            if value.get('disable') != True:
+                value['init'](value)
 #     def createNewDeckMenu(self, key, definition):
 #         self.addMenuItem(definition[u'menu'], self.createNewDeck)
-    def menu_conjugateCurrentNote(self, *args, **kwargs):
-        cs_debug(args)
-        cs_debug(kwargs.items())
-        pass
+    def menu_remove_all_notes(self, *args, **kwargs):
+        Storage.remove_notes()
 
-    def createConjugateMenu(self, key, definition):        
+    def createConjugateMenu(self, definition):        
         self.addMenuItem(definition['menu'], self.menu_conjugateCurrentNote)
         
     def menu_loadDictionary(self,x):
-        print("load_dic", x)
+        cs_debug("load_dic", x)
         Espanol_Dictionary.load()
-        Storage.upsertPhrasesToDb(Espanol_Dictionary.phraseDictionary.values())
-        Storage.upsertVerbsToDb(Espanol_Dictionary.verbDictionary.values())
+        Storage.upsertPhrasesToDb(*Espanol_Dictionary.phraseDictionary.values())
+        Storage.upsertPhrasesToDb(*Espanol_Dictionary.verbDictionary.values())
 
-    def createLoadMenu(self, key, definition):
+    def createLoadMenu(self, definition):
         self.addMenuItem(definition['menu'], self.menu_loadDictionary)
 
     def menu_createNotes(self, *args, **kwargs):
         cs_debug(args)
         cs_debug(kwargs.items())
-        modelTemplate = self._getModelTemplateByName(BASE_MODEL)
-        for verb in Espanol_Dictionary.get_verbs():
-            note = modelTemplate.verbToNote(verb)
+        model_name = PHRASE_MODEL
+        modelTemplate = self._getModelTemplateByName(model_name)
+        self.createNewDeck(model_name)
+        for phrase in Espanol_Dictionary.get_phrases():
+            note = modelTemplate.verbToNote(phrase)
+            
             mw.col.addNote(note)
+            Storage.connect_phrase_to_note(phrase, note)
             
     def menu_createVerbNotes(self, *args, **kwargs):
         cs_debug(args)
         cs_debug(kwargs.items())
-        modelTemplate = self._getModelTemplateByName(BASE_MODEL)
+        model_name = VERB_SHORT_MODEL
+        modelTemplate = self._getModelTemplateByName(model_name)
         for verb in Espanol_Dictionary.get_verbs():
             note = modelTemplate.verbToNote(verb)
-            mw.col.addNote(note)            
+            mw.col.addNote(note)
+            Storage.connect_phrase_to_note(verb, note)        
             
-    def createAllNotesMenu(self, key, definition):
+    def createAllNotesMenu(self, definition):
         self.addMenuItem(definition['menu'], self.menu_createNotes)
     
-    def createAllVerbNotesMenu(self, key, definition):
+    def createAllVerbNotesMenu(self, definition):
         self.addMenuItem(definition['menu'], self.menu_createVerbNotes)
          
-    def resetDb_(self):
+    def resetDb_(self, *args, **kwargs):
         Storage.resetDb()
 
-    def resetDbMenu(self, key, definition):
+    def resetDbMenu(self, definition):
         self.addMenuItem(definition['menu'], self.resetDb_)
     
 AnkiIntegration = AnkiIntegration_()

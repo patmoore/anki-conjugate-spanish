@@ -21,6 +21,13 @@ _ending_vowel_check = re_compile('['+Vowels.all+']$')
 _single_vowel_re = re.compile('^([^'+Vowels.all+']*)(['+Vowels.all+'])([^'+Vowels.all+']*)$', re.IGNORECASE+re.UNICODE)
 #
 # Parse up the infinitive string: 
+# verb forms: 
+#  1. verb ( has proper spanish infinitive ending )
+#  2. reflexive verb ( has proper spanish infinitive ending -se)
+#  3. derived verb ( prefix'-'base_verb) 
+#  4. (prefix words)* (prefix_characters*)-()-se (suffix words)
+#  4. (prefix words)* (verb_form_1) (suffix words)*
+#  5. (prefix words)* (verb_form_2) (suffix words)* 
 # group 1 = prefix words (if present)
 # group 2 = prefix characters (if present)
 # group 3 = core verb (note: special case of 'ir' and 'irse'
@@ -53,24 +60,23 @@ class Verb(Phrase):
     def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, **kwargs):
         '''
         Constructor
-        :param phrase:
-        :param base_verb: used as base verb for conjugation
+            phrase: the string : will be parsed to find the prefix words, suffix words.
+                
+            base_verb: used as base verb for conjugation - for example: mantener would have a base_verb of tener
+            manual_overrides: explict string that handles very unique cases that have no pattern.  
         '''
         super().__init__(phrase, definition, True, **kwargs)   
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self._doNotApply = []
         self._appliedOverrides = []
  
-        # need to preserve with the / and - so that we can go from Note objects back to Verb objects
-        self.key = _phrase_verb_string = make_unicode(phrase)
-                            
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
-        phrase_match = _phrase_parsing.match(_phrase_verb_string)
+        phrase_match = Verb.is_verb(self.phrase_string)
         if phrase_match is None:
-            self.__raise(_phrase_verb_string+": does not appear to be a verb or phrase with verb infinitive in it.")            
+            self.__raise(self.phrase_string+": does not appear to be a verb or phrase with verb infinitive in it.")            
 
         self.prefix_words = phrase_match.group(PREFIX_WORDS)
-        self.prefix_ = phrase_match.group(PREFIX_CHARS)
+        self.prefix = phrase_match.group(PREFIX_CHARS)
         self.core_characters = phrase_match.group(CORE_VERB)
         self.inf_ending = phrase_match.group(INF_ENDING)
         self.reflexive = phrase_match.group(REFLEXIVE_ENDING) is not None and phrase_match.group(REFLEXIVE_ENDING) != ''        
@@ -94,17 +100,17 @@ class Verb(Phrase):
             base_verb_index = self.core_characters.find(_base_verb_parse.group(CORE_VERB))
             if base_verb_index <0:
                 self.__raise(repr(self.base_verb_str_)+ " is not in core characters"+repr(self.core_characters))
-            if self.prefix_ == '' or self.prefix_ is None:
-                self.prefix_ = self.core_characters[:base_verb_index]
+            if not self.has_prefix:
+                self.prefix = self.core_characters[:base_verb_index]
                 self.core_characters = self.core_characters[base_verb_index:]
-            elif base_verb_index != 0 and self.prefix_ != self.core_characters[:base_verb_index]:
-                self.__raise("prefix already="+self.prefix_+" but should be "+self.core_characters[:base_verb_index])
+            elif base_verb_index != 0 and self.prefix != self.core_characters[:base_verb_index]:
+                self.__raise("prefix already="+self.prefix+" but should be "+self.core_characters[:base_verb_index])
             elif self.core_characters != _base_verb_parse.group(CORE_VERB):
                 self.__raise("core_characters already="+self.core_characters+" but should be "+_base_verb_parse.group(CORE_VERB))
         elif self.is_phrase:
             # a phrase means the base verb is the actual verb being conjugated.
             self.base_verb_str_ = self.inf_verb_string
-        elif self.prefix_ != '' or phrase_match.group(REFLEXIVE_ENDING) == '-se':
+        elif self.has_prefix or phrase_match.group(REFLEXIVE_ENDING) == '-se':
             # explicit base verb formed by '-' embedded in the verb
             self.base_verb_str_ = self.core_characters + self.inf_ending
             if phrase_match.group(REFLEXIVE_ENDING) == 'se':
@@ -115,28 +121,23 @@ class Verb(Phrase):
         else:
             self.base_verb_str_ = None
                         
-        self.manual_overrides_string = manual_overrides
         # even for derived verbs we need to allow for the possibility that the derived verb has different overrides        
         if isinstance(conjugation_overrides, str) and conjugation_overrides != '' and conjugation_overrides != Verb.REGULAR_VERB:
             self.explicit_overrides_string = self.overrides_string = conjugation_overrides
-            conjugation_overrides = conjugation_overrides.split(",")                
+            self._conjugation_overrides = conjugation_overrides = conjugation_overrides.split(",")
+            for conjugation_override in get_iterable(conjugation_overrides):
+                self.process_conjugation_override(conjugation_override)                 
         else:
             self.explicit_overrides_string = self.overrides_string = ''
             
-        if self.manual_overrides_string is not None and self.manual_overrides_string != '': 
-            self.manual_overrides_string = manual_overrides
-            manual_conjugation_override = ConjugationOverride.create_from_json(self.manual_overrides_string, key=phrase+"_irregular")
+        # apply manual overrides after the standard overrides because this allows for the manual overrides to 'fix' the previous changes.
+        # applied before the dependent conjugation overrides because many dependent overrides change based on a pattern. 
+        # the manual override may change the verb in such a way that the dependent override no longer matches. Thus making it easier to get the correct result.
+        self.manual_overrides_string = manual_overrides
+        # TODO -- move all process_conjugation_override out of constructor so that we can properly handle derived verbs where the base verb has not been loaded
+        self.process_conjugation_override(self._manual_override)
         
-            if conjugation_overrides is None:
-                conjugation_overrides = [manual_conjugation_override]
-            else:
-                conjugation_overrides.append(manual_conjugation_override) 
-                 
-        if conjugation_overrides is not None:            
-            for conjugation_override in get_iterable(conjugation_overrides):
-                self.process_conjugation_override(conjugation_override) 
-                
-        # look for default overrides - apply to end so that user could explicitly turn off the override
+        # look for default overrides - apply to end so that user could explicitly turn off the default override
         for conjugation_override in Standard_Overrides.values():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):                
                 applied = self.process_conjugation_override(conjugation_override)
@@ -145,7 +146,9 @@ class Verb(Phrase):
                         self.overrides_string = conjugation_override.key
                     else:
                         self.overrides_string += ','+conjugation_override.key
-                
+        
+        # dependent overrides are reused and are for programming convenience; as such we don't display in the string as it would
+        # be confusing on the flash card.
         for conjugation_override in Dependent_Standard_Overrides.values():
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
                 self.process_conjugation_override(conjugation_override)
@@ -155,7 +158,10 @@ class Verb(Phrase):
             self.overrides_string = Verb.REGULAR_VERB
             
         self.process_conjugation_override(UniversalAccentFix)
-                
+        
+    @classmethod        
+    def is_verb(cls, phrase_string):
+        return _phrase_parsing.match(phrase_string)
                 
     def print_all_tenses(self):
         conjugations= self.conjugate_all_tenses()
@@ -209,6 +215,10 @@ class Verb(Phrase):
                         result += ',"'+conjugation+'"'
         return result
     
+    @property
+    def conjugation_overrides(self):
+        return getattr(self, '_conjugation_overrides', None)
+        
     def conjugate_irregular_tenses(self):        
         """
         Look for just the tenses and persons that are different than than completely regular conjugation rules
@@ -751,12 +761,22 @@ class Verb(Phrase):
                     return self_overrides[tense][person]
         return None
     
+    @property
+    def _manual_override(self):
+        if self.manual_overrides_string is not None and self.manual_overrides_string != '':             
+            manual_conjugation_override = ConjugationOverride.create_from_json(self.manual_overrides_string, key=self.key+"_irregular")
+            return manual_conjugation_override
+        else:
+            return None
+
     def process_conjugation_override(self, conjugation_override):
         """
         Before applying the override first check to see if this verb says that it is a special case
         and the override should not be applied.
         """        
-        if isinstance(conjugation_override, ConjugationOverride):
+        if conjugation_override is None:
+            return
+        elif isinstance(conjugation_override, ConjugationOverride):
             override = conjugation_override            
         elif len(conjugation_override) > 1:
             lookup_key = conjugation_override if conjugation_override[0] != '-' else conjugation_override[1:]
@@ -796,11 +816,15 @@ class Verb(Phrase):
             
     @property
     def prefix(self):
-        return self.prefix_
+        return self._prefix
     
     @prefix.setter
     def prefix(self, prefix):
-        self.prefix_ = prefix
+        self._prefix = prefix
+    
+    @property
+    def has_prefix(self):
+        return self.prefix is not None and self.prefix != ''
     
     @property
     def base_verb(self):
@@ -823,6 +847,7 @@ class Verb(Phrase):
     def is_derived(self):
         return self.base_verb_str_ is not None
     
+    ## HACK - should be derived_from
     @property
     def base_verb_str(self):
         return self.base_verb_str_
@@ -844,8 +869,8 @@ class Verb(Phrase):
     def full_prefix(self):
         if self.base_verb is None:
             return ''
-        elif self.prefix_ is not None:
-            return self.prefix_ + self.base_verb.full_prefix
+        elif self.has_prefix:
+            return self.prefix + self.base_verb.full_prefix
         else:
             # basically self is a reflexive verb with a base verb that adds a prefix
             return self.base_verb.full_prefix
@@ -861,7 +886,7 @@ class Verb(Phrase):
         
     @property
     def stem(self):
-        return self.prefix_ + self.core_characters
+        return self.prefix + self.core_characters
     
     @property
     def inf_verb_string(self):
@@ -915,6 +940,14 @@ class Verb(Phrase):
     
     def add_doNotApply(self, applied):
         self._doNotApply.append(applied)
+    
+    @property    
+    def explicit_overrides_string(self):
+        return self.explicit_overrides_string_
+    
+    @explicit_overrides_string.setter
+    def explicit_overrides_string(self, explicit_overrides_string):
+        self.explicit_overrides_string_ = explicit_overrides_string
                  
     def has_override_applied(self, override_key):
         for conjugation_override in get_iterable(self.appliedOverrides):            
@@ -926,6 +959,10 @@ class Verb(Phrase):
                 if _key == override_key:
                     return True
         return False
+    
+    @property
+    def tags(self):
+        return self.conjugation_overrides
     
     def _check_for_multiple_accents(self, tense, person, conjugation):
         """

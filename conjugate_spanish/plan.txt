@@ -11,3 +11,11 @@ nid - note id
 did - deck id : but where ?
 ord - order?
 mod - 
+
+
+TODO: Convert to python naming convention.
+
+1. check short form
+2. create core conjugations: yo/nosotros, usted, ustedes : present /past
+3. create irregular cards 
+4. create pure irregular cards = no phonetic changes

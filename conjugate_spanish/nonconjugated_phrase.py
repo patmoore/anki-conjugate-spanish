@@ -13,8 +13,7 @@ class NonConjugatedPhrase(Phrase):
             self.associated_verbs = associated_verbs.split(",")
         else:
             self.associated_verbs = associated_verbs
-                
-    
+                    
     def sql_insert_values(self):
         return super().sql_insert_values()
     
@@ -30,10 +29,11 @@ class NonConjugatedPhrase(Phrase):
     def derived_from(self):
         return self.associated_verbs
     
-    def make_note(self):
-        from aqt import mw
-#         from anki.notes import Note 
-#         from aqt.qt import debug; 
-#         debug()
-#         note = Note(mw.col)
-#         note.flush()
+    ## HACK
+    @property
+    def base_verb_str(self):
+        return self.associated_verbs[0]
+    
+    @property
+    def tags(self):
+        return None

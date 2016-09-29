@@ -4,9 +4,12 @@ import abc
 class Phrase(object):
     __metaclass__ = abc.ABCMeta
     def __init__(self, phrase_string, definition, conjugatable=True, **kwargs):
+        # key = because full_phrase is used to generate readable string
         self.phrase_string = make_unicode(phrase_string)
+        # need to preserve with the / and - so that we can go from Note objects back to Verb objects
+        self.key = self.phrase_string.lower()
         self.definition = make_unicode(definition)
-        self.conjugatable=conjugatable
+        self._conjugatable=conjugatable
         self.id = kwargs.get('id')
         
     @property
@@ -29,12 +32,20 @@ class Phrase(object):
     def is_derived(self):
         pass
     
+    @property
+    def is_conjugatable(self):
+        return self._conjugatable
+    
+    @property
+    def has_tags(self):
+        return self.tags is not None
+    
     @classmethod
     def table_columns(cls):
         return ["phrase","definition", "conjugatable"]
     
     def sql_insert_values(self):
-        return [self.full_phrase, self.definition, self.conjugatable]
+        return [self.full_phrase, self.definition, self.is_conjugatable]
     
     
     #
@@ -44,7 +55,8 @@ class Phrase(object):
     def from_dict(cls, phrase_dict):
         from .verb import Verb
         from .nonconjugated_phrase import NonConjugatedPhrase
-        if phrase_dict['conjugatable']:
+        conjugatable = phrase_dict.pop('conjugatable')
+        if conjugatable:
             return Verb(**phrase_dict)
         else:
             return NonConjugatedPhrase(**phrase_dict)
