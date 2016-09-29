@@ -9,7 +9,6 @@ from aqt.editor import Editor
 from aqt.utils import askUser, showInfo, shortcut
 # import all of the Qt GUI library
 from aqt.qt import *
-import six
 from anki.utils import intTime
 from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from conjugate_spanish.verb import Verb
