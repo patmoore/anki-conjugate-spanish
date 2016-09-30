@@ -269,7 +269,7 @@ class ModelTemplate_(object):
                 iftest(ModelTemplate_.CONJUGATION_OVERRIDES) +\
                 '<br/>' +\
                 iftest(ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES) +\
-                '<br/>' +\
+                '<br/>Derived from:' +\
                 iftest(ModelTemplate_.ROOT_VERB)  
             cardTemplate.answerFormat = answer
             self.addCard(cardTemplate)

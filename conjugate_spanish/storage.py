@@ -4,11 +4,13 @@ from anki.hooks import addHook
 from aqt import mw
 import conjugate_spanish
 from conjugate_spanish.verb import Verb
+from conjugate_spanish.phrase import Phrase
 from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
 
 class Storage_(object):
-    DB_VERSION='0.1.3'
+    DB_VERSION='0.1.4'
     PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "explicit_overrides", "overrides","applied_overrides","manual_overrides"]
+    
     def __init__(self, mw):
         self.mw = mw
         self.delete_sql_= self._generate_sql("delete from ${conjugation_overrides_table} where ${phrase_table_name}_id=(select id from ${phrase_table_name} where phrase=?)")   
@@ -59,6 +61,13 @@ class Storage_(object):
         return 'notes'
     
     @property
+    def association_columns(self):
+        if not hasattr(self, "_association_columns"):
+            self._association_columns = [self._generate_sql(col_name) for col_name in 
+                                         ["${phrase_table_name}_derived_id", "${phrase_table_name}_root_id", "${phrase_table_name}_root_phrase"]]
+        return self._association_columns
+    
+    @property
     def sql_substitutions(self):
         return dict(phrase_table_name=self.phrase_table_name, associations_table=self.associations_table, conjugation_overrides_table=self.conjugation_overrides_table,
                   phrase_note_table=self.phrase_note_table,               
@@ -88,7 +97,7 @@ class Storage_(object):
                 key                text,
                 data                text,
                 UNIQUE(key) ON CONFLICT REPLACE
-                );
+            );
             create table if not exists $phrase_table_name (
                 id                       integer primary key,
                 phrase                   text not null unique,
@@ -110,7 +119,7 @@ class Storage_(object):
             );
             create table if not exists $phrase_note_table (
                 id                       integer primary key,
-                phrase                   text not null unique,
+                phrase                   text not null,
                 ${phrase_table_name}_id     integer,
                 ${note_table_name}_id    integer,
                 model_template_key       integer,
@@ -134,7 +143,7 @@ class Storage_(object):
             );
             insert or replace into cs_config (key, data) values ('version', '"""+self.DB_VERSION+"""'); 
         """)
-            
+        cs_debug("Running addSchema script: ", dbString)
         self.db.executescript(dbString)
         mw.reset()
         
@@ -222,20 +231,39 @@ class Storage_(object):
         results_dict = dict()
         derived_from_rows = []
         for phrase_row in self.db.execute(sql_string):
-            phrase_dict = dict(zip(Storage_.PHRASE_COLUMNS, phrase_row))
-            phrase = Phrase.from_dict(phrase_dict)
+            phrase =self._load(phrase_row)
             results_dict[phrase.id] = phrase
             results.append(phrase)
-            associations = self.db.execute(self.select_association_sql_, phrase.id)
-            derived_from_rows.extend(associations)
-
         
-        for derived_from_row in derived_from_rows:
-            [derived_from_id, root_id, root_phrase ] = derived_from_row
-            print(derived_from_id, root_id, root_phrase,'=',derived_from_row)
-
         return results
     
+    def _load(self, phrase_row):
+        phrase_dict = dict(zip(Storage_.PHRASE_COLUMNS, phrase_row))
+        base_verb_cursor = self.db.execute(self.select_association_sql_, phrase_dict["id"])
+
+        base_verbs = [dict(zip(Storage.association_columns, association))
+                                  for association in base_verb_cursor]
+        if len(base_verbs) > 0:
+            phrase_dict['base_verb'] = base_verbs[0][Storage.association_columns[2]]
+
+        phrase = Phrase.from_dict(phrase_dict)
+        return phrase
+            
+    def _create_conjugation_overrides_from_parent(self):
+        """
+        TODO:
+        we have a derived verb
+        """
+        pass
+    
+    def _create_placeholder_base_verb(self):
+        """
+        TODO:
+        Handles case where the base verb is not yet in the database.
+        we create the base verb as the place to store conjugation overrides.
+        this allows other derived verbs to pick up the conjugation overrides.
+        """
+        
     def connect_phrase_to_note(self, phrase, note):
         # 2016-09-24: Annoyingly named parameters is not working
         sql_params=[

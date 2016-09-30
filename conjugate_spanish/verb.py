@@ -843,6 +843,12 @@ class Verb(Phrase):
                 
         return self._base_verb
     
+    @base_verb.setter
+    def base_verb(self, base_verb):
+        """ should only be called by the storage
+        """
+        self._base_verb = base_verb
+    
     @property
     def is_derived(self):
         return self.base_verb_str_ is not None
@@ -856,6 +862,7 @@ class Verb(Phrase):
     def derived_from(self):
         """
         return derived from
+        TODO: maybe a chain of derivations
         """
         if self.is_derived:
             if self.reflexive:
