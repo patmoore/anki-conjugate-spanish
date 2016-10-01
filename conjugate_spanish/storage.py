@@ -8,8 +8,8 @@ from conjugate_spanish.phrase import Phrase
 from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
 
 class Storage_(object):
-    DB_VERSION='0.1.4'
-    PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "explicit_overrides", "overrides","applied_overrides","manual_overrides"]
+    DB_VERSION='0.1.5'
+    PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "explicit_overrides", "conjugation_overrides","applied_overrides","manual_overrides"]
     
     def __init__(self, mw):
         self.mw = mw
@@ -28,6 +28,8 @@ class Storage_(object):
         self.select_phrase_sql = self._generate_sql(select_string)
         self.insert_phrase_to_note_sql = self._generate_sql("""insert into ${phrase_note_table} (${phrase_table_name}_id,phrase,${note_table_name}_id,model_template_id) 
             values(?,?,?,?)""")
+        self._select_phrase_by_note_sql = self._generate_sql("""select ${phrase_columns} from ${phrase_table_name} join ${phrase_note_table} on ${phrase_table_name}.id={phrase_note_table}.${phrase_table_name}_id where ${note_table_name}_id=?""")
+        
         addHook("remNotes", self._remNotes_hook)
 
     @property
@@ -71,7 +73,9 @@ class Storage_(object):
     def sql_substitutions(self):
         return dict(phrase_table_name=self.phrase_table_name, associations_table=self.associations_table, conjugation_overrides_table=self.conjugation_overrides_table,
                   phrase_note_table=self.phrase_note_table,               
-                  note_table_name=self.note_table_name)  
+                  note_table_name=self.note_table_name,
+                  phrase_columns=self.PHRASE_COLUMNS
+                  )  
         
     def addSchema(self):        
         # "phrase","definition", "prefix_words", "prefix", "core_characters", "inf_ending", "reflexive", "suffix_words"
@@ -98,7 +102,7 @@ class Storage_(object):
                 data                text,
                 UNIQUE(key) ON CONFLICT REPLACE
             );
-            create table if not exists $phrase_table_name (
+            create table if not exists ${phrase_table_name} (
                 id                       integer primary key,
                 phrase                   text not null unique,
                 definition               text,
@@ -111,13 +115,13 @@ class Storage_(object):
                 reflexive                boolean,
                 suffix_words             text,
                 explicit_overrides       text,
-                overrides                text,
+                conjugation_overrides    text,
                 applied_overrides        text,
                 manual_overrides         text,
                 synonyms                 text,
                 notes                    text
             );
-            create table if not exists $phrase_note_table (
+            create table if not exists ${phrase_note_table} (
                 id                       integer primary key,
                 phrase                   text not null,
                 ${phrase_table_name}_id     integer,
@@ -126,7 +130,7 @@ class Storage_(object):
                 model_template_id        integer,
                 UNIQUE(${phrase_table_name}_id, ${note_table_name}_id, model_template_id) ON CONFLICT REPLACE
             );                    
-            create table if not exists $associations_table (
+            create table if not exists ${associations_table} (
                 ${phrase_table_name}_derived_id     integer not null,
                 ${phrase_table_name}_root_id        integer default null,
                 ${phrase_table_name}_root_phrase    text not null,
@@ -208,8 +212,8 @@ class Storage_(object):
                     insert_associations_data.append([derived, phrase.full_phrase])   
         cs_debug(self.insert_association_sql_)
         self.db.executemany(self.insert_association_sql_, insert_associations_data)
-        # connect root back to derived.
-        self.db.execute(self._generate_sql( "update ${associations_table} set ${phrase_table_name}_root_id=(select id from ${phrase_table_name} where ${associations_table}.${phrase_table_name}_root_phrase=${phrase_table_name}.phrase)"))
+        # connect all roots back to all derived. TODO - limit to 
+        self.db.execute(self._generate_sql( "update ${associations_table} set ${phrase_table_name}_root_id=(select id from ${phrase_table_name} where ${associations_table}.${phrase_table_name}_root_phrase=${phrase_table_name}.phrase) where ${phrase_table_name}_root_id is NULL"))
         self.db.commit()
             
     def get_phrases(self, conjugatable=None, phrase=None):
@@ -229,7 +233,6 @@ class Storage_(object):
             sql_string = sql_string + " where " + " AND ".join(where)
         
         results_dict = dict()
-        derived_from_rows = []
         for phrase_row in self.db.execute(sql_string):
             phrase =self._load(phrase_row)
             results_dict[phrase.id] = phrase
@@ -248,6 +251,10 @@ class Storage_(object):
 
         phrase = Phrase.from_dict(phrase_dict)
         return phrase
+    
+    def get_phrase_from_note(self, note):
+        phrase_row = self.db.first(self._select_phrase_by_note_sql, note.id)
+        return self._load(phrase_row)
             
     def _create_conjugation_overrides_from_parent(self):
         """

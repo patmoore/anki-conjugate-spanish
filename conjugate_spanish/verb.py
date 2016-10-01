@@ -997,7 +997,7 @@ class Verb(Phrase):
     @classmethod
     def table_columns(cls):
         table_columns_ = super().table_columns()
-        table_columns_.extend( ["prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "explicit_overrides", "overrides","applied_overrides","manual_overrides"])
+        table_columns_.extend( ["prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "explicit_overrides", "conjugation_overrides","applied_overrides","manual_overrides"])
         return table_columns_
                        
     def sql_insert_values(self):

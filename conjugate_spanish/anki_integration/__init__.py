@@ -24,7 +24,8 @@ from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
 import conjugate_spanish
 from conjugate_spanish.utils import cs_debug
 from conjugate_spanish.storage import Storage
-from conjugate_spanish.anki_integration.model_template import PHRASE_MODEL, VERB_SHORT_MODEL
+from conjugate_spanish.anki_integration.model_template import PHRASE_MODEL, VERB_SHORT_MODEL,\
+    THIRD_PERSON_ONLY_MODEL
 
 __all__ = [ 'AnkiIntegration']
 """
@@ -58,7 +59,7 @@ class AnkiIntegration_(object):
     def createDefaultConjugationOverride(self, note):        
         note['Conjugation Overrides'] = Verb(note['Text']).overrides_string
             
-    def showQuestion(self):
+    def showQuestion(self):   
         pass
     
     def showAnswer(self):
@@ -74,17 +75,16 @@ class AnkiIntegration_(object):
         """
         if not ModelTemplate_.isSpanishModel(note):
             return flag
-        modelTemplate = ModelTemplate_(note.model())
+        modelTemplate = ModelTemplate_.getModelTemplate(note.model(), False)
+        #look for required - doesn't anki have code for this?
         inf_field = modelTemplate.getFieldIndex(ModelTemplate_.INFINITIVE_OR_PHRASE)
         conjugationoverrides_field = modelTemplate.getFieldIndex(ModelTemplate_.CONJUGATION_OVERRIDES)
         if currentFieldIndex == inf_field and note.fields[inf_field] != '' and note.fields[conjugationoverrides_field] == '':
             # don't generate unless leaving infinitive field
-            if Verb.is_verb(note.fields[inf_field]):
-                phrase = Verb(note.fields[inf_field]) 
-                note.fields[conjugationoverrides_field] = phrase.overrides_string
-            else:
-                phrase = NonConjugatedPhrase(note.fields[inf_field])
-                
+            phrase = Storage.get_phrase_from_note(note)
+            if phrase is None:
+                cs_debug("No phrase for note "+note.id)
+            # TODO: allow changes?                
             ##TODO: save() <<<,
             return True
         return flag
@@ -129,7 +129,6 @@ class AnkiIntegration_(object):
         return self.modelTemplates.get(modelName, None)
     
     def setupEditorButtons(self, editor=None, *args):
-        import pdb; pdb.set_trace()
         if not isinstance(editor, Editor):
             return
         b = editor._addButton
@@ -293,13 +292,24 @@ class AnkiIntegration_(object):
     def menu_createVerbNotes(self, *args, **kwargs):
         cs_debug(args)
         cs_debug(kwargs.items())
-        model_name = VERB_SHORT_MODEL
-        modelTemplate = self._getModelTemplateByName(model_name)
-        for verb in Espanol_Dictionary.get_verbs():
-            note = modelTemplate.verbToNote(verb)
-            mw.col.addNote(note)
-            Storage.connect_phrase_to_note(verb, note)        
+        
+        for phrase in Espanol_Dictionary.get_verbs():
+            for modelTemplate in self._getModels(phrase):
+                note = modelTemplate.verbToNote(phrase)
+                mw.col.addNote(note)
+                Storage.connect_phrase_to_note(phrase, note)        
             
+    def _getModels(self, phrase):
+        model_names = []
+        if not phrase.is_conjugatable:
+            model_names.append(PHRASE_MODEL)
+        else:
+            model_names.append(BASE_MODEL)
+            if not phrase.is_regular and '3rd_only' in phrase.conjugation_overrides:
+                model_names.append(THIRD_PERSON_ONLY_MODEL)
+            model_names.append(FULLY_CONJUGATED_MODEL)
+        return [self._getModelTemplateByName(model_name) for model_name in model_names]
+    
     def createAllNotesMenu(self, definition):
         self.addMenuItem(definition['menu'], self.menu_createNotes)
     

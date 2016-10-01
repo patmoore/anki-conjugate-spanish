@@ -63,6 +63,9 @@ class ModelTemplate_(object):
             collection = mw.col
         self.collection = collection
         self.modelManager = collection.models 
+        #
+        # TODO: must be in factory method
+        #
         self._changed = False       
         if fields is not None:
             for fieldDefinition in fields:
@@ -140,6 +143,9 @@ class ModelTemplate_(object):
             if model_ is None:
                 if not create:
                     return None
+        elif isinstance(model, dict):
+            model_ = model
+            modelName = model['name']
         else:
             modelName = BASE_MODEL
             
@@ -372,12 +378,12 @@ for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
         'model_template_key': model_template_key,
         'modelName': modelName,        
         'fields': [
+            {'name': ModelTemplate_.KEY},
             {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
             {'name': ModelTemplate_.ENGLISH_DEFINITION},
             {'name': ModelTemplate_.CONJUGATION_OVERRIDES},
             {'name': ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES},
             {'name': ModelTemplate_.ROOT_VERB},
-            {'name': ModelTemplate_.KEY},
         ]
     }
     model_template_key += 1
@@ -410,6 +416,7 @@ ModelDefinitions[PHRASE_MODEL] = {
         # constant to help if the model gets deleted.
         'model_template_key': model_template_key,
         'fields': [
+            {'name': ModelTemplate_.KEY},
             {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
             {'name': ModelTemplate_.ENGLISH_DEFINITION},
             {'name': ModelTemplate_.ROOT_VERB},
@@ -421,6 +428,7 @@ ModelDefinitions[VERB_SHORT_MODEL] = {
         # constant to help if the model gets deleted.
         'model_template_key': model_template_key,
         'fields': [
+            {'name': ModelTemplate_.KEY},
             {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
             {'name': ModelTemplate_.ENGLISH_DEFINITION},
             {'name': ModelTemplate_.ROOT_VERB},
