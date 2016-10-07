@@ -53,6 +53,9 @@ class Tenses_(BaseConsts_):
     future_cond = [ future_tense, conditional_tense]
     # Most of the time these 2 have same conjugation
     past_part_adj = [ past_participle, adjective]
+    # these tenses are the ones that are most commonly needed used in normal conversation
+    # note that future tense can be "cheated" with "ir a"    
+    core = [ present_tense, past_tense ]
     
 # names also used in manually defined override files
 Tenses = Tenses_([
@@ -86,6 +89,8 @@ class Persons_(BaseConsts_):
     first_person = [ first_person_singular, first_person_plural ]
     second_person = [ second_person_singular, second_person_plural ]
     third_person = [ third_person_singular, third_person_plural]    
+    # arguably second person singular is not core...
+    core = [ first_person_singular, first_person_plural, second_person_singular, third_person_singular, third_person_plural ]
 
 Persons = Persons_([
     'yo',

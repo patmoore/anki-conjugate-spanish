@@ -69,18 +69,18 @@ class ConjugationOverride(object):
         """
         :manual_overrides dict with conjugation_stems, conjugation_endings, conjugations key. values are dicts: tense names as keys; values are arrays or strings
         special case: tense name of 'present_except_nosvos' means present tense overriding just yo, tu, usted, ustedes
-        """
-        if parents is None:
-            self.parent = None
-        else:
-            _parents = parents if isinstance(parents, list) else [ parents ]
-            self.parent = [ Standard_Overrides[parent] if isinstance(parent, str) else parent for parent in _parents] 
-        
+        """        
         self.inf_match = inf_match
-        self.documentation = []
-        self.documentation.extend(make_list(documentation))
-        self.examples=[]
-        self.examples.extend(make_list(examples))
+        self.documentation =make_list(documentation)
+        if parents is None:
+            self._parents = None
+        else:
+            _parents = make_list(parents)
+            self._parents = [ Standard_Overrides[parent] if isinstance(parent, str) else parent for parent in _parents] 
+            for parent in self.parents:
+                self.documentation.extend([parent.key+" :"+parent_documentation for parent_documentation in parent.documentation])                                       
+        
+        self.examples=make_list(examples)
         self.key= key if key is not None else inf_match
         if auto_match is None:
             self.auto_match = inf_match is not None
@@ -199,8 +199,8 @@ class ConjugationOverride(object):
         
     def __get_override(self, tense, person, attr_name):
         overrides = []
-        if self.parent is not None:
-            for parent in self.parent:
+        if self.has_parents:
+            for parent in self.parents:
                 parent_override = parent.__get_override(tense, parent, attr_name)
                 if parent_override is not None:
                     overrides.extend(parent_override)
@@ -227,8 +227,8 @@ class ConjugationOverride(object):
             return False
 
     def apply(self, verb):
-        if self.parent is not None:
-            for parent in self.parent:
+        if self.has_parents:
+            for parent in self.parents:
                 verb.process_conjugation_override(parent)
             
         for applies in ConjugationOverride.Conjugation_Override_Properties:
@@ -244,6 +244,14 @@ class ConjugationOverride(object):
                 raise Exception("Standard Override already defined for "+self.key)
             else:
                 Standard_Overrides[self.key] = self
+    
+    @property
+    def has_parents(self):
+        return self.parents is not None and len(self.parents) > 0 
+    
+    @property
+    def parents(self):        
+        return self._parents
     
 Radical_Stem_Conjugation_Overrides = {} 
 class Radical_Stem_Conjugation_Override(ConjugationOverride):
