@@ -18,6 +18,7 @@ import inspect
 from functools import partial
 from conjugate_spanish.conjugation_override import Standard_Overrides
 from conjugate_spanish.utils import cs_debug
+from string import Template
 
 __all__ = [ 'ModelTemplate_', "CardTemplate_", 'BASE_MODEL','FULLY_CONJUGATED_MODEL', 'ModelDefinitions']
 MODEL_FIELDS = {
@@ -38,10 +39,11 @@ def addToList(list_, item):
 def td(string_):
     return '<td>' + string_ + '</td>'
 
-def iftest(variable, string_ = None):
-    if string_ is None:
-        string_ = '{{' + variable +'}}'
-    return '{{#'+variable+'}}'+string_+'{{/'+variable+'}}'
+IfTest_No_String = Template("{{#${variable}}}${before}{{${variable}}}{{/${variable}}}")
+IfTest_String = Template("{{#${variable}}}${before}{{${string}}}{{/${variable}}}")
+def iftest(variable, string_ = None, before=''):
+    template = IfTest_No_String if string_ is None else IfTest_String
+    return template.substitute(variable=variable, string=string_, before=before)
 
 class ModelTemplate_(object):
     INFINITIVE_OR_PHRASE = 'Infinitive or Phrase'
@@ -81,9 +83,6 @@ class ModelTemplate_(object):
         # NOTE: using '::' can be used to create sub decks
         deck_id(self.model, self.collection.decks.id(self.name))
         self._changed = True # HACK for now
-        if self._changed: 
-            self.save()
-            self._changed = False           
         
     def createConjugationFields(self, tenses=Tenses.all, persons=Persons.all):
         for tense in tenses:
@@ -271,12 +270,9 @@ class ModelTemplate_(object):
         def _create(cardTemplate):                
             cardTemplate.questionFormat = '{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+'}}'
             answer = '{{' + ModelTemplate_.ENGLISH_DEFINITION+'}}' +\
-                '<br/>' + \
-                iftest(ModelTemplate_.CONJUGATION_OVERRIDES) +\
-                '<br/>' +\
-                iftest(ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES) +\
-                '<br/>Derived from:' +\
-                iftest(ModelTemplate_.ROOT_VERB)  
+                iftest(ModelTemplate_.CONJUGATION_OVERRIDES, before='<br/>') +\
+                iftest(ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES, before='<br/>' ) +\
+                iftest(ModelTemplate_.ROOT_VERB, before='<br/>Derived from:')
             cardTemplate.answerFormat = answer
             self.addCard(cardTemplate)
             self._changed = True
