@@ -492,20 +492,21 @@ class Verb(Phrase):
                 #May need to go through twice if there is only 1 vowel in the word and it would be normally skipped
                 for index in range(len(conjugation_string)-1,0,-1):                    
                     if conjugation_string[index] in _strong_vowel:
-                        #strong vowel             
-                        if vowel_skip > 0:
-                            vowel_skip -=1
-                        else:
-                            result = accent_at(conjugation_string,index)
-                            break
+                        #strong vowel that is NOT preceded by a paired weak vowel 'ia' is treated for accenting as a single vowel.
+                        if index == 0 or not conjugation_string[index-1] in _weak_vowel:                                 
+                            if vowel_skip > 0:
+                                vowel_skip -=1
+                            else:
+                                result = accent_at(conjugation_string,index)
+                                break
                     elif conjugation_string[index] in _weak_vowel:
                         #weak vowel                                                           
                         if vowel_skip > 0:
                             vowel_skip -=1
-                        elif index >= 1 and conjugation_string[index-1] in _strong_vowel:
+                        elif index ==0 or conjugation_string[index-1] in _strong_vowel:
                             # accent should be on strong vowel immediately before the weak vowel (so skip the current weak vowel)                           
                             continue
-                        elif index >= 1 and conjugation_string[index-1:index+1] in ['qu','gu' ]:
+                        elif index ==0 or conjugation_string[index-1:index+1] in ['qu','gu' ]:
                             # qu is a dipthong ( see accent rules on acercarse : 1st person plural and 3rd person plural imperative  ) 
                             continue
                         else:
