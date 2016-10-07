@@ -56,13 +56,16 @@ class Verb(Phrase):
     '''
     # constant used to tell human that the verb is explicitly known to be a regular verb 
     REGULAR_VERB = 'regular'
-    def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, **kwargs):
+    def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, root_verb=None, **kwargs):
         '''
         Constructor
             phrase: the string : will be parsed to find the prefix words, suffix words.
                 
-            base_verb: used as base verb for conjugation - for example: mantener would have a base_verb of tener
-            manual_overrides: explict string that handles very unique cases that have no pattern.  
+            root_verb: used as root_verb for conjugation - for example: mantener would have a root_verb of tener
+               tener has root_verb = tener
+            base_verb: used to as the verb that this phrase or verb is most immediately derived from.
+            for example "detenerse a [inf]","stop [inf]" -- base verb = detenerse , root = tener
+            manual_overrides: explicit string that handles very unique cases that have no pattern.  
         '''
         super().__init__(phrase, definition, True, **kwargs)   
         # Some verbs don't follow the default rules for their ending> for example, mercer
@@ -81,24 +84,37 @@ class Verb(Phrase):
         self.reflexive = phrase_match.group(REFLEXIVE_ENDING) is not None and phrase_match.group(REFLEXIVE_ENDING) != ''        
         self.suffix_words = phrase_match.group(SUFFIX_WORDS)
 
+        _root_verb = make_unicode(root_verb)
+        # TODO: validate root
+        if _root_verb is None:            
+            self._root_verb_str = self.core_characters + self.inf_ending
+        elif isinstance(_root_verb, Verb):            
+            self._root_verb = _root_verb
+            self._root_verb_str = self.root_verb.full_phrase
+        elif isinstance(_root_verb, str) and _root_verb != '':
+            # TODO strip leading/trailing white space
+            self._root_verb_str = _root_verb 
+        else:
+            self.__raise("root_verb must be Verb or string")
+            
         _base_verb = make_unicode(base_verb)
         if _base_verb == '':
             _base_verb = None
         if _base_verb is not None:        
             if isinstance(_base_verb, Verb):
                 self.base_verb = _base_verb
-                self.base_verb_str_ = _base_verb.inf_verb_string
+                self._base_verb_str = _base_verb.inf_verb_string
             elif isinstance(_base_verb, str) and _base_verb != '':
                 # TODO strip leading/trailing white space
-                self.base_verb_str_ = _base_verb 
+                self._base_verb_str = _base_verb 
             else:
                 self.__raise("base_verb must be Verb or string")
             # example abatir has base: batir
-            _base_verb_parse = _phrase_parsing.match(self.base_verb_str_)
+            _base_verb_parse = Verb.is_verb(self.base_verb_str)
             # "abat".find("bat")
             base_verb_index = self.core_characters.find(_base_verb_parse.group(CORE_VERB))
             if base_verb_index <0:
-                self.__raise(repr(self.base_verb_str_)+ " is not in core characters"+repr(self.core_characters))
+                self.__raise(repr(self._base_verb_str)+ " is not in core characters"+repr(self.core_characters))
             if not self.has_prefix:
                 self.prefix = self.core_characters[:base_verb_index]
                 self.core_characters = self.core_characters[base_verb_index:]
@@ -108,17 +124,17 @@ class Verb(Phrase):
                 self.__raise("core_characters already="+self.core_characters+" but should be "+_base_verb_parse.group(CORE_VERB))
         elif self.is_phrase:
             # a phrase means the base verb is the actual verb being conjugated.
-            self.base_verb_str_ = self.inf_verb_string
+            self._base_verb_str = self.inf_verb_string            
         elif self.has_prefix or phrase_match.group(REFLEXIVE_ENDING) == '-se':
             # explicit base verb formed by '-' embedded in the verb
-            self.base_verb_str_ = self.core_characters + self.inf_ending
+            self._base_verb_str = self.core_characters + self.inf_ending
             if phrase_match.group(REFLEXIVE_ENDING) == 'se':
-                self.base_verb_str_ += 'se'
+                self._base_verb_str += 'se'
         elif self.reflexive:
             # base verb is without the 'se' ( no prefix)
-            self.base_verb_str_ = self.core_characters + self.inf_ending
+            self._base_verb_str = self.core_characters + self.inf_ending
         else:
-            self.base_verb_str_ = None
+            self._base_verb_str = None
                         
         # even for derived verbs we need to allow for the possibility that the derived verb has different overrides        
         if isinstance(conjugation_overrides, str) and conjugation_overrides != '' and conjugation_overrides != Verb.REGULAR_VERB:
@@ -198,8 +214,8 @@ class Verb(Phrase):
                 result+=',"'+repr(self.appliedOverrides)+'"'
             if len(self.doNotApply) > 0:
                 result +=',"'+repr(self.doNotApply)+'"'
-            if self.base_verb_str_ is not None:
-                result += ',"'+self.base_verb_str_+'"'
+            if self.base_verb_str is not None:
+                result += ',"'+self.base_verb_str+'"'
         
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
@@ -725,8 +741,8 @@ class Verb(Phrase):
             result['applied']= self.appliedOverrides
         if self.doNotApply is not None and self.doNotApply != []:
             result['excluded'] = self.doNotApply
-        if self.base_verb_str_ is not None:
-            result['base_verb'] = self.base_verb_str_
+        if self._base_verb_str is not None:
+            result['base_verb'] = self._base_verb_str
         return result
     
     @property
@@ -805,15 +821,8 @@ class Verb(Phrase):
 
     def canApply(self,override_or_key):
         key = override_or_key if isinstance(override_or_key, str) else override_or_key.key
-        return key not in self.doNotApply and key not in self.appliedOverrides
-        
-    @property
-    def root_verb(self):
-        if self.base_verb is None:
-            return self
-        else:
-            return self.base_verb.root_verb
-            
+        return key not in self.doNotApply and key not in self.appliedOverrides        
+    
     @property
     def prefix(self):
         return self._prefix
@@ -834,7 +843,7 @@ class Verb(Phrase):
             # some verbs are based off of others (tener)
             # TODO: maldecir has different tu affirmative than decir        
             from .espanol_dictionary import Verb_Dictionary
-            _base_verb = Verb_Dictionary.get(self.base_verb_str_)
+            _base_verb = Verb_Dictionary.get(self._base_verb_str)
             if _base_verb is None:
                 # TODO - may not be in dictionary yet?
                 return None 
@@ -847,16 +856,30 @@ class Verb(Phrase):
     def base_verb(self, base_verb):
         """ should only be called by the storage
         """
-        self._base_verb = base_verb
+        self._base_verb = base_verb    
+    
+    @property
+    def root_verb(self):
+        """
+        Root verb is the verb that provides the conjugation rules.
+        """
+        if self.base_verb is None:
+            return self
+        else:
+            return self.base_verb.root_verb
+            
+    @property
+    def root_verb_str(self):
+        return self._root_verb_str
     
     @property
     def is_derived(self):
-        return self.base_verb_str_ is not None
+        return self._base_verb_str is not None
     
     ## HACK - should be derived_from
     @property
     def base_verb_str(self):
-        return self.base_verb_str_
+        return self._base_verb_str
     
     @property
     def derived_from(self):

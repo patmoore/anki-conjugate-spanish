@@ -10,15 +10,15 @@ class Phrase(object):
         self.key = self.phrase_string.lower()
         self.definition = make_unicode(definition)
         self._conjugatable=conjugatable
-        self.id = kwargs.get('id')
+        self._id = kwargs.get('id')
         
     @property
     def id(self):
-        return self.id_
-    
-    @id.setter
-    def id(self, id):
-        self.id_ = id
+        return self._id
+#     
+#     @id.setter
+#     def id(self, id):
+#         self._id = id
          
     @property
     def full_phrase(self):
