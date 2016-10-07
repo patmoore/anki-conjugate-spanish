@@ -3,7 +3,7 @@ import unittest
 from conjugate_spanish import Tenses, Persons, Verb
 import codecs
 import csv
-from conjugate_spanish.verb_dictionary import Verb_Dictionary
+from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect,\
     get_iterable
 from conjugate_spanish.conjugation_override import Standard_Overrides
