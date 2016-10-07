@@ -12,8 +12,7 @@ import traceback
 from .utils import cs_debug
 import types
 from .phrase import Phrase
-# UTF8Writer = codecs.getwriter('utf8')
-# sys.stdout = UTF8Writer(sys.stdout)
+from functools import reduce
 from .standard_endings import Standard_Conjugation_Endings
 
 _ending_vowel_check = re_compile('['+Vowels.all+']$')
@@ -928,6 +927,12 @@ class Verb(Phrase):
     def is_regular(self):
         return self.appliedOverrides is None or len(self.appliedOverrides) == 0  
     
+    def has_conjugation_overrides(self, conjugation_overrides):
+        result = True
+        for conjugation_override in get_iterable(conjugation_overrides):
+            result = result & (conjugation_override in self.appliedOverrides )
+        return result 
+    
     @property
     def appliedOverrides(self):
         appliedOverrides_ = list(self._appliedOverrides)
@@ -1004,4 +1009,5 @@ class Verb(Phrase):
         insert_values_ = super().sql_insert_values()
         insert_values_.extend( [self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive, self.suffix_words, self.explicit_overrides_string, self.overrides_string, ",".join(self.appliedOverrides), self.manual_overrides_string])    
         return insert_values_
+    
     
