@@ -1,17 +1,16 @@
 from conjugate_spanish.utils import cs_debug
 from string import Template
-from anki.hooks import addHook
-from aqt import mw
-import conjugate_spanish
 from conjugate_spanish.verb import Verb
 from conjugate_spanish.phrase import Phrase
 from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
+from aqt import mw
 
 class Storage_(object):
-    DB_VERSION='0.1.5'
+    DB_VERSION='0.1.6'
     PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "explicit_overrides", "conjugation_overrides","applied_overrides","manual_overrides"]
     
     def __init__(self, mw):
+        from anki.hooks import addHook
         self.mw = mw
         self.delete_sql_= self._generate_sql("delete from ${conjugation_overrides_table} where ${phrase_table_name}_id=(select id from ${phrase_table_name} where phrase=?)")   
         # NO     
@@ -30,6 +29,7 @@ class Storage_(object):
             values(?,?,?,?)""")
         self._select_phrase_by_note_sql = self._generate_sql("""select ${phrase_columns} from ${phrase_table_name} join ${phrase_note_table} on ${phrase_table_name}.id={phrase_note_table}.${phrase_table_name}_id where ${note_table_name}_id=?""")
         
+        self._select_phrase_by_phrase = self._generate_sql("""select ${phrase_columns} from ${phrase_table_name} where phrase = ?""")
         addHook("remNotes", self._remNotes_hook)
 
     @property
@@ -95,6 +95,9 @@ class Storage_(object):
             cs_debug("old version ",version, ": upgrading to version ", self.DB_VERSION)
             self.dropDb()
         
+        # TODO : have conjugation_root_phrase_id in ${phrase_table_name} -- the place for the base conjugations *not the base verb*
+        # TODO: create root_phrase if does not exist. before inserting  
+        # TODO: create the base_verb as a separate from root -- for example "detenerse a [inf]","stop [inf]" -- base verb = detenerse , root -tener
         dbString = self._generate_sql("""
             create table if not exists cs_config (
                 id                       integer primary key,
@@ -114,6 +117,8 @@ class Storage_(object):
                 inf_ending_index         integer,
                 reflexive                boolean,
                 suffix_words             text,
+                conjugation_root_id      integer,
+                parent_phrase_id         integer,
                 explicit_overrides       text,
                 conjugation_overrides    text,
                 applied_overrides        text,
@@ -149,7 +154,7 @@ class Storage_(object):
         """)
         cs_debug("Running addSchema script: ", dbString)
         self.db.executescript(dbString)
-        mw.reset()
+        self.mw.reset()
         
     def dropDb(self):
         dbString = self._generate_sql("""drop table if exists cs_config;
@@ -157,7 +162,7 @@ class Storage_(object):
             drop table if exists $associations_table;
             drop table if exists ${conjugation_overrides_table};
             drop table if exists $phrase_note_table""")
-        self.db.executescript(dbString)
+        self.db.executescript(dbString)    
 
     def resetDb(self):
         self.dropDb()
@@ -188,6 +193,16 @@ class Storage_(object):
         # HACK : NOTE: requiring that all phrases be in the same class - not worth fixing at this moment because other things are changing.
         insert_sql = self.generate_insert_sql(phrases[0].__class__)
         self.batch_insert(insert_sql, phrases)
+#         for phrase in phrases:
+#             if phrase.is_conjugatable:                 
+#                 if phrase.is_derived:
+#                     parent_verb_str = phrase.root_verb_str
+#                     verb_row =self.db.first(self._select_phrase_by_phrase, parent_verb_str)
+#                     if verb_row is None: 
+#                         Verb(parent_verb_str, conjugation_overrides=phrase.explicit_overrides_string)
+#                     base_verb_row =self.db.first(self._select_phrase_by_phrase, phrase.base_verb_str)
+#                     if base_verb_row is None: 
+#                         pass
         self.create_associations(phrases)
         # HACK : NOTE: requiring that all phrases be in the same class - not worth fixing at this moment because other things are changing.
         if phrases[0].is_conjugatable:

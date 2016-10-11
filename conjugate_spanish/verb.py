@@ -14,6 +14,7 @@ import types
 from .phrase import Phrase
 from functools import reduce
 from .standard_endings import Standard_Conjugation_Endings
+from conjugate_spanish.conjugation_override import ConjugationOverride
 
 _ending_vowel_check = re_compile('['+Vowels.all+']$')
 # check for word with only a single vowel ( used in imperative conjugation )
@@ -56,6 +57,7 @@ class Verb(Phrase):
     '''
     # constant used to tell human that the verb is explicitly known to be a regular verb 
     REGULAR_VERB = 'regular'
+    
     def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, root_verb=None, **kwargs):
         '''
         Constructor
@@ -136,6 +138,11 @@ class Verb(Phrase):
         else:
             self._base_verb_str = None
                         
+        # note: determining the conjugation overrides in constructor because:
+        #    1. some conjugation overrides happen automatically based on the verb endings ( i.e. -guir)
+        #    2. some overrides for pronounciation preservation are only applied if a previous override has not removed the condition
+        # ideally, the conjugation overrides would be a processing pipe - but i didn't know that the code would head that way when i started.
+        # 
         # even for derived verbs we need to allow for the possibility that the derived verb has different overrides        
         if isinstance(conjugation_overrides, str) and conjugation_overrides != '' and conjugation_overrides != Verb.REGULAR_VERB:
             self.explicit_overrides_string = self.overrides_string = conjugation_overrides
@@ -282,6 +289,10 @@ class Verb(Phrase):
     def conjugate(self, tense, person=None, options={}):
         """
         :param person: usually must be set but can be None if tense in Tenses.Person_Agnostic
+        options -
+            reflexive_override - set to False to force the verb to be conjugated without the reflexive pronoun 
+               (needed in cases of a base verb being a reflexive verb.)
+            
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
         """                
         if tense in Tenses.imperative and person == Persons.first_person_singular:
@@ -306,7 +317,7 @@ class Verb(Phrase):
                             formatted = traceback.format_exception_only(traceback_,extype, ex)[-1]
                             message = "Trying to conjugate irregular:%s %s" % ex.message, formatted
                             self.__raise(message, tense, person, traceback_)
-                _reflexive = pick(options,'reflexive_override',self.reflexive)
+                _reflexive = pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE,self.reflexive)
                 if _reflexive:
                     # needed in imperative to correctly add in the reflexive pronoun 
                     conjugation = self.__conjugation_imperative_reflexive(tense, person, conjugation)
@@ -341,15 +352,14 @@ class Verb(Phrase):
         I would like to eliminate this code and go to a pure conjugation override model 
         """
         # we never want the base verb to apply the reflexive pronoun - irregardless of reflexive_override
-        _options = dict(options)
-        _options['reflexive_override'] = False
+        _options = { **options, **{ConjugationOverride.REFLEXIVE_OVERRIDE : False} }
         base_verb_conjugation = self.root_verb.conjugate(tense, person, _options)
         if base_verb_conjugation is None:
             # imperative, third-person only verbs
             return None
         
         # done because of multiple layers of derivation.
-        _reflexive = pick(options,'reflexive_override', self.reflexive)
+        _reflexive = pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE, self.reflexive)
         explicit_accent_already_applied = False
         single_vowel_match = _single_vowel_re.match(base_verb_conjugation)        
         
@@ -642,7 +652,8 @@ class Verb(Phrase):
         return returned_conjugation
              
     def __conjugation_present_subjective_stem(self, tense, person):
-        options = { 'force_conjugation': True }
+        # need to force for verbs that are normally third person only
+        options = { ConjugationOverride.FORCE_CONJUGATION: True }
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
         if first_person_conjugation[-1:] =='o':
             conjugation_stem = first_person_conjugation[:-1]            
@@ -659,7 +670,8 @@ class Verb(Phrase):
         """
         in First person plural, accent if third person plural ends in a vowel after dropping -ron        
         """
-        options = { 'force_conjugation': True }
+        # need to force for verbs that are normally third person only
+        options = { ConjugationOverride.FORCE_CONJUGATION: True }
         third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options)
         if third_person_plural_conjugation[-3:] == 'ron':
             conjugation_stem = third_person_plural_conjugation[:-3]

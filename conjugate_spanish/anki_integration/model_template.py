@@ -162,8 +162,10 @@ class ModelTemplate_(object):
         return modelTemplate
     
     def verbToNote(self, verb, irregularOnly=True):
-        conjugations = None        
-        # TODO:         
+        """
+        TODO: Ugly - conjugation pipeline!
+        """
+        conjugations = None                 
         note = Note(self.collection, model=self.model )        
         for field in self.model['flds']:
             fieldName = field['name']
@@ -187,17 +189,18 @@ class ModelTemplate_(object):
                     value_ = Standard_Overrides.human_documentation(verb.conjugation_overrides)
                     if value_ is not None:
                         value = "<br>".join(value_)
-            
-                if conjugations is None:
-                    conjugations = verb.conjugate_irregular_tenses() if irregularOnly else verb.conjugate_all_tenses()
-                conjugation_match = ModelTemplate_.splitTensePerson.match(fieldName)
-                if conjugation_match is not None:
-                    tense = Tenses.index(conjugation_match.group(1))
-                    if tense in Tenses.Person_Agnostic:
-                        value = conjugations[tense] #verb.conjugate(tense)
-                    else:
-                        person = Persons.index(conjugation_match.group(2))
-                        value = conjugations[tense][person] if conjugations[tense] is not None else None
+                elif not irregularOnly or not verb.is_regular:
+                    # conjugating every tense/person or only irregular and this verb is irregular.
+                    if conjugations is None:
+                        conjugations = verb.conjugate_irregular_tenses() if irregularOnly else verb.conjugate_all_tenses()
+                    conjugation_match = ModelTemplate_.splitTensePerson.match(fieldName)
+                    if conjugation_match is not None:
+                        tense = Tenses.index(conjugation_match.group(1))
+                        if tense in Tenses.Person_Agnostic:
+                            value = conjugations[tense] #verb.conjugate(tense)
+                        else:
+                            person = Persons.index(conjugation_match.group(2))
+                            value = conjugations[tense][person] if conjugations[tense] is not None else None
                     
             if value is None:
                 """
@@ -431,3 +434,8 @@ ModelDefinitions[VERB_SHORT_MODEL] = {
             {'name': ModelTemplate_.CONJUGATION_OVERRIDES_DESCRIPTION},
         ]
     }
+
+for tense in Tenses.core:
+    for person in Persons.core:
+        ModelDefinitions[VERB_SHORT_MODEL]['fields'].append(
+            {'name': Tenses[tense]+'/'+Persons[person]})

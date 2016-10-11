@@ -57,6 +57,13 @@ def make_dep_override(inf_match=None, parents=None, documentation=None, examples
 # TODO need a way of adding notes to overrides
 
 class ConjugationOverride(object):
+    """
+    TODO -- make conjugation a pipeline.
+    Conjugation options: here because I want to explore a conjugation pipeline by removing from Verb.
+    """
+    FORCE_CONJUGATION = 'force_conjugation'
+    REFLEXIVE_OVERRIDE = 'reflexive_override'
+    
     Conjugation_Override_Properties = ['conjugations', 'conjugation_stems', 'conjugation_endings', 'conjugation_joins']
     """
     overrides are functions that are bound to the specific verb ( so become instance methods ) 
@@ -887,7 +894,7 @@ Defective_CO.override_tense(tenses, lambda self, **kwargs: '')
 # Third person only conjugations
 
 def __block_conjugation(self, options, **kwargs):
-    force_conjugation = pick(options, 'force_conjugation', False)
+    force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
     if force_conjugation:
         conjugation = self._conjugate_stem_and_endings(options=options, **kwargs)
         return conjugation

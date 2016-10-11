@@ -193,8 +193,14 @@ class AnkiIntegration_(object):
         
     def initialize(self, *args):
         cs_debug("initialize")
-        self.menu_ = self.mw.form.menuPlugins.addMenu("Español Conjugation")
-        
+        self.menu_ = self.mw.form.menuPlugins.addMenu("Español Conjugation")        
+
+## TODO: I saw code like this in the japanese addon : but the models are not created 
+## maybe only on installation?
+# for modelName, modelDefinition in ModelDefinitions.iteritems():
+#     def __makecall(modelName, modelDefinition):
+#         return lambda col: ModelTemplate_(modelName, collection=col, **modelDefinition)
+#     anki.stdmodels.models.append((_(modelName), __makecall(modelName, modelDefinition)))
         # Make sure our standard models are defined.
         for modelName, modelDefinition in ModelDefinitions.items():
             cs_debug("model ",modelName)
@@ -324,11 +330,3 @@ class AnkiIntegration_(object):
     
 AnkiIntegration = AnkiIntegration_()
 addHook('profileLoaded', AnkiIntegration.initialize)
-
-
-## TODO: I saw code like this in the japanese addon : but the models are not created 
-## maybe only on installation?
-# for modelName, modelDefinition in ModelDefinitions.iteritems():
-#     def __makecall(modelName, modelDefinition):
-#         return lambda col: ModelTemplate_(modelName, collection=col, **modelDefinition)
-#     anki.stdmodels.models.append((_(modelName), __makecall(modelName, modelDefinition)))
