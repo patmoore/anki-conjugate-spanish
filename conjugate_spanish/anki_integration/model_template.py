@@ -167,7 +167,7 @@ class ModelTemplate_(object):
         """
         conjugations = None                 
         note = Note(self.collection, model=self.model )        
-        for field in self.model['flds']:
+        for field in model_fields(self.model):
             fieldName = field['name']
             value = None            
             if fieldName == ModelTemplate_.KEY:

@@ -257,6 +257,7 @@ def dump_trace(e, message):
 
 #####
 # some standard methods to help document the cryptic keys used by anki
+# Not elegant or 'good' practice but this isolates the anki constants. 
 #####
 def deck_id(dict_, value=None):
     if value == None:
@@ -269,3 +270,9 @@ def model_id(dict_, value=None):
         return dict_.get('mid', None)
     else:
         dict_['mid'] = value
+        
+def model_fields(dict_, value=None):
+    if value == None:
+        return dict_.get('flds',None)
+    else:
+        dict_['flds'] = value

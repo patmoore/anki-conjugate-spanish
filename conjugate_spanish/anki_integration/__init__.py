@@ -2,7 +2,7 @@
 from PyQt5.QtCore import pyqtSignal
 from aqt.qt import QAction, QProgressDialog
 
-from anki.hooks import addHook, wrap
+from anki.hooks import addHook, wrap, remHook
 from aqt import mw
 from anki.lang import _
 from anki.notes import Note
@@ -46,6 +46,7 @@ class AnkiIntegration_(object):
         addHook('editFocusGained', self.editFocusGained)
         addHook('setupEditorButtons', self.setupEditorButtons)
         addHook('editFocusLost', self.onFocusLost)
+        addHook('profileLoaded', self.initialize)
         
     def createNewDeck(self, deckName):
         """
@@ -262,12 +263,14 @@ class AnkiIntegration_(object):
             }
         ]
     
-        Storage.initialize()
         for value in FEATURES:
             if value.get('disable') != True:
                 value['init'](value)
+#         remHook('profileLoaded', AnkiIntegration.initialize)
+
 #     def createNewDeckMenu(self, key, definition):
 #         self.addMenuItem(definition[u'menu'], self.createNewDeck)
+        
     def menu_remove_all_notes(self, *args, **kwargs):
         Storage.remove_notes()
 
@@ -330,4 +333,3 @@ class AnkiIntegration_(object):
         self.addMenuItem(definition['menu'], self.resetDb_)
     
 AnkiIntegration = AnkiIntegration_()
-addHook('profileLoaded', AnkiIntegration.initialize)

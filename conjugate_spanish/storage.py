@@ -4,6 +4,8 @@ from conjugate_spanish.verb import Verb
 from conjugate_spanish.phrase import Phrase
 from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
 from aqt import mw
+from anki.hooks import addHook, wrap, remHook
+
 
 class Storage_(object):
     DB_VERSION='0.1.6'
@@ -305,3 +307,4 @@ class Storage_(object):
         collection.db.executemany(self._generate_sql("delete from $phrase_note_table where ${note_table_name}_id = ?"), note_ids_)
             
 Storage = Storage_(mw)
+addHook('profileLoaded', Storage.initialize)
