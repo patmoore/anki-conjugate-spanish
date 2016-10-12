@@ -32,11 +32,11 @@ class Standard_Overrides_(dict):
         if conjugation_override_string[0] == '-':
             lookup_key = conjugation_override_string[1:]
             conjugation = self.get(lookup_key)         
-            return "Excluded ("+conjugation.documentation+")"
+            return conjugation_override_string+": Excluded ("+";".join(conjugation.documentation)+")"
         else:
             lookup_key = conjugation_override_string
             conjugation = self.get(lookup_key)         
-            return conjugation.documentation            
+            return conjugation_override_string+":"+";".join(conjugation.documentation)            
     
 Standard_Overrides = Standard_Overrides_()
 
@@ -84,8 +84,8 @@ class ConjugationOverride(object):
         else:
             _parents = make_list(parents)
             self._parents = [ Standard_Overrides[parent] if isinstance(parent, str) else parent for parent in _parents] 
-            for parent in self.parents:
-                self.documentation.extend([parent.key+" :"+parent_documentation for parent_documentation in parent.documentation])                                       
+#             for parent in self.parents:
+#                 self.documentation.extend([parent.key+" :"+parent_documentation for parent_documentation in parent.documentation])                                       
         
         self.examples=make_list(examples)
         self.key= key if key is not None else inf_match

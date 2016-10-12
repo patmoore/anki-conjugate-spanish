@@ -314,6 +314,7 @@ class AnkiIntegration_(object):
             if phrase.has_conjugation_overrides(['3rd_only', '3rd_sing_only']):
                 model_names.append(THIRD_PERSON_ONLY_MODEL)
             model_names.append(FULLY_CONJUGATED_MODEL)
+            model_names.append(VERB_SHORT_MODEL)
         return [self._getModelTemplateByName(model_name) for model_name in model_names]
     
     def createAllNotesMenu(self, definition):
