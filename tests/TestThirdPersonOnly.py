@@ -23,7 +23,7 @@ class TestThirdPersonOnly(unittest.TestCase):
             self.assertEqual(verb.inf_verb_string, verb.full_phrase)
         
     def test_third_only(self):
-        verb = Verb('suceder','happen', conjugation_overrides=['3rd_only'])
+        verb = Verb.importString('suceder','happen', conjugation_overrides=['3rd_only'])
         results = [
             ['sucede','suceden'],
             ['sucedía','sucedían'],
@@ -49,7 +49,7 @@ class TestThirdPersonOnly(unittest.TestCase):
                 
         
     def test_third_sing_only(self):
-        verb = Verb('helar','freeze', conjugation_overrides=['3rd_sing_only',"e:ie"])
+        verb = Verb.importString('helar','freeze', conjugation_overrides=['3rd_sing_only',"e:ie"])
         results = [
             'hiela',
             'helaba',

@@ -25,13 +25,13 @@ class TestBasic(unittest.TestCase):
         """
         Make sure that a verb does not claim itself as its own base_verb - it would cause infinit loops
         """
-        verb = Verb("faketer", "fake as always")
+        verb = Verb.importString("faketer", "fake as always")
         self.assertNotEqual(verb, verb.base_verb)
         self.assertEqual(verb.base_verb_str, None)
         self.__check(verb, "faket", "er")
         
     def test_simple_parsing(self):
-        verb = Verb("faketer"," fake definition")
+        verb = Verb.importString("faketer"," fake definition")
         self.assertFalse(verb.is_phrase)
         self.assertEqual(verb.base_verb_str, None)
         self.assertEqual(verb.root_verb_str, "faketer")
@@ -39,17 +39,17 @@ class TestBasic(unittest.TestCase):
         self.__check(verb, "faket", "er")
         
     def test_reflexive_parsing(self):
-        verb = Verb("faketerse"," fake definition")
+        verb = Verb.importString("faketerse"," fake definition")
         self.__check(verb, "faket", "er", reflexive=True)
         self.assertEqual(verb.base_verb_str, "faketer")
-        verb = Verb("faketer-se"," fake definition")
+        verb = Verb.importString("faketer-se"," fake definition")
         self.__check(verb, "faket", "er", reflexive=True)
         self.assertEqual(verb.base_verb_str, "faketer")
         self.assertEqual(verb.root_verb_str, "faketer")
         self.assertEqual(verb.full_phrase, "faketerse")
         
     def test_base_verb_parsing(self):
-        verb = Verb("abs-faketer-se"," fake definition")
+        verb = Verb.importString("abs-faketer-se"," fake definition")
         self.__check(verb, "absfaket", "er", prefix="abs", reflexive=True)
         self.assertEqual(verb.base_verb_str, "faketer")
         self.assertEqual(verb.root_verb_str, "faketer")
@@ -58,7 +58,7 @@ class TestBasic(unittest.TestCase):
         
     def test_phrase_parsing(self):
         # also test for excess spaces and leading spaces
-        verb = Verb("  a  absfaketer  de {{inf}}  "," fake definition", root_verb="faketer")
+        verb = Verb.importString("  a  absfaketer  de {{inf}}  "," fake definition", root_verb="faketer")
         self.__check(verb, "absfaket", "er", prefix="", reflexive=False, prefix_words="a", suffix_words="de {{inf}}", is_phrase=True)
         self.assertEqual(verb.base_verb_str, "absfaketer")
         self.assertEqual(verb.root_verb_str, "faketer")
@@ -69,7 +69,7 @@ class TestBasic(unittest.TestCase):
         """
         Test to make sure that the u in qu is skipped.
         """
-        verb = Verb("acercarse","approach,draw near")
+        verb = Verb.importString("acercarse","approach,draw near")
         conjugation = verb.conjugate(Tenses.imperative_positive, Persons.third_person_singular)
         self.assertEqual(conjugation, 'acérquese')
         conjugation = verb.conjugate(Tenses.imperative_positive, Persons.third_person_plural)
@@ -79,7 +79,7 @@ class TestBasic(unittest.TestCase):
         """
         make sure the o is accented not the i ( i is a weak vowel )
         """
-        verb = Verb('divorciarse','')
+        verb = Verb.importString('divorciarse','')
         self.assertEqual(verb.base_verb_str, "divorciar")
         self.assertEqual(verb.root_verb_str, "divorciar")
         self.assertEqual(verb.inf_verb_string, "divorciar")
@@ -90,7 +90,7 @@ class TestBasic(unittest.TestCase):
         """
         make sure the o is accented not the i ( i is a weak vowel )
         """
-        verb = Verb('limpiarse','')
+        verb = Verb.importString('limpiarse','')
         self.assertEqual(verb.base_verb_str, "limpiar")
         self.assertEqual(verb.root_verb_str, "limpiar")
         self.assertEqual(verb.inf_verb_string, "limpiar")
@@ -101,7 +101,7 @@ class TestBasic(unittest.TestCase):
         """
         make sure the o is accented not the i ( i is a weak vowel )
         """
-        verb = Verb('enviar','', conjugation_overrides="iar")
+        verb = Verb.importString('enviar','', conjugation_overrides="iar")
         self.assertEqual(verb.base_verb_str, None)
         self.assertEqual(verb.root_verb_str, "enviar")
         self.assertEqual(verb.inf_verb_string, "enviar")

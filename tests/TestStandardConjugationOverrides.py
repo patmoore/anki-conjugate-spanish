@@ -19,7 +19,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
             self.assertEqual(pp, 'ido', 'ir past part. wrong')
          
     def test_guir_yo(self):
-        distinguir = Verb('distinguir','')
+        distinguir = Verb.importString('distinguir','')
         yo_present = distinguir.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(yo_present, 'distingo', 'guir yo present wrong')
  
@@ -27,7 +27,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         """
         faketir - e:i is explicitly assigned ( fake verb to make it easier to debug ) 
         """
-        faketir = Verb("faketir", "", conjugation_overrides="e:i")
+        faketir = Verb.importString("faketir", "", conjugation_overrides="e:i")
 #         match = Dependent_Standard_Overrides[u"stem_changing_ir_"+u"e:i"].is_match(faketir)
 #         self.assertTrue(match, 'automatch')
         self.assertIsNotNone(faketir.conjugation_stems, "faketir.conjugation_stems")
@@ -40,7 +40,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         """
         fakegir - e:i is implicitly assigned: gir have stem changing by default
         """
-        fakegir = Verb('fakegir', "")
+        fakegir = Verb.importString('fakegir', "")
 #         self.assertTrue(fakegir.has_override_applied(u''))
         self.assertIsNotNone(fakegir.conjugation_stems, "fakegir.conjugation_stems")
         gerund = fakegir.conjugate_tense(Tenses.gerund)
@@ -49,7 +49,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
     def test_beginning_word_radical_stem_changing_overrides(self):
         """
         """
-        oler = Verb('oler',"to hear",["o:ue"])
+        oler = Verb.importString('oler',"to hear",["o:ue"])
         conjugation = oler.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(conjugation, 'huelo', "problems with loading manual overrides "+conjugation)
         conjugation = oler.conjugate(Tenses.present_subjective_tense, Persons.first_person_plural)
@@ -61,7 +61,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         test to see if a manual override defined as a json object will be correctly applied.
         Make sure for a manual override with None in a override position does not remove a previous override.
         """
-        decir = Verb("decir","to say, tell",["go","e:i","-v_cir",
+        decir = Verb.importString("decir","to say, tell",["go","e:i","-v_cir",
             ConjugationOverride.create_from_json(""'{"conjugation_stems":{"past":"dij","future":"dir","conditional":"dir"},"conjugations":{"imperative_positive_second":"di"}}')])
         conjugations = decir.conjugate_tense(Tenses.imperative_positive)
         self.assertEqual(conjugations[Persons.second_person_singular], 'di', "problems with loading manual overrides of imperative")
@@ -74,15 +74,15 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         ending stem-vowel -> 'ig' + 'o' (asir)
         ending stem-'c' -> change 'c'->'g' (hacer,decir)
         """
-        fakir = Verb("fakir", "fake go 1","go")
+        fakir = Verb.importString("fakir", "fake go 1","go")
         conjugation = fakir.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(conjugation, "fakgo")
          
-        fair = Verb("fair", "fake go 1","go")
+        fair = Verb.importString("fair", "fake go 1","go")
         conjugation = fair.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(conjugation, "faigo")
         
-        facer = Verb("facer", "fake go 1","go")
+        facer = Verb.importString("facer", "fake go 1","go")
         conjugation = facer.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(conjugation, "fago")
         
@@ -90,7 +90,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         """
         make sure that the key places of stem changing occur (ir different than er ar verbs)
         """ 
-        verb = Verb('dormir', 'fake',"o:ue")
+        verb = Verb.importString('dormir', 'fake',"o:ue")
         conjugation = verb.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual(conjugation, 'duermo')
         conjugation = verb.conjugate(Tenses.past_tense, Persons.third_person_plural)
@@ -105,7 +105,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
     def test_uir_verbs(self):
         """ uir verbs have to worry about removing the 'u' before o
         """
-        verb = Verb('constituir', "constitute") 
+        verb = Verb.importString('constituir', "constitute") 
         conjugation = verb.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual('constituyo', conjugation, 'constituyo !='+conjugation)
         
@@ -113,7 +113,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         """
         uar verbs have a u:ú stem change
         """
-        verb = Verb('continuar', 'continue')
+        verb = Verb.importString('continuar', 'continue')
         conjugation = verb.conjugate(Tenses.present_tense, Persons.first_person_singular)
         self.assertEqual('continúo', conjugation, 'continúo !='+ conjugation)
         conjugation = verb.conjugate(Tenses.present_subjective_tense, Persons.first_person_singular)
@@ -123,7 +123,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         """
         e:i verbs have a u:ú stem change
         """
-        verb = Verb('venir', 'come',["-e:ie_1sp",'e:ie','e:ie_past_all','go','e2d',"e_and_o"])
+        verb = Verb.importString('venir', 'come',["-e:ie_1sp",'e:ie','e:ie_past_all','go','e2d',"e_and_o"])
         radical_stem = Radical_Stem_Conjugation_Overrides['e:ie']
         self.assertTrue(verb.has_override_applied(radical_stem.key))
         self.assertFalse(verb.has_override_applied(radical_stem.first_person_conjugation_override.key))

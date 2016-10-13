@@ -8,8 +8,8 @@ from anki.hooks import addHook, wrap, remHook
 
 
 class Storage_(object):
-    DB_VERSION='0.1.7'
-    PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "explicit_overrides", "conjugation_overrides","applied_overrides","manual_overrides"]
+    DB_VERSION='0.1.8'
+    PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "conjugation_overrides","applied_overrides","manual_overrides"]
     
     def __init__(self, mw):
         from anki.hooks import addHook
@@ -121,7 +121,6 @@ class Storage_(object):
                 suffix_words             text,
                 conjugation_root_id      integer,
                 parent_phrase_id         integer,
-                explicit_overrides       text,
                 conjugation_overrides    text,
                 applied_overrides        text,
                 manual_overrides         text,
@@ -201,7 +200,7 @@ class Storage_(object):
 #                     parent_verb_str = phrase.root_verb_str
 #                     verb_row =self.db.first(self._select_phrase_by_phrase, parent_verb_str)
 #                     if verb_row is None: 
-#                         Verb(parent_verb_str, conjugation_overrides=phrase.explicit_overrides_string)
+#                         Verb.importString(parent_verb_str, conjugation_overrides=phrase.explicit_overrides_string)
 #                     base_verb_row =self.db.first(self._select_phrase_by_phrase, phrase.base_verb_str)
 #                     if base_verb_row is None: 
 #                         pass

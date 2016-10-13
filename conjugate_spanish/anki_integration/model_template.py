@@ -264,7 +264,7 @@ class ModelTemplate_(object):
 
     def createTenseCard(self, tense):   
         cardName = Tenses.human_readable(tense)
-        def __addCell(tense,person):
+        def __addRow(tense,person):
             return iftest(self.fieldName(tense,person),td(Persons.human_readable(person))+ td('{{'+self.fieldName(tense,person)+'}}'))
         def _create(cardTemplate):
             cardTemplate.questionFormat = '{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+'}}'+'<br>'+Tenses.human_readable(tense)
@@ -274,18 +274,18 @@ class ModelTemplate_(object):
                 answer += iftest(self.fieldName(tense), td('{{'+self.fieldName(tense)+'}}'))            
             else:
                 if tense in Tenses.imperative:
-                    answer+=td('')+__addCell(tense, Persons.first_person_plural)
+                    answer+=td('')+td('')+__addRow(tense, Persons.first_person_plural)
                 else:
                     for person in Persons.first_person:
-                        answer += __addCell(tense, person)
+                        answer += __addRow(tense, person)
                 answer += '</tr>\n'
                 answer += '<tr>'
                 for person in Persons.second_person:
-                    answer += __addCell(tense, person)
+                    answer += __addRow(tense, person)
                 answer += '</tr>\n'
                 answer += '<tr>'
                 for person in Persons.third_person:
-                    answer += __addCell(tense, person)
+                    answer += __addRow(tense, person)
             answer += '</tr>\n'
             answer += '</table>'
             cardTemplate.answerFormat = answer
@@ -298,7 +298,7 @@ class ModelTemplate_(object):
     
     def createPersonCard(self, person):   
         cardName = Persons.human_readable(person)
-        def __addCell(tense,person):
+        def __addRow(tense,person):
             _fieldName = self.fieldName(tense,person)
             if _fieldName is None:
                 return ''
@@ -310,7 +310,7 @@ class ModelTemplate_(object):
             answer = iftest(ModelTemplate_.ENGLISH_DEFINITION)+'<table>\n'
             for tense in Tenses.all_except(Tenses.Person_Agnostic):
                 answer += '<tr>'
-                answer+= __addCell(tense, person)
+                answer+= __addRow(tense, person)
                 answer += '</tr>\n'
             answer += '</table>'
             cardTemplate.answerFormat = answer

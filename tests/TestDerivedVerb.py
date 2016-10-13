@@ -19,7 +19,7 @@ faketenerse = Verb_Dictionary.add('faketenerse', "fake tener", base_verb='tener'
 # tests double derivatives
 # real world example: desacordarse -> acordarse -> acordar
 descfaketenerse = Verb_Dictionary.add('descfaketenerse', "fake tener", base_verb=faketenerse)
-faketenerse_1 = Verb('faketenerse', "fake tener", base_verb=faketener)
+faketenerse_1 = Verb.importString('faketenerse', "fake tener", base_verb=faketener)
 
 fakeacordar = Verb_Dictionary.add("fakeacordar", "fake acordar", "o:ue")
 #derive just because of reflexive/non-reflexive

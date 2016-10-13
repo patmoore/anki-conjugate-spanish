@@ -54,7 +54,7 @@ class Dictionary_(dict):
 class Verb_Dictionary_(Dictionary_):
     VERBS_FILENAME = re_compile('(.*)-verbs.csv$')                            
     def add(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
-        verb = Verb(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)  
+        verb = Verb.importString(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)  
         if phrase in self:
             cs_debug("Verb_Dictionary :", phrase,"already in dictionary")
         else:      

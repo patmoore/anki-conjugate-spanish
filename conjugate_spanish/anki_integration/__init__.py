@@ -58,7 +58,7 @@ class AnkiIntegration_(object):
         return deck_id
     
     def createDefaultConjugationOverride(self, note):        
-        note['Conjugation Overrides'] = Verb(note['Text']).overrides_string
+        note['Conjugation Overrides'] = Verb.importString(note['Text']).overrides_string
             
     def showQuestion(self):   
         pass
