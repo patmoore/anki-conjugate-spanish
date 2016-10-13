@@ -40,7 +40,7 @@ def td(string_):
     return '<td>' + string_ + '</td>'
 
 IfTest_No_String = Template("{{#${variable}}}${before}{{${variable}}}{{/${variable}}}")
-IfTest_String = Template("{{#${variable}}}${before}{{${string}}}{{/${variable}}}")
+IfTest_String = Template("{{#${variable}}}${before}${string}{{/${variable}}}")
 def iftest(variable, string_ = None, before=''):
     template = IfTest_No_String if string_ is None else IfTest_String
     return template.substitute(variable=variable, string=string_, before=before)
@@ -128,38 +128,6 @@ class ModelTemplate_(object):
         
     def addCard(self, cardTemplate):
         self.modelManager.addTemplate(self.model, cardTemplate.card)
-        
-    @classmethod
-    def getModelTemplate(cls, model, create=False, **kwargs):
-        global mw
-        do_save = False
-        
-        if isinstance(model, ModelTemplate_):
-            return model
-        elif isinstance(model, str):
-            modelName = model
-            model_ = mw.col.models.byName(modelName)
-            if model_ is None:
-                if not create:
-                    return None
-        elif isinstance(model, dict):
-            model_ = model
-            modelName = model['name']
-        else:
-            modelName = BASE_MODEL
-            
-        if model_ is None:
-            do_save = True
-            model_ = mw.col.models.new(name=modelName)
-            deck_id(model_, mw.col.decks.id(modelName))
-            
-        if modelName in ModelDefinitions:            
-            kwargs.update(ModelDefinitions[modelName])
-            
-        modelTemplate = ModelTemplate_(model=model_, **kwargs)
-        if do_save:
-            modelTemplate.save()
-        return modelTemplate
     
     def verbToNote(self, verb, irregularOnly=True):
         """
@@ -267,6 +235,8 @@ class ModelTemplate_(object):
         card = self.createConjugationOverrideCard()
         for tense in Tenses.all:
             card = self.createTenseCard(tense)
+        for person in Persons.all:
+            card = self.createPersonCard(person)
     
     def createConjugationOverrideCard(self):
         cardName='Conjugation Overrides'
@@ -284,35 +254,58 @@ class ModelTemplate_(object):
         return cardTemplate
 
     def createTenseCard(self, tense):   
-        def addCell(person):
-            return iftest(Tenses[tense]+' '+Persons[person],td(Persons[person])+ td('{{'+Tenses[tense]+' '+Persons[person]+'}}'))
-        cardName = Tenses[tense]
+        cardName = Tenses.human_readable(tense)
+        def __addCell(tense,person):
+            return iftest(self.fieldName(tense,person),td(Persons.human_readable(person))+ td('{{'+self.fieldName(tense,person)+'}}'))
         def _create(cardTemplate):
-            cardTemplate.questionFormat = '{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+'}}'+'<br>'+Tenses[tense]
+            cardTemplate.questionFormat = '{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+'}}'+'<br>'+Tenses.human_readable(tense)
             answer = '<table>\n'
             answer += '<tr>'
             if tense in Tenses.Person_Agnostic:            
-                answer += iftest(Tenses[tense], td('{{'+Tenses[tense]+'}}'))            
+                answer += iftest(self.fieldName(tense), td('{{'+self.fieldName(tense)+'}}'))            
             else:
                 if tense in Tenses.imperative:
-                    answer+=td('')+addCell(Persons.first_person_plural)
+                    answer+=td('')+__addCell(tense, Persons.first_person_plural)
                 else:
                     for person in Persons.first_person:
-                        answer += addCell(person)
+                        answer += __addCell(tense, person)
                 answer += '</tr>\n'
                 answer += '<tr>'
                 for person in Persons.second_person:
-                    answer += addCell(person)
+                    answer += __addCell(tense, person)
                 answer += '</tr>\n'
                 answer += '<tr>'
                 for person in Persons.third_person:
-                    answer += addCell(person)
+                    answer += __addCell(tense, person)
             answer += '</tr>\n'
             answer += '</table>'
             cardTemplate.answerFormat = answer
             self.addCard(cardTemplate)
             self._changed = True
-        cardTemplate = self.getCard(cardName,create=True)
+        cardTemplate = self.getCard(cardName,create=_create)
+        return cardTemplate
+    
+    def createPersonCard(self, person):   
+        cardName = Persons.human_readable(person)
+        def __addCell(tense,person):
+            _fieldName = self.fieldName(tense,person)
+            if _fieldName is None:
+                return ''
+            else:
+                return iftest(self.fieldName(tense,person),td(Tenses.human_readable(tense))+ td('{{'+self.fieldName(tense,person)+'}}'))
+
+        def _create(cardTemplate):
+            cardTemplate.questionFormat = '{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+'}}'+'<br>'+Persons.human_readable(person)
+            answer = '<table>\n'
+            for tense in Tenses.all_except(Tenses.Person_Agnostic):
+                answer += '<tr>'
+                answer+= __addCell(tense, person)
+                answer += '</tr>\n'
+            answer += '</table>'
+            cardTemplate.answerFormat = answer
+            self.addCard(cardTemplate)
+            self._changed = True
+        cardTemplate = self.getCard(cardName,create=_create)
         return cardTemplate
     
 class CardTemplate_(object):
@@ -359,22 +352,62 @@ SPANISH_PREFIX = ADDON_PREFIX+"::"
 BASE_MODEL = SPANISH_PREFIX+'Verb'
 VERB_SHORT_MODEL= SPANISH_PREFIX+'Verb (Short)'
 FULLY_CONJUGATED_MODEL = SPANISH_PREFIX+'Fully Conjugated Verb'
-THIRD_PERSON_ONLY_MODEL = SPANISH_PREFIX+'Third Person Only'
 PHRASE_MODEL = SPANISH_PREFIX+'Phrase'
 
 class ModelDefinitions_(dict):
+    def model_name(self, suffix):
+        if suffix[:len(SPANISH_PREFIX)] != SPANISH_PREFIX:
+            _model_name = SPANISH_PREFIX+suffix
+        else:
+            _model_name = suffix  
+        return _model_name
     def find_by_model_key(self, model_template_key):
         for model_template in self.values():
             if model_template.model_template_key == model_template_key:
                 return model_template
         return None
-    
+        
+    def add_tense_person_field(self, dict_, tense, person=None):
+        fieldName = ModelTemplate_.fieldName(tense,person)
+        if fieldName is not None:
+            dict_['fields'].append({'name':fieldName})
+            
+    def getModelTemplate(self, model, create=False, **kwargs):
+        global mw
+        do_save = False
+        
+        if isinstance(model, ModelTemplate_):
+            return model
+        elif isinstance(model, str):
+            modelName = self.model_name(model)
+            model_ = mw.col.models.byName(modelName)
+            if model_ is None:
+                if not create:
+                    return None
+        elif isinstance(model, dict):
+            model_ = model
+            modelName = model['name']
+        else:
+            modelName = BASE_MODEL
+            
+        if model_ is None:
+            do_save = True
+            model_ = mw.col.models.new(name=modelName)
+            deck_id(model_, mw.col.decks.id(modelName))
+            
+        if modelName in ModelDefinitions:            
+            kwargs.update(ModelDefinitions[modelName])
+            
+        modelTemplate = ModelTemplate_(model=model_, **kwargs)
+        if do_save:
+            modelTemplate.save()
+        return modelTemplate
+
 ModelDefinitions = ModelDefinitions_()
-model_template_key = 1
-for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
+for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL]:
     ModelDefinitions[modelName] = {
-        # constant to help if the model gets deleted.
-        'model_template_key': model_template_key,
+        # constant to help if the model gets deleted. 
+        'model_template_key': modelName,
         'modelName': modelName,        
         'fields': [
             {'name': ModelTemplate_.KEY},
@@ -385,35 +418,62 @@ for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL, THIRD_PERSON_ONLY_MODEL]:
             {'name': ModelTemplate_.ROOT_VERB},
         ]
     }
-    model_template_key += 1
-
-ModelDefinitions[BASE_MODEL]['menuName'] = 'Conjugate Spanish:Basic'
-ModelDefinitions[FULLY_CONJUGATED_MODEL]['menuName'] = 'Conjugate Spanish:Full Conjugation'
-
-ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['menuName'] = 'Conjugate Spanish:Third party only verbs'
+    
+## models by person
+for person in Persons.all:
+    modelName = SPANISH_PREFIX+Persons[person]
+    cs_debug("model=",modelName)
+    ModelDefinitions[modelName] = {
+        # constant to help if the model gets deleted.
+        'model_template_key': modelName,
+        'modelName': modelName,       
+        'fields': [
+            {'name': ModelTemplate_.KEY},
+            {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
+            {'name': ModelTemplate_.ENGLISH_DEFINITION},
+            {'name': ModelTemplate_.CONJUGATION_OVERRIDES},
+            {'name': ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES},
+            {'name': ModelTemplate_.ROOT_VERB},
+        ]
+    }
+    for tense in Tenses.all_except(Tenses.Person_Agnostic):
+        ModelDefinitions.add_tense_person_field(ModelDefinitions[modelName],tense, person)
+## models by Tense
+for tense in Tenses.all:
+    modelName = SPANISH_PREFIX+Tenses[tense]
+    cs_debug("model=",modelName)
+    ModelDefinitions[modelName] = {
+        # constant to help if the model gets deleted.
+        'model_template_key': modelName,
+        'modelName': modelName,       
+        'fields': [
+            {'name': ModelTemplate_.KEY},
+            {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
+            {'name': ModelTemplate_.ENGLISH_DEFINITION},
+            {'name': ModelTemplate_.CONJUGATION_OVERRIDES},
+            {'name': ModelTemplate_.MANUAL_CONJUGATION_OVERRIDES},
+            {'name': ModelTemplate_.ROOT_VERB},
+        ]
+    }
+    if tense in Tenses.Person_Agnostic:
+        ModelDefinitions.add_tense_person_field(ModelDefinitions[modelName],tense)
+    else:
+        for person in Persons.all:
+            ModelDefinitions.add_tense_person_field(ModelDefinitions[modelName],tense, person)
+                    
 for tense in Tenses.All_Persons:
     for person in Persons.all:
-        ModelDefinitions[FULLY_CONJUGATED_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense,person)})
+        ModelDefinitions.add_tense_person_field(ModelDefinitions[FULLY_CONJUGATED_MODEL], tense, person)
 for tense in Tenses.imperative:
     for person in Persons.all_except(Persons.first_person_singular):
-        ModelDefinitions[FULLY_CONJUGATED_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense,person)})
+        ModelDefinitions.add_tense_person_field(ModelDefinitions[FULLY_CONJUGATED_MODEL], tense, person)
 for tense in Tenses.Person_Agnostic:
-    ModelDefinitions[FULLY_CONJUGATED_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense)})
+    ModelDefinitions.add_tense_person_field(ModelDefinitions[FULLY_CONJUGATED_MODEL], tense)
 
-for tense in Tenses.All_Persons:
-    for person in Persons.third_person:
-        ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense,person)})
-for tense in Tenses.imperative:
-    for person in Persons.third_person:
-        ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense,person)})
-for tense in Tenses.Person_Agnostic:
-    ModelDefinitions[THIRD_PERSON_ONLY_MODEL]['fields'].append({'name':ModelTemplate_.fieldName(tense)})
-
-model_template_key += 1
 ModelDefinitions[PHRASE_MODEL] = {
         'modelName': PHRASE_MODEL,
         # constant to help if the model gets deleted.
-        'model_template_key': model_template_key,
+        'model_template_key': PHRASE_MODEL,
         'fields': [
             {'name': ModelTemplate_.KEY},
             {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
@@ -421,11 +481,10 @@ ModelDefinitions[PHRASE_MODEL] = {
             {'name': ModelTemplate_.ROOT_VERB},
         ]
     }
-model_template_key += 1
 ModelDefinitions[VERB_SHORT_MODEL] = {
         'modelName': VERB_SHORT_MODEL,
         # constant to help if the model gets deleted.
-        'model_template_key': model_template_key,
+        'model_template_key': VERB_SHORT_MODEL,
         'fields': [
             {'name': ModelTemplate_.KEY},
             {'name': ModelTemplate_.INFINITIVE_OR_PHRASE},
@@ -437,5 +496,4 @@ ModelDefinitions[VERB_SHORT_MODEL] = {
 
 for tense in Tenses.core:
     for person in Persons.core:
-        ModelDefinitions[VERB_SHORT_MODEL]['fields'].append(
-            {'name': Tenses[tense]+'/'+Persons[person]})
+        ModelDefinitions.add_tense_person_field(ModelDefinitions[VERB_SHORT_MODEL],tense,person)

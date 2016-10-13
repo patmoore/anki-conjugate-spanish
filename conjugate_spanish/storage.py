@@ -8,7 +8,7 @@ from anki.hooks import addHook, wrap, remHook
 
 
 class Storage_(object):
-    DB_VERSION='0.1.6'
+    DB_VERSION='0.1.7'
     PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "explicit_overrides", "conjugation_overrides","applied_overrides","manual_overrides"]
     
     def __init__(self, mw):
@@ -133,7 +133,7 @@ class Storage_(object):
                 phrase                   text not null,
                 ${phrase_table_name}_id     integer,
                 ${note_table_name}_id    integer,
-                model_template_key       integer,
+                model_template_key       text,
                 model_template_id        integer,
                 UNIQUE(${phrase_table_name}_id, ${note_table_name}_id, model_template_id) ON CONFLICT REPLACE
             );                    

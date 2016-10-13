@@ -13,6 +13,10 @@ def re_compile(string_):
     return re.compile(string_, re.UNICODE+re.IGNORECASE)
 
 class BaseConsts_(list):
+    def __init__(self, constants, human_readable):
+        super().__init__(constants)
+        self._human_readable = human_readable
+        
     @property
     def all(self):
         return list(range(len(self)))
@@ -20,6 +24,9 @@ class BaseConsts_(list):
         if not isinstance(_except, list):
             _except = [ _except ]
         return [index for index in self.all if index not in _except]
+    
+    def human_readable(self, index):
+        return self._human_readable[index]
     
 class Infinitive_Endings_(BaseConsts_):
     ar_verb = 0
@@ -30,6 +37,10 @@ Infinitive_Endings = Infinitive_Endings_( [
     'ar',
     'er',
     'ir'
+],[
+    '-ar',
+    '-er',
+    '-ir'
 ])
 
 class Tenses_(BaseConsts_):
@@ -74,6 +85,19 @@ Tenses = Tenses_([
     #The boy is cursed. --> el niño está maldito. (adjective)
     #The boy has been cursed --> el niño ha sido maldecido ( one of the perfect tenses)
     'adjective'
+],[
+    'Present',
+    'Incomplete Past',
+    'Past',
+    'Future',
+    'Conditional',
+    'Present Subjective',
+    'Past Subjective',
+    'Imperative Positive',
+    'Imperative Negative',
+    'Gerund (-ed)',
+    'Past Participle (-ing)',
+    'Adjective (usually Past Participle)'
 ])
 
 class Persons_(BaseConsts_):
@@ -94,6 +118,12 @@ class Persons_(BaseConsts_):
 
 Persons = Persons_([
     'yo',
+    'tú',
+    'usted',
+    'nosotros',
+    'vosotros',
+    'ustedes'
+],['yo',
     'tú',
     'usted',
     'nosotros',

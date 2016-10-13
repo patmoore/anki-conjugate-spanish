@@ -24,8 +24,7 @@ from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
 import conjugate_spanish
 from conjugate_spanish.utils import cs_debug
 from conjugate_spanish.storage import Storage
-from conjugate_spanish.anki_integration.model_template import PHRASE_MODEL, VERB_SHORT_MODEL,\
-    THIRD_PERSON_ONLY_MODEL
+from conjugate_spanish.anki_integration.model_template import PHRASE_MODEL, VERB_SHORT_MODEL
 
 __all__ = [ 'AnkiIntegration']
 """
@@ -41,6 +40,7 @@ class AnkiIntegration_(object):
     
     def __init__(self, modelName=BASE_MODEL):        
         self.modelName = modelName
+        # HACK should really be ModelDefinitions
         self.modelTemplates = {}
         self.mw = mw
         addHook('editFocusGained', self.editFocusGained)
@@ -76,7 +76,7 @@ class AnkiIntegration_(object):
         """
         if not ModelTemplate_.isSpanishModel(note):
             return flag
-        modelTemplate = ModelTemplate_.getModelTemplate(note.model(), False)
+        modelTemplate = ModelDefinitions.getModelTemplate(note.model(), False)
         #look for required - doesn't anki have code for this?
         inf_field = modelTemplate.getFieldIndex(ModelTemplate_.INFINITIVE_OR_PHRASE)
         conjugationoverrides_field = modelTemplate.getFieldIndex(ModelTemplate_.CONJUGATION_OVERRIDES)
@@ -127,7 +127,11 @@ class AnkiIntegration_(object):
             return self._getModelTemplateByName(modelName)
         
     def _getModelTemplateByName(self, modelName):
-        return self.modelTemplates.get(modelName, None)
+        """
+        HACK- should be part of ModelDefinitions
+        """
+        _model_name = ModelDefinitions.model_name(modelName)
+        return self.modelTemplates.get(_model_name, None)
     
     def setupEditorButtons(self, editor=None, *args):
         if not isinstance(editor, Editor):
@@ -165,11 +169,11 @@ class AnkiIntegration_(object):
         """
         pass
         
-    def setDeckNoteType(self, deck):
-        model = self.getModelTemplate(self.modelName)
-        deck_ = self._getDeck(deck)
-        deck_['mid'] = model['id']
-        self._saveDeck(deck_)
+#     def setDeckNoteType(self, deck):
+#         model = self.getModelTemplate(self.modelName)
+#         deck_ = self._getDeck(deck)
+#         deck_['mid'] = model['id']
+#         self._saveDeck(deck_)
     
     def _getDeck(self, deck):
         from aqt import mw
@@ -205,7 +209,7 @@ class AnkiIntegration_(object):
         # Make sure our standard models are defined.
         for modelName, modelDefinition in ModelDefinitions.items():
             cs_debug("model ",modelName)
-            self.modelTemplates[modelName] = ModelTemplate_.getModelTemplate(modelName, collection=mw.col, create=True, **modelDefinition)
+            self.modelTemplates[modelName] = ModelDefinitions.getModelTemplate(modelName, collection=mw.col, create=True, **modelDefinition)
             
 #     def enterNewVerbInit(key, definition):
 #         global AnkiIntegration
@@ -287,44 +291,31 @@ class AnkiIntegration_(object):
         self.addMenuItem(definition['menu'], self.menu_loadDictionary)
 
     def menu_createNotes(self, *args, **kwargs):
-        cs_debug(args)
-        cs_debug(kwargs.items())
         model_name = PHRASE_MODEL
         modelTemplate = self._getModelTemplateByName(model_name)
         self.createNewDeck(model_name)
         for phrase in Espanol_Dictionary.get_phrases():
             note = modelTemplate.verbToNote(phrase)
-            
             mw.col.addNote(note)
             Storage.connect_phrase_to_note(phrase, note)
-            
-    def menu_createVerbNotes(self, *args, **kwargs):
-        cs_debug(args)
-        cs_debug(kwargs.items())
-        
+                
+    def _create_Notes_Menu(self, modelName, irregular_only=True, *args):
+        modelTemplate = self._getModelTemplateByName(modelName)
         for phrase in Espanol_Dictionary.get_verbs():
-            for modelTemplate in self._getModels(phrase):
-                note = modelTemplate.verbToNote(phrase)
-                mw.col.addNote(note)
-                Storage.connect_phrase_to_note(phrase, note)        
-            
-    def _getModels(self, phrase):
-        model_names = []
-        if not phrase.is_conjugatable:
-            model_names.append(PHRASE_MODEL)
-        else:
-            model_names.append(BASE_MODEL)
-            if phrase.has_conjugation_overrides(['3rd_only', '3rd_sing_only']):
-                model_names.append(THIRD_PERSON_ONLY_MODEL)
-            model_names.append(FULLY_CONJUGATED_MODEL)
-            model_names.append(VERB_SHORT_MODEL)
-        return [self._getModelTemplateByName(model_name) for model_name in model_names]
+            note = modelTemplate.verbToNote(phrase, irregular_only)
+            mw.col.addNote(note)
+            Storage.connect_phrase_to_note(phrase, note)                
     
     def createAllNotesMenu(self, definition):
         self.addMenuItem(definition['menu'], self.menu_createNotes)
     
     def createAllVerbNotesMenu(self, definition):
-        self.addMenuItem(definition['menu'], self.menu_createVerbNotes)
+#         for person in Persons.all:
+#             self.addMenuItem(Persons.human_readable(person), lambda *args: self._create_Notes_Menu(Persons[person], False, *args))
+#         for tense in Tenses.all:
+#             self.addMenuItem(Tenses.human_readable(tense), lambda *args: self._create_Notes_Menu(Tenses[tense], False, *args))
+        
+        self.addMenuItem(definition['menu'], lambda *args: self._create_Notes_Menu(FULLY_CONJUGATED_MODEL, False, *args))
          
     def resetDb_(self, *args, **kwargs):
         Storage.resetDb()
