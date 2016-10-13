@@ -81,8 +81,17 @@ class ModelTemplate_(object):
         self._createTemplates()
         cs_debug("model=",model)
         # NOTE: using '::' can be used to create sub decks
-        deck_id(self.model, self.collection.decks.id(self.name))
+        self._set_deck_id(self.model, self.name)
         self._changed = True # HACK for now
+    
+    # HACK -- need to refactor to proper class.    
+    def _set_deck_id(self, dict_, deck_name):
+        deck_id(dict_, self.collection.decks.id(deck_name))
+    
+    # HACK -- need to refactor to proper class.
+    def _set_card_deck_id(self, cardTemplate, deck_name):
+        # so the deck is a subdeck
+        cardTemplate.deck_id = self.collection.decks.id(SPANISH_PREFIX+deck_name)
         
     def createConjugationFields(self, tenses=Tenses.all, persons=Persons.all):
         for tense in tenses:
@@ -259,7 +268,7 @@ class ModelTemplate_(object):
             return iftest(self.fieldName(tense,person),td(Persons.human_readable(person))+ td('{{'+self.fieldName(tense,person)+'}}'))
         def _create(cardTemplate):
             cardTemplate.questionFormat = '{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+'}}'+'<br>'+Tenses.human_readable(tense)
-            answer = '<table>\n'
+            answer = iftest(ModelTemplate_.ENGLISH_DEFINITION)+'<table>\n'
             answer += '<tr>'
             if tense in Tenses.Person_Agnostic:            
                 answer += iftest(self.fieldName(tense), td('{{'+self.fieldName(tense)+'}}'))            
@@ -280,6 +289,8 @@ class ModelTemplate_(object):
             answer += '</tr>\n'
             answer += '</table>'
             cardTemplate.answerFormat = answer
+            self._set_card_deck_id(cardTemplate, cardName)
+            
             self.addCard(cardTemplate)
             self._changed = True
         cardTemplate = self.getCard(cardName,create=_create)
@@ -296,13 +307,14 @@ class ModelTemplate_(object):
 
         def _create(cardTemplate):
             cardTemplate.questionFormat = '{{'+ModelTemplate_.INFINITIVE_OR_PHRASE+'}}'+'<br>'+Persons.human_readable(person)
-            answer = '<table>\n'
+            answer = iftest(ModelTemplate_.ENGLISH_DEFINITION)+'<table>\n'
             for tense in Tenses.all_except(Tenses.Person_Agnostic):
                 answer += '<tr>'
                 answer+= __addCell(tense, person)
                 answer += '</tr>\n'
             answer += '</table>'
             cardTemplate.answerFormat = answer
+            self._set_card_deck_id(cardTemplate, cardName)
             self.addCard(cardTemplate)
             self._changed = True
         cardTemplate = self.getCard(cardName,create=_create)
@@ -346,6 +358,12 @@ class CardTemplate_(object):
     @backAnswerFormat.setter
     def backAnswerFormat(self, bafmt):
         self.card['bafmt'] = bafmt
+    @property    
+    def deck_id(self):
+        return deck_id(self.card)    
+    @deck_id.setter
+    def deck_id(self, deck_id_):
+        deck_id(self.card, deck_id_)
         
 # NOTE: using '::' can be used to create sub decks
 SPANISH_PREFIX = ADDON_PREFIX+"::"
@@ -393,7 +411,7 @@ class ModelDefinitions_(dict):
         if model_ is None:
             do_save = True
             model_ = mw.col.models.new(name=modelName)
-            deck_id(model_, mw.col.decks.id(modelName))
+#             deck_id(model_, mw.col.decks.id(modelName))
             
         if modelName in ModelDefinitions:            
             kwargs.update(ModelDefinitions[modelName])
@@ -421,11 +439,12 @@ for modelName in [ BASE_MODEL, FULLY_CONJUGATED_MODEL]:
     
 ## models by person
 for person in Persons.all:
-    modelName = SPANISH_PREFIX+Persons[person]
+    modelKey = SPANISH_PREFIX+Persons[person]
+    modelName = SPANISH_PREFIX+Persons.human_readable(person)
     cs_debug("model=",modelName)
-    ModelDefinitions[modelName] = {
+    ModelDefinitions[modelKey] = {
         # constant to help if the model gets deleted.
-        'model_template_key': modelName,
+        'model_template_key': modelKey,
         'modelName': modelName,       
         'fields': [
             {'name': ModelTemplate_.KEY},
@@ -437,14 +456,15 @@ for person in Persons.all:
         ]
     }
     for tense in Tenses.all_except(Tenses.Person_Agnostic):
-        ModelDefinitions.add_tense_person_field(ModelDefinitions[modelName],tense, person)
+        ModelDefinitions.add_tense_person_field(ModelDefinitions[modelKey],tense, person)
 ## models by Tense
 for tense in Tenses.all:
-    modelName = SPANISH_PREFIX+Tenses[tense]
+    modelKey = SPANISH_PREFIX+Tenses[tense]
+    modelName = SPANISH_PREFIX+Tenses.human_readable(tense)
     cs_debug("model=",modelName)
-    ModelDefinitions[modelName] = {
+    ModelDefinitions[modelKey] = {
         # constant to help if the model gets deleted.
-        'model_template_key': modelName,
+        'model_template_key': modelKey,
         'modelName': modelName,       
         'fields': [
             {'name': ModelTemplate_.KEY},
@@ -456,10 +476,10 @@ for tense in Tenses.all:
         ]
     }
     if tense in Tenses.Person_Agnostic:
-        ModelDefinitions.add_tense_person_field(ModelDefinitions[modelName],tense)
+        ModelDefinitions.add_tense_person_field(ModelDefinitions[modelKey],tense)
     else:
         for person in Persons.all:
-            ModelDefinitions.add_tense_person_field(ModelDefinitions[modelName],tense, person)
+            ModelDefinitions.add_tense_person_field(ModelDefinitions[modelKey],tense, person)
                     
 for tense in Tenses.All_Persons:
     for person in Persons.all:

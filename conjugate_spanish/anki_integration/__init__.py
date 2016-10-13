@@ -211,22 +211,6 @@ class AnkiIntegration_(object):
             cs_debug("model ",modelName)
             self.modelTemplates[modelName] = ModelDefinitions.getModelTemplate(modelName, collection=mw.col, create=True, **modelDefinition)
             
-#     def enterNewVerbInit(key, definition):
-#         global AnkiIntegration
-#         def testFunction():
-#             global mw
-#             global showInfo
-#             AnkiIntegration._createModel()
-#             # get the number of cards in the current collection, which is stored in
-#             # the main window
-#             cardCount = mw.col.cardCount()
-#             deckName = u'ImportDeck'
-#             # will create deck if it doesn't exist (mw.col.decks is a DeckManager)
-#             did = mw.col.decks.id(deckName)
-#             # show a message box
-#             showInfo("Card count: {0}, deck id={1}".format(cardCount,did))
-#         
-#         AnkiIntegration.addMenuItem(definition[u'menu'], testFunction)
         FEATURES = [
 #         u'new_verb': {
 #             u'menu': u'Enter new verb or phrase',
