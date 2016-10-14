@@ -8,8 +8,8 @@ from anki.hooks import addHook, wrap, remHook
 
 
 class Storage_(object):
-    DB_VERSION='0.1.8'
-    PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "conjugation_overrides","applied_overrides","manual_overrides"]
+    DB_VERSION='0.1.10'
+    PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "conjugation_overrides","applied_overrides","manual_overrides", "base_verb", "root_verb"]
     
     def __init__(self, mw):
         from anki.hooks import addHook
@@ -117,8 +117,10 @@ class Storage_(object):
                 core_characters          text,
                 inf_ending               text,
                 inf_ending_index         integer,
-                reflexive                boolean,
+                reflexive                integer,
                 suffix_words             text,
+                base_verb             text,
+                root_verb             text,
                 conjugation_root_id      integer,
                 parent_phrase_id         integer,
                 conjugation_overrides    text,
