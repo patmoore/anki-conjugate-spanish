@@ -155,7 +155,7 @@ class ModelTemplate_(object):
             elif fieldName == ModelTemplate_.ENGLISH_DEFINITION:
                 value = verb.definition
             elif fieldName == ModelTemplate_.ROOT_VERB:
-                value = verb.base_verb_str if verb.is_derived else None
+                value = verb.base_verb_string if verb.is_derived else None
                 
             elif isinstance(verb, Verb):
                 if fieldName == ModelTemplate_.CONJUGATION_OVERRIDES:

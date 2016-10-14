@@ -240,8 +240,8 @@ class Verb(Phrase):
                 result+=',"'+repr(self.appliedOverrides)+'"'
             if len(self.doNotApply) > 0:
                 result +=',"'+repr(self.doNotApply)+'"'
-            if self.base_verb_str is not None:
-                result += ',"'+self.base_verb_str+'"'
+            if self.base_verb_string is not None:
+                result += ',"'+self.base_verb_string+'"'
         
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
@@ -870,7 +870,7 @@ class Verb(Phrase):
             # some verbs are based off of others (tener)
             # TODO: maldecir has different tu affirmative than decir        
             from .espanol_dictionary import Verb_Dictionary
-            _base_verb = Verb_Dictionary.get(self._base_verb_str)
+            _base_verb = Verb_Dictionary.get(self.base_verb_string)
             if _base_verb is None:
                 # TODO - may not be in dictionary yet?
                 return None 
@@ -885,6 +885,25 @@ class Verb(Phrase):
         """
         self._base_verb = base_verb    
     
+    @property
+    def base_verb_string(self):
+        _base_verb_str= getattr(self, '_base_verb_string', None)
+        if _base_verb_str is None:
+            if self.is_phrase:
+                # a phrase means the base verb is the actual verb being conjugated.
+                self._base_verb_string = self.inf_verb_string
+            elif self.has_prefix and self.reflexive == Reflexive.base_reflexive:
+                self._base_verb_string = self.core_characters + self.inf_ending +'se'
+            elif self.has_prefix:
+                self._base_verb_string = self.core_characters + self.inf_ending
+            else:
+                self._base_verb_string = ''
+        return self._base_verb_string
+    
+    @base_verb_string.setter
+    def base_verb_string(self, base_verb_string_):
+        self._base_verb_string = base_verb_string_
+        
     @property
     def root_verb(self):
         """
@@ -901,12 +920,7 @@ class Verb(Phrase):
     
     @property
     def is_derived(self):
-        return self._base_verb_str is not None
-    
-    ## HACK - should be derived_from
-    @property
-    def base_verb_str(self):
-        return self._base_verb_str
+        return self.base_verb_string is not None    
     
     @property
     def derived_from(self):
@@ -915,10 +929,10 @@ class Verb(Phrase):
         TODO: maybe a chain of derivations
         """
         if self.is_derived:
-            if self.reflexive:
-                return [ self.base_verb_str, self.inf_verb_string ]
+            if self.is_reflexive:
+                return [ self.base_verb_string, self.inf_verb_string ]
             else:
-                return [ self.base_verb_str ]
+                return [ self.base_verb_string ]
         else:
             return None
         

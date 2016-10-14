@@ -200,8 +200,8 @@ class Storage_(object):
 #                     parent_verb_str = phrase.root_verb_str
 #                     verb_row =self.db.first(self._select_phrase_by_phrase, parent_verb_str)
 #                     if verb_row is None: 
-#                         Verb.importString(parent_verb_str, conjugation_overrides=phrase.explicit_overrides_string)
-#                     base_verb_row =self.db.first(self._select_phrase_by_phrase, phrase.base_verb_str)
+#                         Verb(parent_verb_str, conjugation_overrides=phrase.explicit_overrides_string)
+#                     base_verb_row =self.db.first(self._select_phrase_by_phrase, phrase.base_verb_string)
 #                     if base_verb_row is None: 
 #                         pass
         self.create_associations(phrases)

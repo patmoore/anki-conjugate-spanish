@@ -31,7 +31,7 @@ class NonConjugatedPhrase(Phrase):
     
     ## HACK
     @property
-    def base_verb_str(self):
+    def base_verb_string(self):
         return self.associated_verbs[0]
     
     @property
