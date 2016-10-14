@@ -343,7 +343,7 @@ class Verb(Phrase):
                 _reflexive = pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE,self.reflexive)
                 if _reflexive:
                     # needed in imperative to correctly add in the reflexive pronoun 
-                    conjugation = self.__conjugation_imperative_reflexive(tense, person, conjugation)
+                    conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, conjugation)
             else:
                 conjugation = self._conjugate_stem_and_endings(tense, person, options)
             
