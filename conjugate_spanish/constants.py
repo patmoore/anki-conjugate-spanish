@@ -284,7 +284,13 @@ def dump_trace(e, message):
     traceback.print_tb(tb)
     formatted = traceback.format_exception(extype, ex, tb)[-1]
 
-
+def is_empty_str(string):
+    if string is None or string == "":
+        return True
+    elif isinstance(string, str):
+        return False
+    else:
+        raise Exception("value is not a string")
 #####
 # some standard methods to help document the cryptic keys used by anki
 # Not elegant or 'good' practice but this isolates the anki constants. 
