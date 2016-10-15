@@ -107,6 +107,16 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.inf_verb_string, "enviar")
         conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
         self.assertEqual('envía', conjugation)
+    def test_proper_accent_4(self):
+        """
+        make sure the o is accented not the i ( i is a weak vowel )
+        """
+        verb = Verb.importString('erguirse','', conjugation_overrides="e:i")
+        self.assertEqual(verb.base_verb_string, None)
+        self.assertEqual(verb.root_verb_str, "erguir")
+        self.assertEqual(verb.inf_verb_string, "erguirse")
+        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        self.assertEqual('írguete', conjugation)
         
     def test_accenting_rules(self):
         samples = {

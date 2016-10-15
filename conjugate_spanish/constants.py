@@ -177,7 +177,7 @@ def pick(dictionary, key, default_value):
         return default_value
 
 ## for convenience with creating strings
-class Vowels_(list):
+class Vowels_():
     a = 'a'
     e = 'e'
     i = 'i'
@@ -194,6 +194,12 @@ class Vowels_(list):
     i_any = i + i_a
     o_any = o + o_a
     u_any = u + u_a + u_u
+    y = 'y'
+    # umplauted u
+    qu = 'qu'
+    # umplauted u
+    gu = 'gu'
+    h = 'h'
     
     unaccented = a+e+i+o+u
     accented = a_a + e_a + i_a + o_a + u_a
@@ -202,49 +208,154 @@ class Vowels_(list):
     
     strong = [ a, a_a, e, e_a, o, o_a ]
     weak = [ i, i_a, u, u_a, u_u ]
-    @classmethod
-    def any(cls, vowel):
-        for an_any in Vowels_.any_:
+    # http://www.123teachme.com/learn_spanish/diphthongs_and_triphthongs
+    # TODO - need to verify accent rules!
+    accent_mapping = {
+        e+h+u: e_a+h+u,
+        u+a+y : u+a_a+y,
+        u+e+y : u+e_a+y,
+        u+a+u : u+a_a+u,
+        u+a+i: u+a_a+i,
+        i+a+i: i+a_a+i,
+        i+e+i: i+e_a+i,
+        a+i : a_a + i,
+        a+y : a_a + y, 
+        e+i : e_a + i,
+        e+y : e_a + y,
+        o+i : o_a + i,
+        o+y : o_a + y,
+        u+i : u_a + i,
+        u+y : u_a + y,
+        a+u : a_a + u,
+        e+u : e_a + u,
+        i+a : i + a_a,
+        i+e : i + e_a,
+        i+o : i + o_a,
+        i+a : i_a + u,
+        u+a : u + a_a,
+        u+e : u + a_a,
+        u+o : u + a_a,    
+        a: a_a,
+        e: e_a,
+        i: i_a,
+        o: o_a,
+        u: u_a,            
+    }
+    # used to preserve order.
+    # non-accented because we check first for accented
+    vowel_combinations = [
+            e+h+u,
+            u+a+y,
+            u+e+y,
+            u+a+u,
+            # uái
+            u+a+i,
+            # guiáis
+            i+a+i,
+            # estudiéis
+            i+e+i,
+            a+i,
+            a+y, 
+            e+i,
+            e+y,
+            o+i,
+            o+y,
+            u+i,
+            u+y,
+            a+u,
+            e+u,
+            i+a,
+            i+e,
+            i+o,
+            i+a,
+            u+a,
+            u+e,
+            u+o
+        ]    
+    
+    def __init__(self):
+        # note: order is important here
+        self.accent_rules = []
+        weak_beginning = '^(.*?)'
+        consonants = '([^'+self.all+']*)'
+        vowel_groups = "(?:"+"|".join(self.vowel_combinations)+")"
+        unaccented_group = "(["+self.unaccented+"])"
+        # possible combinations are broken up to avoid having to be super exact on the regex rules ( also makes much more readable)
+        # in onle case we want to match on the dipthongs / triphongs first before single vowels.
+        """
+        Accent a vowel explicitly UNLESS there is an accent already
+        The rules on accenting in spanish is the last vowel if the word ends in a consonent other than n or s
+        Otherwise the second to last vowel.
+        If the vowel to be accented is a strong-weak (au,ai,ei,... ) or a weak-strong pair (ua,ia, ... ) the strong vowel of the pair gets the accent
+        TODO: NOTE: an h between 2 vowels does not break the diphthong
+        https://en.wikipedia.org/wiki/Spanish_irregular_verbs
+        Remember that the presence of a silent h does not break a diphthong, so a written accent is needed anyway in rehúso.
+        http://www.123teachme.com/learn_spanish/diphthongs_and_triphthongs
+        I don't feel i understand the rules correctly.
+        """
+        self.accent_rules = [
+            re_compile(weak_beginning+"("+vowel_groups+")"+consonants+"("+vowel_groups+'[ns]{0,2})$'),
+            re_compile(weak_beginning+unaccented_group+consonants+"("+vowel_groups+'[ns]{0,2})$'),
+            
+            re_compile(weak_beginning+"("+vowel_groups+")"+consonants+"(["+self.unaccented+'][ns]{0,2})$'),
+            re_compile(weak_beginning+unaccented_group+consonants+"(["+self.unaccented+'][ns]{0,2})$'),
+            
+            re_compile(weak_beginning+"("+vowel_groups+")"+consonants+"()$"),
+            re_compile(weak_beginning+unaccented_group+consonants+"()$"),
+            
+            re_compile(weak_beginning+"("+vowel_groups+")"+"()()$"),
+            re_compile(weak_beginning+unaccented_group+consonants+"()$")
+        ]
+        
+    def any(self, vowel):
+        for an_any in self.any_:
             if an_any.find(vowel) >= 0:
                 return an_any
         return vowel
-    @classmethod
-    def re_any_string(cls, string_):
+    
+    def re_any_string(self, string_):
         regex_str = ''
         for char in string_:
-            reg_chars = Vowels_.any(char)
+            reg_chars = self.any(char)
             if len(reg_chars) == 1:
                 regex_str += reg_chars
             else:
                 regex_str += '['+reg_chars+']'
         return regex_str    
-    dipthong_regex_pattern = '(?:(?:[iu]?h?[aeo])|(?:[aeo]h?[iu]?))'
+#     dipthong_regex_pattern = '(?:(?:[iu]?h?[aeo])|(?:[aeo]h?[iu]?))'
     
-    accent_rules = [
-        # word ends in strong vowel, dipthong or n,s
-        re_compile('^(.*?)('+dipthong_regex_pattern+')([^'+all+']*)('+dipthong_regex_pattern+'[ns]{0,2})$'),
-        # word ends in weak vowel or n,s
-        re_compile('^(.*?)('+dipthong_regex_pattern+')([^'+all+']*)([iu]?[ns]{0,2})$'),
-        re_compile('^(.*?)('+'[iu]'+')([^'+all+']*)([ns]{0,2})$'),
-    ]
+#     accent_rules = [
+#         # word ends in strong vowel, dipthong or n,s
+#         re_compile('^(.*?)('+dipthong_regex_pattern+')([^'+all+']*)('+dipthong_regex_pattern+'[ns]{0,2})$'),
+#         # word ends in weak vowel or n,s
+#         re_compile('^(.*?)('+dipthong_regex_pattern+')([^'+all+']*)([iu]?[ns]{0,2})$'),
+#         re_compile('^(.*?)('+'[iu]'+')([^'+all+']*)([ns]{0,2})$'),
+#     ]
     #TODO needs more work
     # need to pick out the exact vowel to accent.
-    @classmethod
-    def find_accented(cls, word):
-        for accent_rule in Vowels_.accent_rules:
+    def find_accented(self, word):
+        for accent_rule in self.accent_rules:
             match = accent_rule.match(word)
             if match is not None:
                 break
         return match
         
+    def accent(self, word):
+        match = self.find_accented(word)
+        if match:
+            print(match.groups())
+            accented = self.accent_mapping[match.group(2)]
+            result = match.group(1)+accented+match.group(3)+match.group(4)
+            print("word="+word+";accent-->"+result)
+            return result
+        else:
+            return word
     
-Vowels = Vowels_([
-    'a',
-    'e',
-    'i',
-    'o',
-    'u'
-])
+Vowels = Vowels_()
+if True:
+    for word in ['repite', 'se', 'cambia', 'irgue']:
+        answer = Vowels.accent(word)
+    
 accented_vowel_check = re_compile('['+Vowels.accented+']')
 def accent_at(string_, index_=None):
     """

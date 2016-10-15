@@ -340,10 +340,10 @@ class Verb(Phrase):
                             formatted = traceback.format_exception_only(traceback_,extype, ex)[-1]
                             message = "Trying to conjugate irregular:%s %s" % ex.message, formatted
                             self.__raise(message, tense, person, traceback_)
-                _reflexive = pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE,self.reflexive)
-                if _reflexive:
+                if pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE,self.reflexive) and not is_empty_str(conjugation):
                     # needed in imperative to correctly add in the reflexive pronoun 
-                    conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, conjugation)
+                    # TODO: may not to check for explicit accent.
+                    conjugation = self.__apply_reflexive_pronoun(tense, person, conjugation, False)
             else:
                 conjugation = self._conjugate_stem_and_endings(tense, person, options)
             
@@ -414,16 +414,23 @@ class Verb(Phrase):
         else:
             _conjugation = self.full_prefix + base_verb_conjugation
             
+        if _reflexive:
+            returned_conjugation = self.__apply_reflexive_pronoun(tense,person,_conjugation, explicit_accent_already_applied)
+        return returned_conjugation
+    def __apply_reflexive_pronoun(self, tense, person, _conjugation, explicit_accent_already_applied):
+        """
+        assume that self.is_reflexive has been checked 
+        """
         if tense in Tenses.imperative:
             returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation, explicit_accent_already_applied)                        
-        elif _reflexive and tense not in Tenses.Person_Agnostic:
+        elif tense not in Tenses.Person_Agnostic:
             returned_conjugation = Persons_Indirect[person] +" "+ _conjugation
-        elif _reflexive and tense == Tenses.gerund:
-            returned_conjugation = self.__explicit_accent(_conjugation)+'se'
+        elif tense == Tenses.gerund:
+            returned_conjugation = Vowels.accent(_conjugation)+'se'
         else:
             returned_conjugation = _conjugation
         return returned_conjugation
-        
+            
     def conjugate_stem(self, tense, person, current_conjugation_ending):
         def __check_override(override, current_conjugation_stem):
             if isinstance(override, str):
@@ -514,56 +521,7 @@ class Verb(Phrase):
  
         return current_conjugation_stem+current_conjugation_ending
     
-    def __explicit_accent(self, conjugation_string):
-        """
-        Accent a vowel explicitly UNLESS there is an accent already
-        The rules on accenting in spanish is the last vowel if the word ends in a consonent other than n or s
-        Otherwise the second to last vowel.
-        If the vowel to be accented is a strong-weak (au,ai,ei,... ) or a weak-strong pair (ua,ia, ... ) the strong vowel of the pair gets the accent
-        TODO: NOTE: an h between 2 vowels does not break the diphthong
-        https://en.wikipedia.org/wiki/Spanish_irregular_verbs
-        Remember that the presence of a silent h does not break a diphthong, so a written accent is needed anyway in rehúso.
-        """
-        _strong_vowel = ['a', 'e', 'o']
-        _weak_vowel = ['i', 'u']
-        if accented_vowel_check.search(conjugation_string):
-            return conjugation_string
-        else:            
-            if conjugation_string[-1] in ['n', 's'] or conjugation_string[-1] in _strong_vowel or conjugation_string[-1] in _weak_vowel:
-                # skip the first vowel for words ending in s or n or a vowel
-                vowel_skip = 1
-            else:
-                vowel_skip = 0
-            
-            result = None
-            while result is None:
-                #May need to go through twice if there is only 1 vowel in the word and it would be normally skipped
-                for index in range(len(conjugation_string)-1,0,-1):                    
-                    if conjugation_string[index] in _strong_vowel:
-                        #strong vowel that is NOT preceded by a paired weak vowel 'ia' is treated for accenting as a single vowel.
-                        if index == 0 or not conjugation_string[index-1] in _weak_vowel:                                 
-                            if vowel_skip > 0:
-                                vowel_skip -=1
-                            else:
-                                result = accent_at(conjugation_string,index)
-                                break
-                    elif conjugation_string[index] in _weak_vowel:
-                        #weak vowel                                                           
-                        if vowel_skip > 0:
-                            vowel_skip -=1
-                        elif index ==0 or conjugation_string[index-1] in _strong_vowel:
-                            # accent should be on strong vowel immediately before the weak vowel (so skip the current weak vowel)                           
-                            continue
-                        elif index ==0 or conjugation_string[index-1:index+1] in ['qu','gu' ]:
-                            # qu is a dipthong ( see accent rules on acercarse : 1st person plural and 3rd person plural imperative  ) 
-                            continue
-                        else:
-                            # for two weak vowels the accent is on the second one (i.e. this one) 
-                            # or if there is any other letter or this is the beginning of the word
-                            result = accent_at(conjugation_string,index)
-                            break
-                            
-            return result
+    
     
     def __conjugation_imperative(self, tense, person, conjugation=None):
         """
@@ -628,11 +586,14 @@ class Verb(Phrase):
     def __apply_imperative_reflexive_pronoun(self, tense, person, conjugation, explicit_accent_already_applied=False):
         # Step 3 - handle the placement of the indirect pronoun for reflexive verbs.  
         # The important issue here is the effect on the accent.      
+        if is_empty_str(conjugation):
+            # degenerate verbs such as solerse
+            return conjugation
         def handle_explicit_accent_():
             if explicit_accent_already_applied:
                 return conjugation
             else:
-                return self.__explicit_accent(conjugation)
+                return Vowels.accent(conjugation)
         if self.is_reflexive:
             #Now apply the reflexive pronoun rules.
             if person in Persons.third_person:
@@ -976,14 +937,14 @@ class Verb(Phrase):
         
     @property
     def full_phrase(self):
-        if self.prefix_words != '':
+        if not is_empty_str(self.prefix_words):
             result = self.prefix_words + ' '
         else:
             result = ''
         result += self.inf_verb_string
         if self.is_reflexive:
             result += 'se'
-        if self.suffix_words != '':
+        if not is_empty_str(self.suffix_words):
             result += ' ' + self.suffix_words
         return result
         
@@ -997,7 +958,7 @@ class Verb(Phrase):
            
     @property
     def is_phrase(self):
-        return self.prefix_words != '' or self.suffix_words != ''
+        return not is_empty_str(self.prefix_words) or not is_empty_str(self.suffix_words)
     
     @property
     def is_regular(self):
@@ -1056,7 +1017,7 @@ class Verb(Phrase):
         """
         Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
         """
-        if conjugation is not None:
+        if not is_empty_str(conjugation):
             accented = accented_vowel_check.findall(conjugation)
             if len(accented) > 1:
                 self.__raise("Too many accents in "+conjugation, tense, person)
