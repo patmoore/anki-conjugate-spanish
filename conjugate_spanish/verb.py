@@ -630,13 +630,15 @@ class Verb(Phrase):
                 else:
                     # ex: ¡Sentaos! - Sit down! ( the spoken accent will be on the ending a )
                     returned_conjugation = _replace_last_letter_of_stem(remove_accent(conjugation), 'd', Persons_Indirect[Persons.second_person_plural])
+            else:
+                self.__raise("applying reflexive pronoun", tense, person)
         else:
             returned_conjugation = conjugation
         return returned_conjugation
              
     def __conjugation_present_subjective_stem(self, tense, person):
         # need to force for verbs that are normally third person only
-        options = { ConjugationOverride.FORCE_CONJUGATION: True }
+        options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
         if first_person_conjugation[-1:] =='o':
             conjugation_stem = first_person_conjugation[:-1]            
@@ -654,7 +656,7 @@ class Verb(Phrase):
         in First person plural, accent if third person plural ends in a vowel after dropping -ron        
         """
         # need to force for verbs that are normally third person only
-        options = { ConjugationOverride.FORCE_CONJUGATION: True }
+        options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
         third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options)
         if third_person_plural_conjugation[-3:] == 'ron':
             conjugation_stem = third_person_plural_conjugation[:-3]
