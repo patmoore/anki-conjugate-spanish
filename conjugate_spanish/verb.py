@@ -81,6 +81,7 @@ class Verb(Phrase):
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self._doNotApply = []
         self._appliedOverrides = []
+        self._generated = kwargs.get('generated', False)
  
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
         phrase_match = Verb.is_verb(self.phrase_string)
@@ -215,7 +216,7 @@ class Verb(Phrase):
 #             
 #         kwargs['base_verb'] = _base_verb_str
         verb = Verb(phrase, definition, conjugation_overrides, process_conjugations=False, **kwargs)
-        
+        return verb
     @classmethod        
     def is_verb(cls, phrase_string):
         return _phrase_parsing.match(phrase_string)
@@ -848,6 +849,10 @@ class Verb(Phrase):
         return self.reflexive != Reflexive.not_reflexive
     
     @property
+    def is_generated(self):
+        return self._generated
+    
+    @property
     def base_verb(self):
         if not self.is_derived:
             return None
@@ -1053,12 +1058,12 @@ class Verb(Phrase):
     @classmethod
     def table_columns(cls):
         table_columns_ = super().table_columns()
-        table_columns_.extend( ["prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "conjugation_overrides","applied_overrides","manual_overrides", 'base_verb','root_verb'])
+        table_columns_.extend( ["prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "conjugation_overrides","applied_overrides","manual_overrides", 'base_verb','root_verb','generated'])
         return table_columns_
                        
     def sql_insert_values(self):
         insert_values_ = super().sql_insert_values()
-        insert_values_.extend( [self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive.value, self.suffix_words, ",".join(self.conjugation_overrides), ",".join(self.appliedOverrides), self.manual_overrides_string, self.base_verb_string, self.root_verb_str])    
+        insert_values_.extend( [self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive.value, self.suffix_words, ",".join(self.conjugation_overrides), ",".join(self.appliedOverrides), self.manual_overrides_string, self.base_verb_string, self.root_verb_str, self.is_generated])    
         return insert_values_
     
     

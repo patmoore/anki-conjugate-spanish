@@ -8,8 +8,8 @@ from anki.hooks import addHook, wrap, remHook
 
 
 class Storage_(object):
-    DB_VERSION='0.1.10'
-    PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "conjugation_overrides","applied_overrides","manual_overrides", "base_verb", "root_verb"]
+    DB_VERSION='0.1.11'
+    PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "conjugation_overrides","applied_overrides","manual_overrides", "base_verb", "root_verb", "generated"]
     
     def __init__(self, mw):
         from anki.hooks import addHook
@@ -126,6 +126,7 @@ class Storage_(object):
                 conjugation_overrides    text,
                 applied_overrides        text,
                 manual_overrides         text,
+                generated                boolean not null default false,
                 synonyms                 text,
                 notes                    text
             );
@@ -288,6 +289,7 @@ class Storage_(object):
         we create the base verb as the place to store conjugation overrides.
         this allows other derived verbs to pick up the conjugation overrides.
         """
+        pass
         
     def connect_phrase_to_note(self, phrase, note):
         # 2016-09-24: Annoyingly named parameters is not working

@@ -56,7 +56,8 @@ class Verb_Dictionary_(Dictionary_):
     def add(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
         verb = Verb.importString(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)
         if verb.is_derived:
-            cs_debug(verb.full_phrase+"is derived")  
+            cs_debug(verb.full_phrase+"is derived")
+            base_verb = self[verb.base_verb_string] if verb.base_verb_string in self else Verb(verb.base_verb_string,conjugation_overrides=conjugation_overrides,manual_overrides=manual_overrides, generated=True)
             verb.process_conjugation_overrides()
         if phrase in self:
             cs_debug("Verb_Dictionary :", phrase,"already in dictionary")
