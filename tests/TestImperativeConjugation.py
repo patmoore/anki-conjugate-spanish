@@ -4,7 +4,7 @@ import inspect
 from conjugate_spanish import Tenses, Persons, Verb
 from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from conjugate_spanish.conjugation_override import Dependent_Standard_Overrides
-from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect, accent_at
+from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect, Vowels
 
 All_Infinitive_Endings= list(Infinitive_Endings)
 All_Infinitive_Endings.append('ír')
@@ -51,8 +51,8 @@ class TestImperativeConjugation(unittest.TestCase):
                 fake = Verb.importString('faket'+ending+'se',"a fake verb")
                 present_subjective_tense = fake.conjugate(Tenses.present_subjective_tense,person)
                 conjugation = fake.conjugate(Tenses.imperative_positive,person)
-                self.assertEqual(conjugation, accent_at(present_subjective_tense, 3)+Persons_Indirect[person])
+                self.assertEqual(conjugation, Vowels.accent_at(present_subjective_tense, 3)+Persons_Indirect[person])
                 conjugation = fake.conjugate(Tenses.imperative_negative,person)
-                self.assertEqual(conjugation, accent_at(present_subjective_tense, 3)+Persons_Indirect[person])
+                self.assertEqual(conjugation, Vowels.accent_at(present_subjective_tense, 3)+Persons_Indirect[person])
                 
         

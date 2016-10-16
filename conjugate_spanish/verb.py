@@ -17,9 +17,9 @@ from .standard_endings import Standard_Conjugation_Endings
 from conjugate_spanish.conjugation_override import ConjugationOverride
 from enum import Enum
 
-_ending_vowel_check = re_compile('['+Vowels.all+']$')
+_ending_vowel_check = re_compile(Vowels.all_group+'$')
 # check for word with only a single vowel ( used in imperative conjugation )
-_single_vowel_re = re.compile('^([^'+Vowels.all+']*)(['+Vowels.all+'])([^'+Vowels.all+']*)$', re.IGNORECASE+re.UNICODE)
+_single_vowel_re = re_compile('^('+Vowels.consonants+'*)('+Vowels.all_group+')('+Vowels.consonants+'*)$')
 #
 # Parse up the infinitive string: 
 # verb forms: 
@@ -37,7 +37,7 @@ _single_vowel_re = re.compile('^([^'+Vowels.all+']*)(['+Vowels.all+'])([^'+Vowel
 # group 6 = suffix words
 # use '-' to separate out the prefix from the base verb
 # use '/' to force the selection of the verb in complex cases or for cases where prefix words end in -ir,-ar,-er
-_phrase_parsing = re.compile('^\s*([^/]*?)[\s/]*([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?[/\s]*(.*?)\s*$', re.UNICODE)
+_phrase_parsing = re_compile('^\s*([^/]*?)[\s/]*([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?[/\s]*(.*?)\s*$')
 PREFIX_WORDS = 1
 PREFIX_CHARS = 2
 CORE_VERB = 3
@@ -402,7 +402,7 @@ class Verb(Phrase):
             if single_vowel_match is not None:
                 explicit_accent_already_applied = True
                 if not _reflexive:
-                    _conjugation = self.full_prefix + accent_at(base_verb_conjugation, single_vowel_match.start(2))
+                    _conjugation = self.full_prefix + Vowels.accent_at(base_verb_conjugation, single_vowel_match.start(2))
                 else:
                     _conjugation = self.full_prefix + base_verb_conjugation                
             else:
@@ -451,7 +451,7 @@ class Verb(Phrase):
         elif tense == Tenses.adjective:
             current_conjugation_stem = self.conjugate_stem(Tenses.past_participle, person, current_conjugation_ending)
         elif tense in [ Tenses.future_tense, Tenses.conditional_tense]:
-            current_conjugation_stem = remove_accent(self.inf_verb_string)
+            current_conjugation_stem = Vowels.remove_accent(self.inf_verb_string)
         elif tense == Tenses.present_subjective_tense:
             current_conjugation_stem = self.__conjugation_present_subjective_stem(tense, person)
         elif tense == Tenses.past_subjective_tense:
@@ -622,14 +622,14 @@ class Verb(Phrase):
                         # example ¡Vestíos! - Get Dressed!
                         # we don't need to worry about accenting the -ir verbs that already have the i accented ( example reírse )
                         # what about verbs that already have explicit accent?
-                        returned_conjugation = remove_accent(conjugation[:-2]) + 'í' + Persons_Indirect[Persons.second_person_plural]
+                        returned_conjugation = Vowels.remove_accent(conjugation[:-2]) + 'í' + Persons_Indirect[Persons.second_person_plural]
                     elif conjugation[-2:] == 'íd':
                         returned_conjugation = _replace_last_letter_of_stem(conjugation, 'd', Persons_Indirect[Persons.second_person_plural])
                     else:
                         self.__raise("don't know how to handle:"+conjugation, tense, person)
                 else:
                     # ex: ¡Sentaos! - Sit down! ( the spoken accent will be on the ending a )
-                    returned_conjugation = _replace_last_letter_of_stem(remove_accent(conjugation), 'd', Persons_Indirect[Persons.second_person_plural])
+                    returned_conjugation = _replace_last_letter_of_stem(Vowels.remove_accent(conjugation), 'd', Persons_Indirect[Persons.second_person_plural])
             else:
                 self.__raise("applying reflexive pronoun", tense, person)
         else:
@@ -663,7 +663,7 @@ class Verb(Phrase):
             if person == Persons.first_person_plural:
                 # accent on last vowel                                
                 if _ending_vowel_check.search(conjugation_stem):
-                    conjugation_stem = accent_at(conjugation_stem)
+                    conjugation_stem = Vowels.accent_at(conjugation_stem)
                 else:
                     # assuming last stem character is a vowel
                     # and assuming already accented for some reason

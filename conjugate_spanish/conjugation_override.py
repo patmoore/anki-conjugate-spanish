@@ -279,10 +279,10 @@ class Radical_Stem_Conjugation_Override(ConjugationOverride):
         def __make_radical_call(vowels_from, vowels_to, beginning_word_vowels_to=None, beginning_word_vowels_from=None):
             # Note: even for i-> transitions this is needed to ensure correct accents on the result.
             # -guir/-quir must not pick up a trailing 'u' as the 'last' vowel
-            regex = re_compile('^(.*?)('+Vowels.re_any_string(vowels_from)+'|'+Vowels.re_any_string(vowels_to)+')?([^'+Vowels.all+']*(qu|gu)?)$')
+            regex = re_compile('^(.*?)('+Vowels.re_any_string(vowels_from)+'|'+Vowels.re_any_string(vowels_to)+')?('+Vowels.consonants+'*(qu|gu)?)$')
             if beginning_word_vowels_from is not None:
                 # huelo needs to be checked for 'hue' before looking for 'ue'
-                regexes = [ re_compile('^()('+Vowels.re_any_string(beginning_word_vowels_from)+')([^'+Vowels.all+']*(qu|gu)?)$'), regex]
+                regexes = [ re_compile('^()('+Vowels.re_any_string(beginning_word_vowels_from)+')('+Vowels.consonants+'*(qu|gu)?)$'), regex]
             else:
                 regexes = [regex]
             def __radical_stem_change(self, stem, **kwargs):
@@ -429,7 +429,7 @@ def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= No
 def _universal_accent_correction(self, stem, ending, **kwargs):
     # if the ending has an accent then we remove the accent on the stem
     if accented_vowel_check.search(stem) and accented_vowel_check.search(ending):
-        return [ remove_accent(stem), ending]
+        return [ Vowels.remove_accent(stem), ending]
     else:
         return [stem, ending]
 # explicitly applied at the end
@@ -455,7 +455,7 @@ ENDS_WITH_ACCENTED_I = re_compile('^(.*)(í)$')
 ENDS_WITH_E = re_compile('^(.*)(e)$')
 # -ir verbs in vosotros imperitive positive need to have accented i
 ENDS_WITH_ID_OR_IR = re_compile('^(.*)([ií][rd])$')
-ENDS_WITH_VOWEL = re_compile('^(.*?['+Vowels.all+'])()$')
+ENDS_WITH_VOWEL = re_compile('^(.*?'+Vowels.all_group+')()$')
 STARTS_WITH_NON_I_VOWEL=re_compile('^([aeo])(.*)$')
 REMOVE_ENDING =re_compile('^(.*)()$')
 def _check_and_change(stem, ending,
@@ -578,13 +578,13 @@ def _c2_z_check(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_C,STARTS_WITH_O,'z')
     return result  
 
-Cer_After_Vowel_CO = make_std_override(inf_match=re_compile('['+Vowels.all+']cer$'),
+Cer_After_Vowel_CO = make_std_override(inf_match=re_compile(Vowels.all_group+'cer$'),
     key='v_cer',
     documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o',
     examples=['aparecer'],
     spelling_only=True
     )
-Cir_After_Vowel_CO = make_std_override(inf_match=re_compile('['+Vowels.all+']cir$'),
+Cir_After_Vowel_CO = make_std_override(inf_match=re_compile(Vowels.all_group+'cir$'),
     key='v_cir',
     documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o')
 for co in [ Cer_After_Vowel_CO, Cir_After_Vowel_CO]:
@@ -592,13 +592,13 @@ for co in [ Cer_After_Vowel_CO, Cir_After_Vowel_CO]:
     # Exists to handle satisfacer/hacer: (e_and_o) verbs : May not to be so general?
     co.override_tense_join(Tenses.past_tense, _c2_z_check, Persons.third_person_singular)
   
-Cer_After_Const_CO = make_std_override(inf_match=re_compile('[^'+Vowels.all+']cer$'),
+Cer_After_Const_CO = make_std_override(inf_match=re_compile(Vowels.consonants+'cer$'),
     key='c_cer',
     documentation='verbs ending in -cer or -cir with a preceding consonant have c -> z before o',
     examples=['convencer'],
     spelling_only=True
     )
-Cir_After_Const_CO = make_std_override(inf_match=re_compile('[^'+Vowels.all+']cir$'),
+Cir_After_Const_CO = make_std_override(inf_match=re_compile(Vowels.consonants+'cir$'),
     key='c_cir',
     documentation='verbs ending in -cer or -cir with a preceding consonant have c -> z before o',
     examples=['convencer'],
@@ -875,7 +875,7 @@ Past_Participle_Acer.override_tense_join(Tenses.past_part_adj, _acer_)
 
 UnaccentPresent_Past_CO = make_std_override(key='unaccent_present_past', documentation='small verbs have no accent on past and present tense conjugations',
     examples= ['dar','ir'])
-UnaccentPresent_Past_CO.override_tense_join([Tenses.present_tense,Tenses.past_tense], lambda self, stem, ending, **kwargs: [remove_accent(stem), remove_accent(ending)])
+UnaccentPresent_Past_CO.override_tense_join([Tenses.present_tense,Tenses.past_tense], lambda self, stem, ending, **kwargs: [Vowels.remove_accent(stem), Vowels.remove_accent(ending)])
 
 Defective_CO = make_std_override(key='defective',
                                  documentation='special case verbs that have only a few tenses',
@@ -889,7 +889,7 @@ Defective_CO.override_tense(tenses, lambda self, **kwargs: '')
 #     examples=[u'vestirse'])
 # Ir_Reflexive_Accent_I_CO.override_tense_stem(Tenses.imperative_positive, persons=Persons.second_person_plural,
 #     documentation=u"Second person plural, reflexive positive, ir verbs accent the i: Vestíos! (get dressed!) ",
-#     overrides=lambda self, **kwargs: remove_accent(self.stem) + u'ír'
+#     overrides=lambda self, **kwargs: Vowels.remove_accent(self.stem) + u'ír'
 #     )
 # Third person only conjugations
 
