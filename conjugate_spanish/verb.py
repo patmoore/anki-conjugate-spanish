@@ -64,7 +64,7 @@ class Verb(Phrase):
     # constant used to tell human that the verb is explicitly known to be a regular verb 
     REGULAR_VERB = 'regular'
     
-    def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, root_verb=None, **kwargs):
+    def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, root_verb=None, process_conjugation_overrides=True, **kwargs):
         '''
         Constructor
             phrase: the string : will be parsed to find the prefix words, suffix words.
@@ -119,18 +119,25 @@ class Verb(Phrase):
         # Note: self.overrides_string << top-level, human editable
         if isinstance(conjugation_overrides, str) and conjugation_overrides != '' and conjugation_overrides != Verb.REGULAR_VERB:
             self.overrides_string = conjugation_overrides
-            self.conjugation_overrides = conjugation_overrides.split(",")
-            for conjugation_override in get_iterable(self.conjugation_overrides):
-                self.process_conjugation_override(conjugation_override)                 
+            self.conjugation_overrides = conjugation_overrides.split(",")            
         else:
             self.overrides_string = ''
             self.conjugation_overrides = []
+        self.manual_overrides_string = manual_overrides
+        self.__processed_conjugation_overrides=False
+        if process_conjugation_overrides or not verb.is_derived:
+            self.process_conjugation_overrides()
+        
+    def process_conjugation_overrides(self):
+        if self.__processed_conjugation_overrides:
+            return
             
+        # TODO -- move all process_conjugation_override out of constructor so that we can properly handle derived verbs where the base verb has not been loaded
+        for conjugation_override in get_iterable(self.conjugation_overrides):
+            self.process_conjugation_override(conjugation_override)     
         # apply manual overrides after the standard overrides because this allows for the manual overrides to 'fix' the previous changes.
         # applied before the dependent conjugation overrides because many dependent overrides change based on a pattern. 
         # the manual override may change the verb in such a way that the dependent override no longer matches. Thus making it easier to get the correct result.
-        self.manual_overrides_string = manual_overrides
-        # TODO -- move all process_conjugation_override out of constructor so that we can properly handle derived verbs where the base verb has not been loaded
         self.process_conjugation_override(self._manual_override)
         
         # look for default overrides - apply to end so that user could explicitly turn off the default override
@@ -207,7 +214,8 @@ class Verb(Phrase):
 #         
 #             
 #         kwargs['base_verb'] = _base_verb_str
-        return Verb(phrase, definition, conjugation_overrides, **kwargs)
+        verb = Verb(phrase, definition, conjugation_overrides, process_conjugations=False, **kwargs)
+        
     @classmethod        
     def is_verb(cls, phrase_string):
         return _phrase_parsing.match(phrase_string)
@@ -649,6 +657,9 @@ class Verb(Phrase):
             # haber (he) is just such an example - but there better be an override available.
             return None
 #             self.__raise("First person conjugation does not end in 'o' = "+first_person_conjugation)
+        # HACK: Not certain if this is correct - but i checked enviar and reunierse - shich both have an accented 1st sing present stem.
+        if person in [ Persons.first_person_plural, Persons.second_person_plural ]:
+            conjugation_stem = Vowels.remove_accent(conjugation_stem)
         return conjugation_stem
 
     def __conjugation_past_subjective_stem(self, tense, person):
@@ -1020,13 +1031,14 @@ class Verb(Phrase):
         Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
         """
         if not is_empty_str(conjugation):
-            accented = accented_vowel_check.findall(conjugation)
+            accented = Vowels.accented_vowel_check.findall(conjugation)
             if len(accented) > 1:
                 self.__raise("Too many accents in "+conjugation, tense, person)
                 
     def __raise(self, msg, tense=None, person=None, traceback_=None):
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
-        raise Exception(msg_).with_traceback(traceback_)
+        cs_debug(">>>>>>",msg_)
+#         raise Exception(msg_).with_traceback(traceback_)
         
     def __str__(self):
         s= ''

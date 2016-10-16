@@ -428,7 +428,7 @@ def _replace_last_letter_of_stem(stem, expected_last_letter, new_stem_ending= No
     
 def _universal_accent_correction(self, stem, ending, **kwargs):
     # if the ending has an accent then we remove the accent on the stem
-    if accented_vowel_check.search(stem) and accented_vowel_check.search(ending):
+    if Vowels.accented_vowel_check.search(stem) and Vowels.accented_vowel_check.search(ending):
         return [ Vowels.remove_accent(stem), ending]
     else:
         return [stem, ending]

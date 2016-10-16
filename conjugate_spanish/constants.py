@@ -229,6 +229,7 @@ class Vowels_():
         h = 'h'
         self.unaccented = unaccented = [a,e,i,o,u]
         self.accented = accented = [a_a, e_a, i_a, o_a, u_a]
+        self.accented_vowel_check = re_compile(re_group(accented))
         self._replace_accents = [ [re_compile(accented[i]), unaccented[i] ] for i in range(4)]
         self.all = all = [ *a_any, *e_any, *i_any, *o_any, *u_any ]
         self._any =  [ "".join(a_any), "".join(e_any), "".join(i_any), "".join(o_any), "".join(u_any) ]
@@ -361,10 +362,10 @@ class Vowels_():
     def accent(self, word):
         match = self.find_accented(word)
         if match:
-            print(match.groups())
-            # TODO handle case.
-            accented = self.to_accent_mapping[match.group(2)]
+            accented = match.group(2) if match.group(2) in self.from_accent_mapping else self.to_accent_mapping[match.group(2)]
+            
             result = match.group(1)+accented+match.group(3)+match.group(4)
+            print(match.groups())
             print("word="+word+";accent-->"+result)
             return result
         else:
@@ -378,17 +379,14 @@ class Vowels_():
             index_ = len(string_)-1
         
         vowel = string_[index_]
-        vindex = self.unaccented.find(vowel)
-        if vindex < 0:
-            accented = self.accented.find(vowel)
-            if accented < 0:
-                raise Exception(string_+" at index="+index_+" there is no vowel.")
-            else:
-                return string_
-        
-        accented = self.accented[vindex]
-        result = string_[:index_] + accented + string_[index_+1:]
-        return result
+        if vowel in self.from_accent_mapping:
+            # already accented
+            return string_
+        elif vowel in self.to_accent_mapping:
+            result = string_[:index_] + self.to_accent_mapping[vowel] + string_[index_+1:]
+            return result
+        else:
+            raise Exception(string_+" at index="+index_+" there is no vowel.")
             
     def remove_accent(self, string_):
         """
