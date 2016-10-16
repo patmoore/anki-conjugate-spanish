@@ -223,7 +223,7 @@ class Vowels_():
         e_any = [e, e_a]
         i_any = [i, i_a]
         o_any = [o, o_a]
-        u_any = [u, u_a]
+        u_any = [u, u_a, u_u]
         y = 'y'
         qu_gu = "(?:[gq]["+u+u_u+"])"
         h = 'h'
@@ -231,6 +231,7 @@ class Vowels_():
         self.accented = accented = [a_a, e_a, i_a, o_a, u_a]
         self._replace_accents = [ [re_compile(accented[i]), unaccented[i] ] for i in range(4)]
         self.all = all = [ *a_any, *e_any, *i_any, *o_any, *u_any ]
+        self._any =  [ "".join(a_any), "".join(e_any), "".join(i_any), "".join(o_any), "".join(u_any) ]
         self.all_group = all_group = re_group(self.all)
         self.consonants = consonants = re_group(self.all, True)
         
@@ -328,12 +329,13 @@ class Vowels_():
                                               ])
                 self.accent_rules.extend([
                                               # ends in required consonants 
-                                              re_compile(weak_beginning+"("+vowels_to_accent+")("+consonants+'+)()$')
+                                              re_compile(weak_beginning+"("+vowels_to_accent+")("+consonants+'+)()$'),
+                                              re_compile("^("+consonants+"*)("+vowels_to_accent+')()()$')
                                               ])
         print(self.accent_rules)
         
     def any(self, vowel):
-        for an_any in self.any_:
+        for an_any in self._any:
             if an_any.find(vowel) >= 0:
                 return an_any
         return vowel
@@ -361,11 +363,12 @@ class Vowels_():
         if match:
             print(match.groups())
             # TODO handle case.
-            accented = self.accent_mapping[match.group(2)]
+            accented = self.to_accent_mapping[match.group(2)]
             result = match.group(1)+accented+match.group(3)+match.group(4)
             print("word="+word+";accent-->"+result)
             return result
         else:
+            cs_debug("no vowels in "+word)
             return word
     def accent_at(self, string_, index_=None):
         """
