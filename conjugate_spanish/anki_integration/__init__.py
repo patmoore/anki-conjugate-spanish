@@ -38,7 +38,8 @@ NOTES: Anki Note objects have the information. Anki Card" are generated from Not
 """
 class AnkiIntegration_(object):    
     
-    def __init__(self, modelName=BASE_MODEL):        
+    def __init__(self, modelName=BASE_MODEL):
+        self.addon_menu_name = "Español Conjugation"        
         self.modelName = modelName
         # HACK should really be ModelDefinitions
         self.modelTemplates = {}
@@ -198,7 +199,7 @@ class AnkiIntegration_(object):
         
     def initialize(self, *args):
         cs_debug("initialize")
-        self.menu_ = self.mw.form.menuPlugins.addMenu("Español Conjugation")        
+        self.menu_ = self.mw.form.menuPlugins.addMenu(self.addon_menu_name)        
 
 ## TODO: I saw code like this in the japanese addon : but the models are not created 
 ## maybe only on installation?

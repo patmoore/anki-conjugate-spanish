@@ -234,7 +234,16 @@ class Storage_(object):
         # connect all roots back to all derived. TODO - limit to 
         self.db.execute(self._generate_sql( "update ${associations_table} set ${phrase_table_name}_root_id=(select id from ${phrase_table_name} where ${associations_table}.${phrase_table_name}_root_phrase=${phrase_table_name}.phrase) where ${phrase_table_name}_root_id is NULL"))
         self.db.commit()
-            
+      
+    def get_phrase(self, phrase):      
+        sql_string = self.select_phrase_sql +" where phrase =?"
+        phrase_row =self.db.first(sql_string, phrase)
+        if phrase_row is not None:
+            phrase =self._load(phrase_row)
+            return phrase
+        else:
+            return None
+        
     def get_phrases(self, conjugatable=None, phrase=None):
         from .phrase import Phrase
         results = []

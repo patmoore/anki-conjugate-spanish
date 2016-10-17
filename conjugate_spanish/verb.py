@@ -901,10 +901,16 @@ class Verb(Phrase):
         """
         Root verb is the verb that provides the conjugation rules.
         """
-        if self.base_verb is None:
-            return self
-        else:
+        if hasattr(self, '_root_verb'):
+            return self._root_verb
+        elif self.base_verb is not None:
             return self.base_verb.root_verb
+        else:
+            return None
+        
+    @root_verb.setter
+    def root_verb(self, root_verb_):
+        self._root_verb = root_verb_
             
     @property
     def root_verb_string(self):

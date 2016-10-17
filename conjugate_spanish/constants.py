@@ -334,6 +334,12 @@ class Vowels_():
                                               re_compile("^("+consonants+"*)("+vowels_to_accent+')()()$')
                                               ])
         print(self.accent_rules)
+        # used to find the vowel groups for displaying vowels in words.
+        self.vowel_groups = []
+        for vowel_group in combinations:
+            self.vowel_groups.extend([
+                                      re_compile("("+vowel_group+")"),
+                                      ])
         
     def any(self, vowel):
         for an_any in self._any:
@@ -399,8 +405,8 @@ class Vowels_():
     
 Vowels = Vowels_()
 if True:
-    for word in ['repite', 'se', 'cambia', 'irgue']:
-        answer = Vowels.accent(word)
+    for word in ['irgue', 'repite', 'se', 'cambia']:
+        answer = Vowels.find_accented(word)
     
 
 def dump_trace(e, message):

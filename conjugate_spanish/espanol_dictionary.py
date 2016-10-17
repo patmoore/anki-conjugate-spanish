@@ -41,9 +41,9 @@ class Dictionary_(dict):
                         if _value != '' and _value is not None:
                             definition[make_unicode(key)] = _value 
                     try:
-                        phrase = self.add(**definition)
+                        phrase = self.add(force_add=True,**definition)
                         current.append(phrase.full_phrase)
-                        count = count +1
+                        count  +=1
                     except Exception as e:
                         cs_debug("error reading ",fileName+": ", repr(definition),repr(e))
                         traceback.print_exc()            
@@ -54,19 +54,21 @@ class Dictionary_(dict):
 
 class Verb_Dictionary_(Dictionary_):
     VERBS_FILENAME = re_compile('(.*)-verbs.csv$')                            
-    def add(self, phrase, definition='', generated=False, **kwargs):
+    def add(self, phrase, definition='', generated=False, force_add=False, **kwargs):
         conjugation_overrides=kwargs.get('conjugation_overrides')
-        if self._build_replacement_if_better(phrase, conjugation_overrides=conjugation_overrides, generated=generated):
-            verb = Verb.importString(phrase, definition, **kwargs)
+        if force_add or self._build_replacement_if_better(phrase, conjugation_overrides=conjugation_overrides, generated=generated):
+            verb = Verb.importString(phrase, definition, generated=generated, **kwargs)
             self[verb.full_phrase] = verb
             if verb.is_derived:
-                cs_debug(verb.full_phrase+" is derived")
+                cs_debug(verb.full_phrase+" is derived from "+verb.root_verb_string+" base ="+verb.base_verb_string)
                 root_verb = self.add(verb.root_verb_string,generated=True, conjugation_overrides=conjugation_overrides)
                 base_verb = self.add(verb.base_verb_string,generated=True, conjugation_overrides=conjugation_overrides)
             
         else:
-            cs_debug("Verb_Dictionary :", phrase,"already in dictionary")
+            if not generated:
+                cs_debug("Verb_Dictionary :", phrase,"already in dictionary")        
             verb = self[phrase]
+        
         return verb
     def processAllVerbs(self):
         for phrase, verb in self.items():
@@ -89,6 +91,12 @@ class Verb_Dictionary_(Dictionary_):
             
     def _build_replacement_if_better(self, phrase, conjugation_overrides, generated):
         if phrase not in self:
+            verb = Storage.get_phrase(phrase=phrase)
+            if verb is not None:
+                self[phrase] = verb
+                cs_debug("found ",phrase)
+                return False
+            
             return True
         
         current_verb = self[phrase]
@@ -96,7 +104,7 @@ class Verb_Dictionary_(Dictionary_):
             if generated:
                 return False
             else:
-                cs_debug("both claiming to not be generated")
+                cs_debug(phrase+":both claiming to not be generated")
                 return False
         elif generated:
             if conjugation_overrides is None or len(conjugation_overrides) == 0:
