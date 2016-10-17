@@ -34,7 +34,7 @@ class TestBasic(unittest.TestCase):
         verb = Verb.importString("faketer"," fake definition")
         self.assertFalse(verb.is_phrase)
         self.assertEqual(verb.base_verb_string, None)
-        self.assertEqual(verb.root_verb_str, "faketer")
+        self.assertEqual(verb.root_verb_string, "faketer")
         self.assertEqual(verb.full_phrase, "faketer")
         self.__check(verb, "faket", "er")
         
@@ -45,14 +45,14 @@ class TestBasic(unittest.TestCase):
         verb = Verb.importString("faketer-se"," fake definition")
         self.__check(verb, "faket", "er", reflexive=True)
         self.assertEqual(verb.base_verb_string, "faketer")
-        self.assertEqual(verb.root_verb_str, "faketer")
+        self.assertEqual(verb.root_verb_string, "faketer")
         self.assertEqual(verb.full_phrase, "faketerse")
         
     def test_base_verb_parsing(self):
         verb = Verb.importString("abs-faketer-se"," fake definition")
         self.__check(verb, "absfaket", "er", prefix="abs", reflexive=True)
         self.assertEqual(verb.base_verb_string, "faketer")
-        self.assertEqual(verb.root_verb_str, "faketer")
+        self.assertEqual(verb.root_verb_string, "faketer")
         self.assertEqual(verb.inf_verb_string, "absfaketer")
         self.assertEqual(verb.full_phrase, "absfaketerse")
         
@@ -61,7 +61,7 @@ class TestBasic(unittest.TestCase):
         verb = Verb.importString("  a  absfaketer  de {{inf}}  "," fake definition", root_verb="faketer")
         self.__check(verb, "absfaket", "er", prefix="", reflexive=False, prefix_words="a", suffix_words="de {{inf}}", is_phrase=True)
         self.assertEqual(verb.base_verb_string, "absfaketer")
-        self.assertEqual(verb.root_verb_str, "faketer")
+        self.assertEqual(verb.root_verb_string, "faketer")
         self.assertEqual(verb.inf_verb_string, "absfaketer")
         self.assertEqual(verb.full_phrase, "a absfaketer de {{inf}}")
 
@@ -81,7 +81,7 @@ class TestBasic(unittest.TestCase):
         """
         verb = Verb.importString('divorciarse','')
         self.assertEqual(verb.base_verb_string, "divorciar")
-        self.assertEqual(verb.root_verb_str, "divorciar")
+        self.assertEqual(verb.root_verb_string, "divorciar")
         self.assertEqual(verb.inf_verb_string, "divorciar")
         conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
         self.assertEqual('divórciate', conjugation)
@@ -92,7 +92,7 @@ class TestBasic(unittest.TestCase):
         """
         verb = Verb.importString('limpiarse','')
         self.assertEqual(verb.base_verb_string, "limpiar")
-        self.assertEqual(verb.root_verb_str, "limpiar")
+        self.assertEqual(verb.root_verb_string, "limpiar")
         self.assertEqual(verb.inf_verb_string, "limpiar")
         conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
         self.assertEqual('límpiate', conjugation)
@@ -103,7 +103,7 @@ class TestBasic(unittest.TestCase):
         """
         verb = Verb.importString('enviar','', conjugation_overrides="iar")
         self.assertEqual(verb.base_verb_string, None)
-        self.assertEqual(verb.root_verb_str, "enviar")
+        self.assertEqual(verb.root_verb_string, "enviar")
         self.assertEqual(verb.inf_verb_string, "enviar")
         conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
         self.assertEqual('envía', conjugation)
@@ -113,7 +113,7 @@ class TestBasic(unittest.TestCase):
         """
         verb = Verb.importString('erguirse','', conjugation_overrides="e:i")
         self.assertEqual(verb.base_verb_string, None)
-        self.assertEqual(verb.root_verb_str, "erguir")
+        self.assertEqual(verb.root_verb_string, "erguir")
         self.assertEqual(verb.inf_verb_string, "erguirse")
         conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
         self.assertEqual('írguete', conjugation)

@@ -3,7 +3,7 @@ import abc
 
 class Phrase(object):
     __metaclass__ = abc.ABCMeta
-    def __init__(self, phrase_string, definition, conjugatable=True, **kwargs):
+    def __init__(self, phrase_string, definition, conjugatable, **kwargs):
         # key = because full_phrase is used to generate readable string
         self.phrase_string = make_unicode(phrase_string)
         # need to preserve with the / and - so that we can go from Note objects back to Verb objects

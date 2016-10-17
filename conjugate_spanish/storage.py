@@ -200,7 +200,7 @@ class Storage_(object):
 #         for phrase in phrases:
 #             if phrase.is_conjugatable:                 
 #                 if phrase.is_derived:
-#                     parent_verb_str = phrase.root_verb_str
+#                     parent_verb_str = phrase.root_verb_string
 #                     verb_row =self.db.first(self._select_phrase_by_phrase, parent_verb_str)
 #                     if verb_row is None: 
 #                         Verb(parent_verb_str, conjugation_overrides=phrase.explicit_overrides_string)

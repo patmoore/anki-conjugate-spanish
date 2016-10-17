@@ -13,6 +13,7 @@ from test.test_decimal import directory
 from .nonconjugated_phrase import NonConjugatedPhrase
 from .utils import cs_debug
 from .storage import Storage
+from conjugate_spanish.verb import Reflexive
 
 """
 load dictionaries/*-verbs.csv
@@ -53,17 +54,62 @@ class Dictionary_(dict):
 
 class Verb_Dictionary_(Dictionary_):
     VERBS_FILENAME = re_compile('(.*)-verbs.csv$')                            
-    def add(self, phrase, definition, conjugation_overrides=None,base_verb=None, manual_overrides=None, **kwargs):
-        verb = Verb.importString(phrase, definition,conjugation_overrides=conjugation_overrides, base_verb=base_verb, manual_overrides=manual_overrides)
-        if verb.is_derived:
-            cs_debug(verb.full_phrase+"is derived")
-            base_verb = self[verb.base_verb_string] if verb.base_verb_string in self else Verb(verb.base_verb_string,conjugation_overrides=conjugation_overrides,manual_overrides=manual_overrides, generated=True)
-            verb.process_conjugation_overrides()
-        if phrase in self:
-            cs_debug("Verb_Dictionary :", phrase,"already in dictionary")
-        else:      
+    def add(self, phrase, definition='', generated=False, **kwargs):
+        conjugation_overrides=kwargs.get('conjugation_overrides')
+        if self._build_replacement_if_better(phrase, conjugation_overrides=conjugation_overrides, generated=generated):
+            verb = Verb.importString(phrase, definition, **kwargs)
             self[verb.full_phrase] = verb
+            if verb.is_derived:
+                cs_debug(verb.full_phrase+" is derived")
+                root_verb = self.add(verb.root_verb_string,generated=True, conjugation_overrides=conjugation_overrides)
+                base_verb = self.add(verb.base_verb_string,generated=True, conjugation_overrides=conjugation_overrides)
+            
+        else:
+            cs_debug("Verb_Dictionary :", phrase,"already in dictionary")
+            verb = self[phrase]
         return verb
+    def processAllVerbs(self):
+        for phrase, verb in self.items():
+            if verb.is_derived:
+                root_verb = self.get(verb.root_verb_string, None)
+                
+                if root_verb is None:
+                    cs_debug(">>>> Missing root "+verb)
+                else:
+                    root_verb.process_conjugation_overrides()
+                    verb.root_verb = root_verb
+                base_verb = self.get(verb.base_verb_string, None)
+                
+                if base_verb is None:
+                    cs_debug(">>>>>> Base verb missing")
+                else:
+                    verb.base_verb = base_verb
+                    base_verb.process_conjugation_overrides()
+            verb.process_conjugation_overrides()
+            
+    def _build_replacement_if_better(self, phrase, conjugation_overrides, generated):
+        if phrase not in self:
+            return True
+        
+        current_verb = self[phrase]
+        if not current_verb.is_generated:
+            if generated:
+                return False
+            else:
+                cs_debug("both claiming to not be generated")
+                return False
+        elif generated:
+            if conjugation_overrides is None or len(conjugation_overrides) == 0:
+                return False
+            
+            if current_verb.is_regular:
+                return True
+            else:
+                # both generated -- which one has the best conjugation overrides
+                cs_debug("both are irregular")
+                return False
+        else:
+            return True
     def filename_match(self, fileName):
         return Verb_Dictionary_.VERBS_FILENAME.match(fileName) 
 
@@ -130,6 +176,7 @@ class Espanol_Dictionary_():
                     self.verbDictionary.load(path+'/'+fileName, verbMatch.group(1))
                 elif phraseMatch is not None:
                     self.phraseDictionary.load(path+'/'+fileName, phraseMatch.group(1))
+        self.verbDictionary.processAllVerbs()
 
     def add_verb(self, phrase, definition, **kwargs):
         self.verbDictionary.add(phrase, definition, **kwargs)

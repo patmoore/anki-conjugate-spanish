@@ -15,7 +15,7 @@ from .phrase import Phrase
 from functools import reduce
 from .standard_endings import Standard_Conjugation_Endings
 from conjugate_spanish.conjugation_override import ConjugationOverride
-from enum import Enum
+from enum import Enum, unique
 
 _ending_vowel_check = re_compile(Vowels.all_group+'$')
 # check for word with only a single vowel ( used in imperative conjugation )
@@ -45,10 +45,17 @@ INF_ENDING = 4
 REFLEXIVE_ENDING = 5
 SUFFIX_WORDS = 6
 
+@unique
 class Reflexive(Enum):
     not_reflexive = 0
     reflexive = 1
     base_reflexive = 2
+    @classmethod
+    def get(cls, value):
+        if value is None:
+            return cls.non_reflexive
+        else:
+            return Reflexive(value)
     
 class Verb(Phrase):
     '''
@@ -64,10 +71,15 @@ class Verb(Phrase):
     # constant used to tell human that the verb is explicitly known to be a regular verb 
     REGULAR_VERB = 'regular'
     
-    def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, root_verb=None, process_conjugation_overrides=True, **kwargs):
+    def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, 
+                 prefix_words='', prefix='', core_characters='', inf_ending=None, reflexive=Reflexive.not_reflexive,
+                 suffix_words=None,
+                 generated =False, process_conjugation_overrides=True,
+                 **kwargs):
         '''
         Constructor
-            phrase: the string : will be parsed to find the prefix words, suffix words.
+            phrase is assumed to be a correct construction of "prefix words"+" "+prefix+core_characters+"se"? +" " + suffix words
+               there may be parsable separators.
                 
             root_verb: used as root_verb for conjugation - for example: mantener would have a root_verb of tener
                tener has root_verb = tener
@@ -77,37 +89,24 @@ class Verb(Phrase):
                 tener and mantener are not semantically related.
             manual_overrides: explicit string that handles very unique cases that have no pattern.  
         '''
+        
         super().__init__(phrase, definition, True, **kwargs)   
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self._doNotApply = []
         self._appliedOverrides = []
-        self._generated = kwargs.get('generated', False)
+        self._generated = generated
  
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
         phrase_match = Verb.is_verb(self.phrase_string)
         if phrase_match is None:
             self.__raise(self.phrase_string+": does not appear to be a verb or phrase with verb infinitive in it.")            
 
-        self.prefix_words = kwargs.get('prefix_words')
-        self.prefix = kwargs.get('prefix')
-        self.core_characters = kwargs.get('core_characters')
-        self.inf_ending = kwargs.get('inf_ending')
-        self.reflexive = Reflexive(kwargs.get('reflexive'))        
-        self.suffix_words = kwargs.get('suffix_words')
-
-        _root_verb = make_unicode(root_verb)
-        # TODO: validate root
-        if _root_verb is None:            
-            self._root_verb_str = self.core_characters + self.inf_ending
-        elif isinstance(_root_verb, Verb):            
-            self._root_verb = _root_verb
-            self._root_verb_str = self.root_verb.full_phrase
-        elif isinstance(_root_verb, str) and _root_verb != '':
-            # TODO strip leading/trailing white space
-            self._root_verb_str = _root_verb 
-        else:
-            self.__raise("root_verb must be Verb or string")
-            
+        self.prefix_words = prefix_words
+        self.prefix = prefix
+        self.core_characters = core_characters
+        self.inf_ending = inf_ending
+        self.reflexive = Reflexive.get(reflexive)        
+        self.suffix_words = suffix_words
 
                         
         # note: determining the conjugation overrides in constructor because:
@@ -126,7 +125,7 @@ class Verb(Phrase):
             self.conjugation_overrides = []
         self.manual_overrides_string = manual_overrides
         self.__processed_conjugation_overrides=False
-        if process_conjugation_overrides or not verb.is_derived:
+        if process_conjugation_overrides or not self.is_derived:
             self.process_conjugation_overrides()
         
     def process_conjugation_overrides(self):
@@ -171,7 +170,7 @@ class Verb(Phrase):
             raise Exception(phrase+": does not appear to be a verb or phrase with verb infinitive in it.")            
 
         
-        if phrase_match.group(REFLEXIVE_ENDING) == '':
+        if is_empty_str(phrase_match.group(REFLEXIVE_ENDING)):
             reflexive_ = Reflexive.not_reflexive
         elif phrase_match.group(REFLEXIVE_ENDING) == '-se':
             reflexive_ = Reflexive.base_reflexive
@@ -215,7 +214,10 @@ class Verb(Phrase):
 #         
 #             
 #         kwargs['base_verb'] = _base_verb_str
-        verb = Verb(phrase, definition, conjugation_overrides, process_conjugations=False, **kwargs)
+        verb = Verb(phrase, definition, conjugation_overrides, process_conjugation_overrides=False, **kwargs)
+        if not verb.is_derived:
+            # process root verbs so that they are available for derived verbs.
+            verb.process_conjugation_overrides()
         return verb
     @classmethod        
     def is_verb(cls, phrase_string):
@@ -877,19 +879,19 @@ class Verb(Phrase):
     
     @property
     def base_verb_string(self):
-        _base_verb_str= getattr(self, '_base_verb_string', None)
-        if _base_verb_str is None:
-            if self.is_phrase:
-                # a phrase means the base verb is the actual verb being conjugated.
-                self._base_verb_string = self.inf_verb_string
-            elif self.has_prefix and self.reflexive == Reflexive.base_reflexive:
-                self._base_verb_string = self.core_characters + self.inf_ending +'se'
-            elif self.has_prefix:
-                self._base_verb_string = self.core_characters + self.inf_ending
-            else:
-                self._base_verb_string = ''
-        return self._base_verb_string
-    
+        if self.is_derived:                
+            _base_verb_str= getattr(self, '_base_verb_string', None)
+            if is_empty_str(_base_verb_str):
+                if self.is_phrase:
+                    # a phrase means the base verb is the actual verb being conjugated.
+                    self._base_verb_string = self.inf_verb_string
+                elif self.reflexive == Reflexive.base_reflexive:
+                    self._base_verb_string = self.core_characters + self.inf_ending +'se'
+                else:                    
+                    self._base_verb_string = self.core_characters + self.inf_ending
+            return self._base_verb_string
+        else:
+            return None
     @base_verb_string.setter
     def base_verb_string(self, base_verb_string_):
         self._base_verb_string = base_verb_string_
@@ -905,12 +907,15 @@ class Verb(Phrase):
             return self.base_verb.root_verb
             
     @property
-    def root_verb_str(self):
-        return self._root_verb_str
+    def root_verb_string(self):
+        if self.is_derived:
+            return self.core_characters+self.inf_ending
+        else:
+            return None
     
     @property
     def is_derived(self):
-        return self.base_verb_string is not None    
+        return self.is_phrase or self.has_prefix or self.is_reflexive    
     
     @property
     def derived_from(self):
@@ -1063,7 +1068,7 @@ class Verb(Phrase):
                        
     def sql_insert_values(self):
         insert_values_ = super().sql_insert_values()
-        insert_values_.extend( [self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive.value, self.suffix_words, ",".join(self.conjugation_overrides), ",".join(self.appliedOverrides), self.manual_overrides_string, self.base_verb_string, self.root_verb_str, self.is_generated])    
+        insert_values_.extend( [self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive.value, self.suffix_words, ",".join(self.conjugation_overrides), ",".join(self.appliedOverrides), self.manual_overrides_string, self.base_verb_string, self.root_verb_string, self.is_generated])    
         return insert_values_
     
     
