@@ -335,12 +335,8 @@ class Vowels_():
                                               ])
         print(self.accent_rules)
         # used to find the vowel groups for displaying vowels in words.
-        self.vowel_groups = []
-        for vowel_group in combinations:
-            self.vowel_groups.extend([
-                                      re_compile("("+vowel_group+")"),
-                                      ])
-        
+#         self.vowel_groups = re_compile("("+"|".join([*three_letter_combinations, *two_letter_groups, *all]) +")")
+
     def any(self, vowel):
         for an_any in self._any:
             if an_any.find(vowel) >= 0:

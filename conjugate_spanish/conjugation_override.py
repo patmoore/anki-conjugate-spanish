@@ -40,14 +40,14 @@ class Standard_Overrides_(dict):
     
 Standard_Overrides = Standard_Overrides_()
 
-def make_std_override(inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None, spelling_only=False):
-    conjugation_override = ConjugationOverride(inf_match, parents, documentation, examples, key, auto_match, manual_overrides, spelling_only)
+def make_std_override(inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None, pronounciation_preservation=False):
+    conjugation_override = ConjugationOverride(inf_match, parents, documentation, examples, key, auto_match, manual_overrides, pronounciation_preservation)
     conjugation_override.add_std()
     return conjugation_override
 
 Dependent_Standard_Overrides = {}
-def make_dep_override(inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None, spelling_only=False):
-    conjugation_override = ConjugationOverride(inf_match, parents, documentation, examples, key, auto_match, manual_overrides, spelling_only)
+def make_dep_override(inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None, pronounciation_preservation=False):
+    conjugation_override = ConjugationOverride(inf_match, parents, documentation, examples, key, auto_match, manual_overrides, pronounciation_preservation)
     if conjugation_override.key is not None:
         if conjugation_override.key in Dependent_Standard_Overrides:
             raise Exception("Dependent_Standard_Overrides already defined for "+conjugation_override.key)
@@ -72,7 +72,7 @@ class ConjugationOverride(object):
     overall overrides are called first, then ending overrides, then stem overrides
     
     """    
-    def __init__(self, inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None, spelling_only=False):
+    def __init__(self, inf_match=None, parents=None, documentation=None, examples=None, key=None, auto_match=None, manual_overrides=None, pronounciation_preservation=False):
         """
         :manual_overrides dict with conjugation_stems, conjugation_endings, conjugations key. values are dicts: tense names as keys; values are arrays or strings
         special case: tense name of 'present_except_nosvos' means present tense overriding just yo, tu, usted, ustedes
@@ -95,7 +95,7 @@ class ConjugationOverride(object):
             self.auto_match = auto_match  
             
         self.add_manual_overrides(manual_overrides)  
-        self.spelling_only = spelling_only
+        self.pronounciation_preservation = pronounciation_preservation
         
     @staticmethod
     def create_from_json(json_string, key=None):
@@ -511,7 +511,7 @@ Zar_CO = make_std_override(inf_match=re_compile('zar$'),
     key='zar',
     documentation='verbs ending in -zar have z -> c before e',
     examples=['comenzar', 'lanzar'],
-    spelling_only=True
+    pronounciation_preservation=True
     )
 Zar_CO.override_tense_join(Tenses.past_tense, _zar_check, Persons.first_person_singular)
 Zar_CO.override_tense_join(Tenses.present_subjective_tense, _zar_check)
@@ -524,7 +524,7 @@ Gar_CO = make_std_override(inf_match=re_compile('gar$'),
     key='gar', 
     documentation='verbs ending in -gar have g -> gu before e',
     examples=['pagar'],
-    spelling_only=True
+    pronounciation_preservation=True
     )
 Gar_CO.override_tense_join(Tenses.past_tense, _gar_check, Persons.first_person_singular)
 Gar_CO.override_tense_join(Tenses.present_subjective_tense, _gar_check)
@@ -562,7 +562,7 @@ Car_CO = make_std_override(inf_match=re_compile('car$'),
     key='car',
     documentation='verbs ending in -car have c -> qu before e',
     examples=['tocar'],
-    spelling_only=True
+    pronounciation_preservation=True
     )
 Car_CO.override_tense_join(Tenses.past_tense, _car_check, Persons.first_person_singular)
 Car_CO.override_tense_join(Tenses.present_subjective_tense, _car_check)
@@ -582,7 +582,7 @@ Cer_After_Vowel_CO = make_std_override(inf_match=re_compile(Vowels.all_group+'ce
     key='v_cer',
     documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o',
     examples=['aparecer'],
-    spelling_only=True
+    pronounciation_preservation=True
     )
 Cir_After_Vowel_CO = make_std_override(inf_match=re_compile(Vowels.all_group+'cir$'),
     key='v_cir',
@@ -596,13 +596,13 @@ Cer_After_Const_CO = make_std_override(inf_match=re_compile(Vowels.consonants+'c
     key='c_cer',
     documentation='verbs ending in -cer or -cir with a preceding consonant have c -> z before o',
     examples=['convencer'],
-    spelling_only=True
+    pronounciation_preservation=True
     )
 Cir_After_Const_CO = make_std_override(inf_match=re_compile(Vowels.consonants+'cir$'),
     key='c_cir',
     documentation='verbs ending in -cer or -cir with a preceding consonant have c -> z before o',
     examples=['convencer'],
-    spelling_only=True
+    pronounciation_preservation=True
     )
 for co in [ Cer_After_Const_CO, Cir_After_Const_CO ]:
     co.override_tense_join(Tenses.present_tense, _c2_z_check, Persons.first_person_singular)
@@ -776,7 +776,7 @@ Guar_CO = make_std_override(inf_match=re_compile('guar$'),
     key='guar',
     examples=['averiguar'],
     documentation='guar verbs need a umlaut/dieresis ü to keep the u sound so we pronounce gu like gw which keeps it consistent with the infinitive sound http://www.spanish411.net/Spanish-Preterite-Tense.asp',
-    spelling_only=True)
+    pronounciation_preservation=True)
 def _umlaut_u_(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_U, STARTS_WITH_E, stem_ending_replacement='ü')
     return result
