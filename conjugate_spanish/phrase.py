@@ -1,8 +1,20 @@
 from .constants import make_unicode
 import abc
+from enum import Enum
 
+class Phrase_Association(Enum):
+    base_verb = 0
+    root_verb = 1
+    synonym = 2
+    antonym = 3
+    
 class Phrase(object):
     __metaclass__ = abc.ABCMeta
+    
+    # Anki tag for phrases
+    PHRASE_TAG = "phrase"
+    #Anki tag for irregular
+    MANUAL_TAG = "manual"
     def __init__(self, phrase_string, definition, conjugatable, **kwargs):
         # key = because full_phrase is used to generate readable string
         self.phrase_string = make_unicode(phrase_string)
@@ -15,14 +27,14 @@ class Phrase(object):
     @property
     def id(self):
         return self._id
-#     
-#     @id.setter
-#     def id(self, id):
-#         self._id = id
          
     @property
     def full_phrase(self):
         return self.phrase_string
+    
+    @abc.abstractproperty
+    def is_phrase(self):
+        pass
     
     @abc.abstractproperty
     def derived_from(self):
@@ -46,7 +58,6 @@ class Phrase(object):
     
     def sql_insert_values(self):
         return [self.full_phrase, self.definition, self.is_conjugatable]
-    
     
     #
     # HACK really shouldn't have the super class know about the subclasses 

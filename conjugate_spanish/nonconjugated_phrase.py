@@ -17,6 +17,10 @@ class NonConjugatedPhrase(Phrase):
     def sql_insert_values(self):
         return super().sql_insert_values()
     
+    @property
+    def is_phrase(self):
+        return True
+    
     @classmethod
     def table_columns(cls):
         return super().table_columns()
@@ -36,4 +40,4 @@ class NonConjugatedPhrase(Phrase):
     
     @property
     def tags(self):
-        return None
+        return [ self.PHRASE_TAG ]

@@ -60,9 +60,9 @@ class Verb_Dictionary_(Dictionary_):
             verb = Verb.importString(phrase, definition, generated=generated, **kwargs)
             self[verb.full_phrase] = verb
             if verb.is_derived:
-                cs_debug(verb.full_phrase+" is derived from "+verb.root_verb_string+" base ="+verb.base_verb_string)
-                root_verb = self.add(verb.root_verb_string,generated=True, conjugation_overrides=conjugation_overrides)
-                base_verb = self.add(verb.base_verb_string,generated=True, conjugation_overrides=conjugation_overrides)
+                cs_debug(verb.full_phrase+" is derived from "+verb.root_verb_string+" base ="+verb.base_verb_string, " conjugation_overrides="+str(conjugation_overrides))
+                verb.root_verb = self.add(verb.root_verb_string, conjugation_overrides=conjugation_overrides,generated=True)
+                verb.base_verb = self.add(verb.base_verb_string, conjugation_overrides=conjugation_overrides, root_verb=verb.root_verb_string,generated=True)
             
         else:
             if not generated:
@@ -70,6 +70,15 @@ class Verb_Dictionary_(Dictionary_):
             verb = self[phrase]
         
         return verb
+    
+    def get(self, phrase, default_ = None):
+        verb = super().get(phrase, default_)
+        if verb is None:
+            verb = Storage.get_phrase(phrase)
+            if verb is not None:
+                self[phrase] = verb
+        return verb
+    
     def processAllVerbs(self):
         for phrase, verb in self.items():
             if verb.is_derived:
@@ -195,6 +204,8 @@ class Espanol_Dictionary_():
         return Storage.get_phrases(False)
     def get_verbs(self):
         return Storage.get_phrases(True)
+    def get_phrase(self, phrase):
+        return Storage.get_phrase(phrase)
 
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary

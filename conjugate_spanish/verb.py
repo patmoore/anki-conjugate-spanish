@@ -57,6 +57,7 @@ class Reflexive(Enum):
             return cls.non_reflexive
         else:
             return Reflexive(value)
+
     
 class Verb(Phrase):
     '''
@@ -388,14 +389,15 @@ class Verb(Phrase):
         """
         # we never want the base verb to apply the reflexive pronoun - irregardless of reflexive_override
         _options = { **options, **{ConjugationOverride.REFLEXIVE_OVERRIDE : False} }
-        base_verb_conjugation = self.root_verb.conjugate(tense, person, _options)
+        base_verb_conjugation = self.base_verb.conjugate(tense, person, _options)
         if base_verb_conjugation is None:
             # imperative, third-person only verbs
             return None
         
         # done because of multiple layers of derivation.
-        _reflexive = pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE, self.reflexive)
+        _reflexive = pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE, self.is_reflexive)
         explicit_accent_already_applied = False
+        # TODO: look for 2/3 vowel dipthongs as well
         single_vowel_match = _single_vowel_re.match(base_verb_conjugation)        
         
         if tense == Tenses.imperative_positive and person == Persons.second_person_singular:
@@ -427,7 +429,15 @@ class Verb(Phrase):
             _conjugation = self.full_prefix + base_verb_conjugation
             
         if _reflexive:
-            returned_conjugation = self.__apply_reflexive_pronoun(tense,person,_conjugation, explicit_accent_already_applied)
+            _conjugation = self.__apply_reflexive_pronoun(tense,person,_conjugation, explicit_accent_already_applied)
+        
+        if not is_empty_str(self.prefix_words):
+            returned_conjugation = self.prefix_words
+        else:
+            returned_conjugation = ''
+        returned_conjugation += _conjugation
+        if not is_empty_str(self.suffix_words):
+            returned_conjugation += ' '+self.suffix_words
         return returned_conjugation
     def __apply_reflexive_pronoun(self, tense, person, _conjugation, explicit_accent_already_applied):
         """
@@ -861,7 +871,9 @@ class Verb(Phrase):
             return None
         elif not hasattr(self, '_base_verb'):
             # some verbs are based off of others (tener)
-            # TODO: maldecir has different tu affirmative than decir        
+            # TODO: maldecir has different tu affirmative than decir  
+            #HACK : would prefer to not trigger sql calls... but this works o.k. 
+            # and allows for out of ordering loading.      
             from .espanol_dictionary import Verb_Dictionary
             _base_verb = Verb_Dictionary.get(self.base_verb_string)
             if _base_verb is None:
@@ -904,6 +916,17 @@ class Verb(Phrase):
         """
         if hasattr(self, '_root_verb'):
             return self._root_verb
+                    # some verbs are based off of others (tener)
+            # TODO: maldecir has different tu affirmative than decir  
+            #HACK : would prefer to not trigger sql calls... but this works o.k. 
+            # and allows for out of ordering loading.
+        if self.root_verb_string:      
+            from .espanol_dictionary import Verb_Dictionary
+    
+            self._root_verb = Verb_Dictionary.get(self.root_verb_string)
+                # TODO - may not be in dictionary yet?
+            return self._root_verb
+
         elif self.base_verb is not None:
             return self.base_verb.root_verb
         else:
@@ -1041,7 +1064,16 @@ class Verb(Phrase):
     
     @property
     def tags(self):
-        return self.conjugation_overrides
+        _tags = list( self.conjugation_overrides)
+        if self.is_phrase:
+            _tags.append(self.PHRASE_TAG)
+        if self.manual_overrides_string is not None:
+            _tags.append(self.MANUAL_TAG)
+        if self.base_verb_string:
+            _tags.append(self.base_verb_string)
+        if self.root_verb_string and self.root_verb_string != self.base_verb_string:
+            _tags.append(self.root_verb_string)
+        return _tags
     
     def _check_for_multiple_accents(self, tense, person, conjugation):
         """

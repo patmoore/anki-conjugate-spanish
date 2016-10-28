@@ -5,14 +5,13 @@ from conjugate_spanish.phrase import Phrase
 from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
 from aqt import mw
 from anki.hooks import addHook, wrap, remHook
-
+from .constants import is_empty_str
 
 class Storage_(object):
     DB_VERSION='0.1.11'
     PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "conjugation_overrides","applied_overrides","manual_overrides", "base_verb", "root_verb", "generated"]
     
     def __init__(self, mw):
-        from anki.hooks import addHook
         self.mw = mw
         self.delete_sql_= self._generate_sql("delete from ${conjugation_overrides_table} where ${phrase_table_name}_id=(select id from ${phrase_table_name} where phrase=?)")   
         # NO     
@@ -32,6 +31,9 @@ class Storage_(object):
         self._select_phrase_by_note_sql = self._generate_sql("""select ${phrase_columns} from ${phrase_table_name} join ${phrase_note_table} on ${phrase_table_name}.id={phrase_note_table}.${phrase_table_name}_id where ${note_table_name}_id=?""")
         
         self._select_phrase_by_phrase = self._generate_sql("""select ${phrase_columns} from ${phrase_table_name} where phrase = ?""")
+        self._create_association_sql = self._generate_sql( "update ${associations_table} set ${phrase_table_name}_root_id=(select id from ${phrase_table_name} where ${associations_table}.${phrase_table_name}_root_phrase=${phrase_table_name}.phrase) where ${phrase_table_name}_root_id is NULL")
+        self._insert_conjugation_overrides_sql = self._generate_sql("""insert into ${conjugation_overrides_table} (${phrase_table_name}_id, conjugation_overrides_key, manual_override) values (?,?,?)""")
+        self._select_conjugation_overrides_sql = self._generate_sql("""select conjugation_overrides_key, ${phrase_table_name}_id, manual_override from ${conjugation_overrides_table} co join ${phrase_table_name} phrase on co.${phrase_table_name}_id=phrase.id where phrase.phrase=?""")
         addHook("remNotes", self._remNotes_hook)
 
     @property
@@ -149,8 +151,9 @@ class Storage_(object):
             );            
             create table if not exists ${conjugation_overrides_table} (
                 id                           integer primary key,
-                conjugation_overrides_key text not null,
-                ${phrase_table_name}_id                  integer,  
+                conjugation_overrides_key  text not null,
+                ${phrase_table_name}_id    integer,
+                manual_override            text,
                 UNIQUE (${phrase_table_name}_id, conjugation_overrides_key) ON CONFLICT REPLACE
                 FOREIGN KEY(${phrase_table_name}_id) REFERENCES ${phrase_table_name}(id)
             );
@@ -223,6 +226,9 @@ class Storage_(object):
         cs_debug("overrides Count = ",count)
         
     def create_associations(self, phrases):
+        """
+        Derived to root or base
+        """
         insert_associations_data = []
         for phrase in phrases:
             if phrase.is_derived:
@@ -232,8 +238,14 @@ class Storage_(object):
         cs_debug(self.insert_association_sql_)
         self.db.executemany(self.insert_association_sql_, insert_associations_data)
         # connect all roots back to all derived. TODO - limit to 
-        self.db.execute(self._generate_sql( "update ${associations_table} set ${phrase_table_name}_root_id=(select id from ${phrase_table_name} where ${associations_table}.${phrase_table_name}_root_phrase=${phrase_table_name}.phrase) where ${phrase_table_name}_root_id is NULL"))
+        self.db.execute(self._create_association_sql)
         self.db.commit()
+        
+    def create_root_verb(self, phrase):
+        if not is_empty_str(phrase.manual_overrides_string):
+            self.db.execute(self._insert_conjugation_overrides_sql, phrase.id, phrase.manual_overrides_string, None)
+        for co in phrase.conjugation_overrides:
+            self.db.execute(self._insert_conjugation_overrides_sql, phrase.id, None, co)
       
     def get_phrase(self, phrase):      
         sql_string = self.select_phrase_sql +" where phrase =?"
