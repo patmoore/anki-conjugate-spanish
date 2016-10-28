@@ -4,7 +4,8 @@ import inspect
 from conjugate_spanish import Tenses, Persons, Verb
 from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from conjugate_spanish.conjugation_override import Dependent_Standard_Overrides
-from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect, Vowels
+from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect
+from conjugate_spanish.vowel import Vowels
 
 All_Infinitive_Endings= list(Infinitive_Endings)
 All_Infinitive_Endings.append('ír')

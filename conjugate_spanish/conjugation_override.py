@@ -3,6 +3,7 @@ import json
 import inspect
 from .standard_endings import Standard_Conjugation_Endings
 from .constants import *
+from .vowel import Vowels
 from string import Template
 """
 Special casing

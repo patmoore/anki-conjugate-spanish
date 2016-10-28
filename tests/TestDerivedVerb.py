@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 from conjugate_spanish import Tenses, Persons, Verb
-from conjugate_spanish.verb_dictionary import Verb_Dictionary
+from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect
 
 All_Infinitive_Endings= list(Infinitive_Endings)

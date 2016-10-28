@@ -8,10 +8,11 @@ import inspect
 import sys
 from .conjugation_override import *
 from .constants import *
+from .vowel import Vowels
 import traceback
 from .utils import cs_debug
 import types
-from .phrase import Phrase
+from .phrase import Phrase, Phrase_Association
 from functools import reduce
 from .standard_endings import Standard_Conjugation_Endings
 from conjugate_spanish.conjugation_override import ConjugationOverride
@@ -130,8 +131,8 @@ class Verb(Phrase):
         
     def process_conjugation_overrides(self):
         if self.__processed_conjugation_overrides:
-            return
-            
+            return                        
+                    
         # TODO -- move all process_conjugation_override out of constructor so that we can properly handle derived verbs where the base verb has not been loaded
         for conjugation_override in get_iterable(self.conjugation_overrides):
             self.process_conjugation_override(conjugation_override)     
