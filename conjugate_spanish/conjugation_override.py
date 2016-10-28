@@ -586,7 +586,8 @@ Cer_After_Vowel_CO = make_std_override(inf_match=re_compile(Vowels.all_group+'ce
     )
 Cir_After_Vowel_CO = make_std_override(inf_match=re_compile(Vowels.all_group+'cir$'),
     key='v_cir',
-    documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o')
+    documentation='verbs ending in -cer or -cir with a preceding vowel have c -> zc before o',
+    pronounciation_preservation=True)
 for co in [ Cer_After_Vowel_CO, Cir_After_Vowel_CO]:
     co.override_tense_join(Tenses.present_tense, _v_ceir_check, Persons.first_person_singular)
     # Exists to handle satisfacer/hacer: (e_and_o) verbs : May not to be so general?
@@ -613,7 +614,7 @@ def __i2y_past_3rd_i_check(self, stem, ending, **kwargs):
     result = _check_and_change(stem, ending, ENDS_WITH_VOWEL,
         STARTS_WITH_I, ending_beginning_replacement='y')
     if result[0] == stem and result[1] == ending:
-        # if no change remore the i in the ending (traer, decir)
+        # if no change remove the i in the ending (traer, decir)
         result = _check_and_change(stem, ending, ending_re=STARTS_WITH_I,ending_beginning_replacement='')
     return result
 
