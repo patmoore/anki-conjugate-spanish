@@ -41,10 +41,10 @@ class Vowels_():
         self.accented = accented = [a_a, e_a, i_a, o_a, u_a]
         self.accented_vowel_check = re_compile(re_group(accented))
         self._replace_accents = [ [re_compile(accented[i]), unaccented[i] ] for i in range(len(accented))]
-        self._all = [ *a_any, *e_any, *i_any, *o_any, *u_any, y ]
+        self._all = self.all = [ *a_any, *e_any, *i_any, *o_any, *u_any, y ]
         self._any =  [ "".join(a_any), "".join(e_any), "".join(i_any), "".join(o_any), "".join(u_any) ]
-        self.all_group = all_group = re_group(self.all)
-        self.consonants = consonants = re_group(self.all, True)
+        self.all_group = all_group = re_group(self._all)
+        self.consonants = consonants = re_group(self._all, True)
         
         strong = [ a, a_a, e, e_a, o, o_a ]
         weak_unaccented = [ i, u, y ]
