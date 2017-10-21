@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 import unittest
 import sys
-print(":::",sys.PYTHONPATH)
 from conjugate_spanish import Tenses, Persons, Verb
 import codecs
 import csv
-from conjugate_spanish.espanol_dictionary import Verb_Dictionary
+from conjugate_spanish.espanol_dictionary import Espanol_Dictionary, Verb_Dictionary
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect,\
     get_iterable
 from conjugate_spanish.conjugation_override import Standard_Overrides
 MASTER_DIR = './conjugate_spanish/expanded'
-Verb_Dictionary.load()
+Espanol_Dictionary.load()
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     # csv.py doesn't do Unicode; encode temporarily as UTF-8:
