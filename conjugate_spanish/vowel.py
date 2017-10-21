@@ -1,3 +1,4 @@
+from .constants import *
 class Vowels_():
     """
     Long form creation allows developers to easily see if all needed vowel combinations are handled.

@@ -286,10 +286,16 @@ class AnkiIntegration_(object):
                 
     def _create_Notes_Menu(self, modelName, irregular_only=True, *args):
         modelTemplate = self._getModelTemplateByName(modelName)
+        phrase = Espanol_Dictionary.get_phrase("tener deseo de [inf]")
+        for i in range(4):
+            c = phrase.conjugate(Tenses.present_tense, Persons.first_person_singular)
+            print(c)
+            
         for phrase in Espanol_Dictionary.get_verbs():
             note = modelTemplate.verbToNote(phrase, irregular_only)
             mw.col.addNote(note)
             Storage.connect_phrase_to_note(phrase, note)                
+        cs_debug("test")
     
     def createAllNotesMenu(self, definition):
         self.addMenuItem(definition['menu'], self.menu_createNotes)

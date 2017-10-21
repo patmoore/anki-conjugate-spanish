@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
+import os
+for l in os.environ['PYTHONPATH'].split(os.pathsep):
+    print(":::", l ) 
+
 from conjugate_spanish import Tenses, Persons, Verb
 from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect
@@ -27,6 +31,10 @@ fakeacordarse = Verb_Dictionary.add("fakeacordarse", "fake acordarse")
 descfakeacordarse = Verb_Dictionary.add("descfakeacordarse", "fake acordarse", base_verb=fakeacordarse)
 
 class TestDerivedVerb(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        unittest.TestCase.setUpClass(cls)
+        
     def test_tener_setup(self):
         tener_ = faketener.base_verb
         self.assertEqual("tener", tener.inf_verb_string)

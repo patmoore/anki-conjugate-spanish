@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
+import sys
+print(":::",sys.PYTHONPATH)
 from conjugate_spanish import Tenses, Persons, Verb
 import codecs
 import csv

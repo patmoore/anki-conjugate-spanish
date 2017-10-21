@@ -3,16 +3,13 @@ from string import Template
 from conjugate_spanish.verb import Verb
 from conjugate_spanish.phrase import Phrase
 from conjugate_spanish.nonconjugated_phrase import NonConjugatedPhrase
-from aqt import mw
-from anki.hooks import addHook, wrap, remHook
 from .constants import is_empty_str
 
 class Storage_(object):
     DB_VERSION='0.1.11'
     PHRASE_COLUMNS = ["id", "phrase","definition", "conjugatable", "prefix_words", "prefix", "core_characters", "inf_ending", "inf_ending_index","reflexive", "suffix_words", "conjugation_overrides","applied_overrides","manual_overrides", "base_verb", "root_verb", "generated"]
     
-    def __init__(self, mw):
-        self.mw = mw
+    def __init__(self):
         self.delete_sql_= self._generate_sql("delete from ${conjugation_overrides_table} where ${phrase_table_name}_id=(select id from ${phrase_table_name} where phrase=?)")   
         # NO     
         self.insert_override_sql_ =self._generate_sql("insert into ${conjugation_overrides_table} (conjugation_overrides_key,${phrase_table_name}_id) select ?, id from ${phrase_table_name} where phrase=?")        
@@ -33,16 +30,26 @@ class Storage_(object):
         self._select_phrase_by_phrase = self._generate_sql("""select ${phrase_columns} from ${phrase_table_name} where phrase = ?""")
         self._create_association_sql = self._generate_sql( "update ${associations_table} set ${phrase_table_name}_root_id=(select id from ${phrase_table_name} where ${associations_table}.${phrase_table_name}_root_phrase=${phrase_table_name}.phrase) where ${phrase_table_name}_root_id is NULL")
         self._insert_conjugation_overrides_sql = self._generate_sql("""insert into ${conjugation_overrides_table} (${phrase_table_name}_id, conjugation_overrides_key, manual_override) values (?,?,?)""")
-        self._select_conjugation_overrides_sql = self._generate_sql("""select conjugation_overrides_key, ${phrase_table_name}_id, manual_override from ${conjugation_overrides_table} co join ${phrase_table_name} phrase on co.${phrase_table_name}_id=phrase.id where phrase.phrase=?""")
-        addHook("remNotes", self._remNotes_hook)
+        self._select_conjugation_overrides_sql = self._generate_sql("""select conjugation_overrides_key, ${phrase_table_name}_id, manual_override from ${conjugation_overrides_table} co join ${phrase_table_name} phrase on co.${phrase_table_name}_id=phrase.id where phrase.phrase=?""")        
 
     @property
     def db(self):
         return self.mw.col.db
     
     def initialize(self):
+        from anki.hooks import addHook
+        from aqt import mw
+        from anki.hooks import addHook, remHook
+        self.mw = mw
+        addHook("remNotes", self._remNotes_hook)
+        addHook("unloadProfile", self._unloadProfile_hook)
         self.addSchema()
-        
+    
+    def _unloadProfile_hook(self):
+        from anki.hooks import remHook
+        remHook("remNotes", self._remNotes_hook)
+        pass
+    
     @property
     def phrase_table_name(self):
         return 'cs_phrase'
@@ -327,8 +334,12 @@ class Storage_(object):
         Called when notes are removed.
         allow us to clean up if needed
         """
-        note_ids_ = [[id] for id in note_ids]
+        note_ids_ = [[id_] for id_ in note_ids]
         collection.db.executemany(self._generate_sql("delete from $phrase_note_table where ${note_table_name}_id = ?"), note_ids_)
+
             
-Storage = Storage_(mw)
-addHook('profileLoaded', Storage.initialize)
+Storage = Storage_()
+def profile_loaded():
+    Storage.initialize()
+     
+addHook('profileLoaded', profile_loaded)
