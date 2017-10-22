@@ -4,7 +4,7 @@
 import sys
 import conjugate_spanish
 from conjugate_spanish import Espanol_Dictionary
-from conjugate_spanish.constants import Tenses, Persons
+from conjugate_spanish.constants import Tense, Tenses, Persons, Person
 Espanol_Dictionary.load()
 if len(sys.argv) < 2:
     print("verb tense person")
@@ -15,21 +15,38 @@ if len(sys.argv) < 2:
 phrase_str = sys.argv[1]
 phrase = Espanol_Dictionary.get(phrase_str)
 
+def print_tense(tense, conjugations):
+    print(tense.human_readable+ "(" 
+      + str(tense._value_) + "):")
+    if tense in Tenses.Person_Agnostic:
+        print('\t' + conjugations)
+    else:
+        print('\t', end='')
+        for person in Person:
+            print(person.human_readable + "(" 
+              + str(person._value_) + "):", end=' ')
+            
+            if conjugations[person] is None:
+                print("---", end='; ')
+            else:    
+                print(conjugations[person], end='; ')
+    print()
+    
 if len(sys.argv) < 3:
-    print(phrase.conjugate_all_tenses())
+    conjugations = phrase.conjugate_all_tenses()
+    for tense in Tense:
+        print_tense(tense, conjugations[tense])
     exit(0)    
 
 tenseIndex=int(sys.argv[2])
 tense = Tenses[tenseIndex]
 if len(sys.argv) < 4:
-    print(tense)
     conjugation = phrase.conjugate_tense(tenseIndex)
-    for person in Persons:
-        print(person + " : " + conjugation[person])
+    print_tense(tense, conjugation)
     exit(0)
 
 personIndex = int(sys.argv[3])
 person = Persons[personIndex]
-print(tense + ", " + person)
+print(tense.human_readable + ", " + person.human_readable)
 print(phrase.conjugate(tenseIndex, personIndex))
 
