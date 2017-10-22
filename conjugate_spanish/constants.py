@@ -3,6 +3,7 @@ import collections
 import re
 import sys
 import traceback
+from enum import IntEnum, Enum
 
 # Used as prefix to actions, models, etc.
 ADDON_PREFIX = 'EspañolConjugator'
@@ -24,12 +25,82 @@ def re_group(args, not_=False):
             return "[^"+"".join(args)+"]"
         else:
             return "["+"".join(args)+"]"
-
-
+    
+class BaseConst(IntEnum):
+    def __new__(cls, code, key, human_readable):
+        inst = int.__new__(cls, code)
+        inst._value_ = code
+        return inst
+    
+    def __init__(self, code, key, human_readable):
+        self.code = code
+        self.key = key
+        self.human_readable = human_readable
+        
+    def __eq__(self, right):
+        if isinstance(right, str):
+            return self.key == right
+        else:
+            return self.cmp(right) == 0
+    
+    def __ne__(self, right):
+        return not(self.__eq__(right))
+        
+    def __lt__(self, right):
+        if isinstance(right, str):
+            return self.key < right
+        else:
+            return self.cmp(right) < 0
+        
+    def __le__(self, right):
+        if isinstance(right, str):
+            return self.key <= right
+        else:
+            return self.cmp(right) <= 0
+        
+    def __gt__(self, right):
+        if isinstance(right, str):
+            return self.key > right
+        else:
+            return self.cmp(right) > 0
+        
+    def __ge__(self, right):
+        if isinstance(right, str):
+            return self.key >= right
+        else:
+            return self.cmp(right) >= 0
+        
+    def cmp(self, right):
+        if isinstance(right, self.__class__):
+            return self._value_ - right._value_
+        elif isinstance(right, int) and not isinstance(right, Enum):
+            # make sure we cannot compare to different Enum class accidently
+            return self._value_ - right
+        else:
+            return NotImplemented
+        
+        
+class Tense(BaseConst):
+    present_tense = (0, 'present', 'Present')
+    incomplete_past_tense = (1, 'incomplete_past',  'Incomplete Past')
+    past_tense=(2, 'past', 'Past')
+    future_tense=(3, 'future', 'Future')
+    conditional_tense=(4, 'conditional', 'Conditional')
+    present_subjective_tense = (5, 'present_subjective', 'Present Subjective')
+    past_subjective_tense = (6, 'past_subjective', 'Past Subjective')
+    imperative_positive = (7, 'imperative_positive', 'Imperative Positive')
+    imperative_negative = (8, 'imperative_negative', 'Imperative Negative')
+    gerund = (9, 'gerund', 'Gerund (-ed)')
+    past_participle = (10, 'past_participle', 'Past Participle (-ing)')
+    #usually it is same as past participle: However,
+    #The boy is cursed. --> el niño está maldito. (adjective)
+    #The boy has been cursed --> el niño ha sido maldecido ( one of the perfect tenses)
+    adjective = (11, 'adjective', 'Adjective (usually Past Participle)' )
+    
 class BaseConsts_(list):
-    def __init__(self, constants, human_readable):
+    def __init__(self, constants):
         super().__init__(constants)
-        self._human_readable = human_readable
+#         self._human_readable = human_readable
         
     @property
     def all(self):
@@ -40,36 +111,39 @@ class BaseConsts_(list):
         return [index for index in self.all if index not in _except]
     
     def human_readable(self, index):
-        return self._human_readable[index]
+        return self[index].human_readable
+    
+    def index(self, index_):
+        for v in self:
+            if v == index_: 
+                return v
+        return None
+    
+class Infinitive_Ending(BaseConst):
+    ar_verb = (0, 'ar', '-ar')
+    er_verb = (1, 'er', '-er')
+    ir_verb = (2, 'ir', '-ir')
     
 class Infinitive_Endings_(BaseConsts_):
-    ar_verb = 0
-    er_verb = 1
-    ir_verb = 2
+    ar_verb = Infinitive_Ending.ar_verb
+    er_verb = Infinitive_Ending.er_verb
+    ir_verb = Infinitive_Ending.ir_verb
      
-Infinitive_Endings = Infinitive_Endings_( [
-    'ar',
-    'er',
-    'ir'
-],[
-    '-ar',
-    '-er',
-    '-ir'
-])
+Infinitive_Endings = Infinitive_Endings_(list(Infinitive_Ending))
 
 class Tenses_(BaseConsts_):
-    present_tense = 0
-    incomplete_past_tense = 1
-    past_tense = 2
-    future_tense = 3
-    conditional_tense = 4
-    present_subjective_tense = 5
-    past_subjective_tense = 6
-    imperative_positive = 7
-    imperative_negative = 8
-    gerund = 9
-    past_participle = 10
-    adjective = 11
+    present_tense = Tense.present_tense
+    incomplete_past_tense = Tense.incomplete_past_tense
+    past_tense = Tense.past_tense
+    future_tense = Tense.future_tense
+    conditional_tense = Tense.conditional_tense
+    present_subjective_tense = Tense.present_subjective_tense
+    past_subjective_tense = Tense.past_subjective_tense
+    imperative_positive = Tense.imperative_positive
+    imperative_negative = Tense.imperative_negative
+    gerund = Tense.gerund
+    past_participle = Tense.past_participle
+    adjective = Tense.adjective
     Person_Agnostic = [ gerund, past_participle, adjective ]
     # these tenses conjugate for all persons ( note: imperative and Person_agnostic is missing)
     All_Persons = [ present_tense, incomplete_past_tense, past_tense, future_tense,
@@ -83,44 +157,23 @@ class Tenses_(BaseConsts_):
     core = [ present_tense, past_tense ]
     
 # names also used in manually defined override files
-Tenses = Tenses_([
-    'present',
-    'incomplete_past',
-    'past',
-    'future',
-    'conditional',
-    'present_subjective',
-    'past_subjective',
-    'imperative_positive',
-    'imperative_negative',
-    'gerund',
-    'past_participle',
-    #usually it is same as past participle: However,
-    #The boy is cursed. --> el niño está maldito. (adjective)
-    #The boy has been cursed --> el niño ha sido maldecido ( one of the perfect tenses)
-    'adjective'
-],[
-    'Present',
-    'Incomplete Past',
-    'Past',
-    'Future',
-    'Conditional',
-    'Present Subjective',
-    'Past Subjective',
-    'Imperative Positive',
-    'Imperative Negative',
-    'Gerund (-ed)',
-    'Past Participle (-ing)',
-    'Adjective (usually Past Participle)'
-])
+Tenses = Tenses_(list(Tense))
 
+class Person(BaseConst):
+    first_person_singular = (0, 'yo', 'yo')
+    second_person_singular = (1, 'tú', 'tú')
+    third_person_singular = (2, 'usted', 'usted')
+    first_person_plural = (3, 'nosotros', 'nosotros')
+    second_person_plural = (4, 'vosotros', 'vosotros')
+    third_person_plural = (5, 'ustedes', 'ustedes')
+    
 class Persons_(BaseConsts_):
-    first_person_singular = 0
-    second_person_singular = 1
-    third_person_singular = 2
-    first_person_plural = 3
-    second_person_plural = 4
-    third_person_plural = 5
+    first_person_singular = Person.first_person_singular
+    second_person_singular =Person.second_person_singular
+    third_person_singular = Person.third_person_singular
+    first_person_plural = Person.first_person_plural
+    second_person_plural = Person.second_person_plural
+    third_person_plural = Person.third_person_plural
         
     Present_Tense_Stem_Changing_Persons = [first_person_singular, second_person_singular, third_person_singular, third_person_plural]
     Past_Tense_Stem_Changing_Persons = [third_person_singular, third_person_plural]
@@ -130,20 +183,7 @@ class Persons_(BaseConsts_):
     # arguably second person singular is not core...
     core = [ first_person_singular, first_person_plural, second_person_singular, third_person_singular, third_person_plural ]
 
-Persons = Persons_([
-    'yo',
-    'tú',
-    'usted',
-    'nosotros',
-    'vosotros',
-    'ustedes'
-],['yo',
-    'tú',
-    'usted',
-    'nosotros',
-    'vosotros',
-    'ustedes'
-])
+Persons = Persons_(list(Person))
 
 Persons_Indirect = [
     'me',

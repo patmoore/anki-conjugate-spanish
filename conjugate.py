@@ -8,6 +8,8 @@ from conjugate_spanish.constants import Tenses, Persons
 Espanol_Dictionary.load()
 if len(sys.argv) < 2:
     print("verb tense person")
+    print("tenses=" + str(Tenses))
+    print("persons=" + str(Persons))
     exit(0)
     
 phrase_str = sys.argv[1]
@@ -21,7 +23,9 @@ tenseIndex=int(sys.argv[2])
 tense = Tenses[tenseIndex]
 if len(sys.argv) < 4:
     print(tense)
-    print(phrase.conjugate_tense(tenseIndex))
+    conjugation = phrase.conjugate_tense(tenseIndex)
+    for person in Persons:
+        print(person + " : " + conjugation[person])
     exit(0)
 
 personIndex = int(sys.argv[3])
