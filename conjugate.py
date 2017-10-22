@@ -20,9 +20,12 @@ if len(sys.argv) < 3:
 tenseIndex=int(sys.argv[2])
 tense = Tenses[tenseIndex]
 if len(sys.argv) < 4:
-    print(phrase.conjugate_tense(tense))
+    print(tense)
+    print(phrase.conjugate_tense(tenseIndex))
     exit(0)
 
-person = Persons[int(sys.argv[3])]
-print(phrase.conjugate(tense, person))
+personIndex = int(sys.argv[3])
+person = Persons[personIndex]
+print(tense + ", " + person)
+print(phrase.conjugate(tenseIndex, personIndex))
 
