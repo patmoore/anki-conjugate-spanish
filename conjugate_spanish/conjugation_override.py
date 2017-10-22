@@ -102,7 +102,7 @@ class ConjugationOverride(object):
     def create_from_json(json_string, key=None):
         if isinstance(json_string, str) and json_string != '':
             try:
-                manual_overrides = json.loads(make_unicode(json_string), 'utf-8')
+                manual_overrides = json.loads(make_unicode(json_string))
             except ValueError as e:
                 print("while parsing json manual_overrides "+ json_string + " to verb_dictionary", repr(e))
                 raise       
