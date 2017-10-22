@@ -74,6 +74,7 @@ class Verb_Dictionary_(Dictionary_):
     def get(self, phrase, default_ = None):
         verb = super().get(phrase, default_)
         if verb is None:
+            print("No verb with " + phrase)
             verb = Storage.get_phrase(phrase)
             if verb is not None:
                 self[phrase] = verb
@@ -201,11 +202,17 @@ class Espanol_Dictionary_():
         self.phraseDictionary.add(phrase, definition, **kwargs)
         
     def get_phrases(self):
-        return Storage.get_phrases(False)
+        return self.phraseDictionary.keys();
     def get_verbs(self):
-        return Storage.get_phrases(True)
+        return self.verbDictionary.keys();
     def get_phrase(self, phrase):
         return Storage.get_phrase(phrase)
+    def get(self, phrase):
+        verb = self.verbDictionary.get(phrase)
+        if verb is None:
+            return self.phraseDictionary.get(phrase)
+        else:
+            return verb
 
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary

@@ -34,14 +34,11 @@ class Storage_(object):
 
     @property
     def db(self):
-        return self.mw.col.db
+#         return self.mw.col.db
+        pass
     
     def initialize(self):
-        self.addSchema()
-    
-    def _unloadProfile_hook(self):
-        from anki.hooks import remHook
-        remHook("remNotes", self._remNotes_hook)
+#         self.addSchema()
         pass
     
     @property
@@ -249,35 +246,36 @@ class Storage_(object):
             self.db.execute(self._insert_conjugation_overrides_sql, phrase.id, None, co)
       
     def get_phrase(self, phrase):      
-        sql_string = self.select_phrase_sql +" where phrase =?"
-        phrase_row =self.db.first(sql_string, phrase)
-        if phrase_row is not None:
-            phrase =self._load(phrase_row)
-            return phrase
-        else:
-            return None
+        pass
+#         sql_string = self.select_phrase_sql +" where phrase =?"
+#         phrase_row =self.db.first(sql_string, phrase)
+#         if phrase_row is not None:
+#             phrase =self._load(phrase_row)
+#             return phrase
+#         else:
+#             return None
         
     def get_phrases(self, conjugatable=None, phrase=None):
         from .phrase import Phrase
         results = []
-        sql_string = self.select_phrase_sql
-        where = []
-        if conjugatable == True:
-            where.append("conjugatable")
-        elif conjugatable == False:
-            where.append("not conjugatable")
-        
-        if phrase is not None:
-            where.append("phrase LIKE '"+phrase+"'")
-        
-        if len(where) > 0:
-            sql_string = sql_string + " where " + " AND ".join(where)
-        
-        results_dict = dict()
-        for phrase_row in self.db.execute(sql_string):
-            phrase =self._load(phrase_row)
-            results_dict[phrase.id] = phrase
-            results.append(phrase)
+#         sql_string = self.select_phrase_sql
+#         where = []
+#         if conjugatable == True:
+#             where.append("conjugatable")
+#         elif conjugatable == False:
+#             where.append("not conjugatable")
+#         
+#         if phrase is not None:
+#             where.append("phrase LIKE '"+phrase+"'")
+#         
+#         if len(where) > 0:
+#             sql_string = sql_string + " where " + " AND ".join(where)
+#         
+#         results_dict = dict()
+#         for phrase_row in self.db.execute(sql_string):
+#             phrase =self._load(phrase_row)
+#             results_dict[phrase.id] = phrase
+#             results.append(phrase)
         
         return results
     
