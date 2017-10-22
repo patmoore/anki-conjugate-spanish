@@ -146,7 +146,7 @@ class Vowels_():
                                               re_compile(weak_beginning+"("+vowels_to_accent+")("+consonants+'+)()$'),
                                               re_compile("^("+consonants+"*)("+vowels_to_accent+')()()$')
                                               ])
-        print(self.accent_rules)
+#         print(self.accent_rules)
         # used to find the vowel groups for displaying vowels in words.
 #         self.vowel_groups = re_compile("("+"|".join([*three_letter_combinations, *two_letter_groups, *all]) +")")
 
@@ -180,7 +180,7 @@ class Vowels_():
             accented = match.group(2) if match.group(2) in self.from_accent_mapping else self.to_accent_mapping[match.group(2)]
             
             result = match.group(1)+accented+match.group(3)+match.group(4)
-            print(match.groups())
+#             print(match.groups())
             print("word="+word+";accent-->"+result)
             return result
         else:

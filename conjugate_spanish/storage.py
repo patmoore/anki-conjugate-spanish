@@ -37,12 +37,6 @@ class Storage_(object):
         return self.mw.col.db
     
     def initialize(self):
-        from anki.hooks import addHook
-        from aqt import mw
-        from anki.hooks import addHook, remHook
-        self.mw = mw
-        addHook("remNotes", self._remNotes_hook)
-        addHook("unloadProfile", self._unloadProfile_hook)
         self.addSchema()
     
     def _unloadProfile_hook(self):
@@ -339,7 +333,3 @@ class Storage_(object):
 
             
 Storage = Storage_()
-def profile_loaded():
-    Storage.initialize()
-     
-addHook('profileLoaded', profile_loaded)
