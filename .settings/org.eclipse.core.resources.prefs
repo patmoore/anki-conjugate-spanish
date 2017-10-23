@@ -1,5 +1,6 @@
 eclipse.preferences.version=1
 encoding//conjugate_spanish/__init__.py=utf-8
+encoding//conjugate_spanish/conjugation_notes.py=utf-8
 encoding//conjugate_spanish/conjugation_override.py=utf-8
 encoding//conjugate_spanish/constants.py=utf-8
 encoding//conjugate_spanish/espanol_dictionary.py=utf-8
