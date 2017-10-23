@@ -2,13 +2,7 @@ from .constants import *
 class Vowels_():
     """
     Long form creation allows developers to easily see if all needed vowel combinations are handled.
-    Fancy programatic creation could result in a bug of missing some vowel combination.
-    """
-     
-    
-    """
-    Long form creation allows developers to easily see if all needed vowel combinations are handled.
-    Fancy programatic creation could result in a bug of missing some vowel combination.
+    Fancy programmatic creation could result in a bug of missing some vowel combination.
     """
     
     # TODO - need to verify accent rules!
@@ -54,7 +48,7 @@ class Vowels_():
                               i: i_a,
                               o: o_a,
                               u: u_a }
-        # combinations with 'h' in the middle - his silent does not break up dipthongs
+        # combinations with 'h' in the middle - h is silent does not break up dipthongs
         # # http://www.123teachme.com/learn_spanish/diphthongs_and_triphthongs
         # note: ou is not a valid dipthong
         for strong_vowel in [ a, e, o ]:
@@ -137,15 +131,15 @@ class Vowels_():
             for weak_beginning in ['^(.*?'+qu_gu+')','^(.*?)']:
                 for last in combinations:
                     self.accent_rules.extend([
-                                              # could have double vowel ending. 
-                                              re_compile(weak_beginning+"("+vowels_to_accent+")("+consonants+"*)("+qu_gu+last+'[ns]{0,2})$'),
-                                              re_compile(weak_beginning+"("+vowels_to_accent+")("+consonants+"*)("+last+'[ns]{0,2})$')
-                                              ])
+                      # could have double vowel ending. 
+                      re_compile(weak_beginning+"("+vowels_to_accent+")("+consonants+"*)("+qu_gu+last+'[ns]{0,2})$'),
+                      re_compile(weak_beginning+"("+vowels_to_accent+")("+consonants+"*)("+last+'[ns]{0,2})$')
+                      ])
                 self.accent_rules.extend([
-                                              # ends in required consonants 
-                                              re_compile(weak_beginning+"("+vowels_to_accent+")("+consonants+'+)()$'),
-                                              re_compile("^("+consonants+"*)("+vowels_to_accent+')()()$')
-                                              ])
+                  # ends in required consonants 
+                  re_compile(weak_beginning+"("+vowels_to_accent+")("+consonants+'+)()$'),
+                  re_compile("^("+consonants+"*)("+vowels_to_accent+')()()$')
+                  ])
 #         print(self.accent_rules)
         # used to find the vowel groups for displaying vowels in words.
 #         self.vowel_groups = re_compile("("+"|".join([*three_letter_combinations, *two_letter_groups, *all]) +")")

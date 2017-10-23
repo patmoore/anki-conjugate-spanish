@@ -58,6 +58,14 @@ class Reflexive(Enum):
         else:
             return Reflexive(value)
 
+    @classmethod
+    def getFromEnding(cls, phrase_match):
+        if is_empty_str(phrase_match.group(REFLEXIVE_ENDING)):
+            return cls.not_reflexive
+        elif phrase_match.group(REFLEXIVE_ENDING) == '-se':
+            return cls.base_reflexive
+        else:
+            return cls.reflexive
     
 class Verb(Phrase):
     '''
@@ -92,7 +100,8 @@ class Verb(Phrase):
             manual_overrides: explicit string that handles very unique cases that have no pattern.  
         '''
         
-        super().__init__(phrase, definition, True, **kwargs)   
+        super().__init__(phrase, definition, True, **kwargs)
+           
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self._doNotApply = []
         self._appliedOverrides = []
@@ -170,20 +179,12 @@ class Verb(Phrase):
         phrase_match = Verb.is_verb(phrase)
         if phrase_match is None:
             raise Exception(phrase+": does not appear to be a verb or phrase with verb infinitive in it.")            
-
-        
-        if is_empty_str(phrase_match.group(REFLEXIVE_ENDING)):
-            reflexive_ = Reflexive.not_reflexive
-        elif phrase_match.group(REFLEXIVE_ENDING) == '-se':
-            reflexive_ = Reflexive.base_reflexive
-        else:
-            reflexive_ = Reflexive.reflexive
             
         for key,value in [['prefix_words', lambda: phrase_match.group(PREFIX_WORDS)], 
                     ['prefix', lambda: phrase_match.group(PREFIX_CHARS)],
                     ['core_characters', lambda:phrase_match.group(CORE_VERB)],
                     ['inf_ending', lambda: phrase_match.group(INF_ENDING)],
-                    ['reflexive', lambda: reflexive_  ],
+                    ['reflexive', lambda: Reflexive.getFromEnding(phrase_match)  ],
                     ['suffix_words', lambda: phrase_match.group(SUFFIX_WORDS)]]:
             if key not in kwargs:
                 kwargs[key] = value()
