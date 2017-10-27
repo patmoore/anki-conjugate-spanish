@@ -123,13 +123,17 @@ class Infinitive_Ending(BaseConst):
     ar_verb = (0, 'ar', '-ar')
     er_verb = (1, 'er', '-er')
     ir_verb = (2, 'ir', '-ir')
+    a_ir_verb = (2, 'ír', '-ír')
     
 class Infinitive_Endings_(BaseConsts_):
     ar_verb = Infinitive_Ending.ar_verb
     er_verb = Infinitive_Ending.er_verb
     ir_verb = Infinitive_Ending.ir_verb
      
-Infinitive_Endings = Infinitive_Endings_(list(Infinitive_Ending))
+Infinitive_Endings = Infinitive_Endings_(
+    list(Infinitive_Ending.ar_verb, 
+         Infinitive_Ending.er_verb, 
+         Infinitive_Ending.ir_verb))
 
 class Tenses_(BaseConsts_):
     present_tense = Tense.present_tense

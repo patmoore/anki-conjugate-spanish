@@ -17,6 +17,7 @@ from functools import reduce
 from .standard_endings import Standard_Conjugation_Endings
 from conjugate_spanish.conjugation_override import ConjugationOverride
 from enum import Enum, unique
+from conjugate_spanish.conjugation_tracking import ConjugationTracking
 
 _ending_vowel_check = re_compile(Vowels.all_group+'$')
 # check for word with only a single vowel ( used in imperative conjugation )
@@ -118,7 +119,9 @@ class Verb(Phrase):
         self.inf_ending = inf_ending
         self.reflexive = Reflexive.get(reflexive)        
         self.suffix_words = suffix_words
-
+        self.conjugation_tracking = ConjugationTracking()
+        self.correct_infinitive()
+        
                         
         # note: determining the conjugation overrides in constructor because:
         #    1. some conjugation overrides happen automatically based on the verb endings ( i.e. -guir)
@@ -136,8 +139,15 @@ class Verb(Phrase):
             self.conjugation_overrides = []
         self.manual_overrides_string = manual_overrides
         self.__processed_conjugation_overrides=False
+        
         if process_conjugation_overrides or not self.is_derived:
             self.process_conjugation_overrides()
+            
+    def correct_infinitive(self):
+        """
+        TODO: correct ir verbs that need an accented ír
+        """
+        pass
         
     def process_conjugation_overrides(self):
         if self.__processed_conjugation_overrides:
@@ -331,13 +341,16 @@ class Verb(Phrase):
                (needed in cases of a base verb being a reflexive verb.)
             
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
-        """                
+        """           
+        conjugation_note = self.conjugation_tracking.conjugation_note(tense, person, operation="base")     
         if tense in Tenses.imperative and person == Persons.first_person_singular:
+            conjugation_note.change(None)
             return None        
         if tense not in Tenses.Person_Agnostic and person not in Persons.all:
             self.__raise("Tense "+Tenses[tense]+" needs a person", tense, person)
         if self.base_verb is not None:            
             conjugation = self.__derived_conjugation(tense, person, options)
+            conjugation_note.change(conjugation)
         else:            
             conjugation_overrides = self.__get_override(tense, person, 'conjugations')
             
@@ -345,6 +358,7 @@ class Verb(Phrase):
                 for conjugation_override in conjugation_overrides:
                     if isinstance(conjugation_override, str):
                         conjugation = conjugation_override
+                        conjugation_note.change(conjugation)
                     elif conjugation_override is not None:
                         override_call = { 'tense': tense, 'person': person, "options":options }
                         try:
