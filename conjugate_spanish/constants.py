@@ -131,9 +131,9 @@ class Infinitive_Endings_(BaseConsts_):
     ir_verb = Infinitive_Ending.ir_verb
      
 Infinitive_Endings = Infinitive_Endings_(
-    list(Infinitive_Ending.ar_verb, 
+    [Infinitive_Ending.ar_verb, 
          Infinitive_Ending.er_verb, 
-         Infinitive_Ending.ir_verb))
+         Infinitive_Ending.ir_verb])
 
 class Tenses_(BaseConsts_):
     present_tense = Tense.present_tense

@@ -26,6 +26,9 @@ class ConjugationNote:
     def not_applied_reason(self):
         return self._not_applied_reason if self._not_applied else None
     
+    def change(self, conjugation):
+        self.conjugation = conjugation
+        
     @property
     def conjugation(self):
         return self._conjugation
@@ -63,21 +66,20 @@ class ConjugationTracking():
     Tracks every change to a verb as it is being conjugated
     """
     def __init__(self):
-        for tense in Tenses.all():
-            self.conjugation_notes[tense] = None
+        self.conjugation_notes = [ None for tense in Tenses.all ]
                 
     def conjugation_note(self, tense, person = None, *, operation=None):
         if self.conjugation_notes[tense] is None:
             if tense in Tenses.Person_Agnostic:
                 self.conjugation_notes[tense] = ConjugationNotes(tense)
             else:
-                self.conjugation_notes[tense] =
-                    [ None for person in Persons.all() ]
+                self.conjugation_notes[tense] =\
+                    [ None for person in Persons.all ]
         
         if tense in Tenses.Person_Agnostic:
             conjugation_notes = self.conjugation_notes[tense] 
         elif self.conjugation_notes[tense][person] is None:
-            conjugation_notes = self.conjugation_notes[tense][person] =
+            conjugation_notes = self.conjugation_notes[tense][person] =\
                     ConjugationNotes(tense, person)
         else:
             conjugation_notes = self.conjugation_notes[tense][person]
