@@ -80,7 +80,7 @@ class ConjugationNote:
         self.conjugation = conjugation
           
     def __repr__(self):
-        return self.conjugation if self.conjugation else "---"
+        return "conjugation=" + self.conjugation +"; core_verb=" + self.core_verb + "; ending=" +self.ending
             
 class ConjugationNotes():
     """

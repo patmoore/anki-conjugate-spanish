@@ -174,8 +174,7 @@ class Vowels_():
             accented = match.group(2) if match.group(2) in self.from_accent_mapping else self.to_accent_mapping[match.group(2)]
             
             result = match.group(1)+accented+match.group(3)+match.group(4)
-#             print(match.groups())
-            print("word="+word+";accent-->"+result)
+#             print("word="+word+";accent-->"+result)
             return result
         else:
             cs_debug("no vowels in "+word)

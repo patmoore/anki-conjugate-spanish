@@ -338,7 +338,7 @@ class Verb(Phrase):
         exists so that third person verbs can decide to conjugate normally for present subjective and past subjective
         """
         if conjugation_notes.tense not in Tenses.imperative:
-            current_conjugation_ending = self.conjugate_ending(conjugation_notes.tense, conjugation_notes.person)            
+            current_conjugation_ending = self.conjugate_ending(conjugation_notes)            
             current_conjugation_stem = self.conjugate_stem(conjugation_notes.tense, conjugation_notes.person, current_conjugation_ending)
             conjugation = self.conjugation_joining(conjugation_notes.tense, conjugation_notes.person, current_conjugation_stem, current_conjugation_ending)
         else:
@@ -465,12 +465,12 @@ class Verb(Phrase):
         
         return current_conjugation_stem
         
-    def conjugate_ending(self, tense, person):
+    def conjugate_ending(self, conjugation_notes):
         def __check_override(override, current_conjugation_ending):
             if isinstance(override, str):
                 current_conjugation_ending = override
             elif override:
-                override_call = { 'tense': tense, 'person': person, 'stem': self.stem, 'ending' : current_conjugation_ending }
+                override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': self.stem, 'ending' : current_conjugation_ending }
                 try:
                     current_conjugation_ending = override(**override_call)
                 except Exception as e:
@@ -480,12 +480,11 @@ class Verb(Phrase):
                     self.__raise(message, tense, person, traceback_)
             return current_conjugation_ending
         
-        if tense in Tenses.Person_Agnostic:
-            current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense]
+        if conjugation_notes.tense in Tenses.Person_Agnostic:
+            current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][conjugation_notes.tense]
         else:
-            current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense][person]
+            current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][conjugation_notes.tense][conjugation_notes.person]
         
-        conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
         conjugation_notes.ending = current_conjugation_ending
         overrides = self.__get_override(conjugation_notes, 'conjugation_endings')
         if overrides is not None:
