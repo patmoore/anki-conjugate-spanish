@@ -421,7 +421,7 @@ class Verb(Phrase):
             returned_conjugation = Vowels.accent(_conjugation)+'se'
         else:
             returned_conjugation = _conjugation
-        self.conjugation_tracking.conjugation(conjugation_notes.tense, conjugation_notes.person, returned_conjugation, operation="apply_reflexive")
+        conjugation_notes.conjugation = returned_conjugation
         return returned_conjugation
             
     def conjugate_stem(self, tense, person, current_conjugation_ending):

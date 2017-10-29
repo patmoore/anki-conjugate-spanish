@@ -7,9 +7,11 @@ from conjugate_spanish import Espanol_Dictionary
 from conjugate_spanish.constants import Tense, Tenses, Persons, Person
 Espanol_Dictionary.load()
 if len(sys.argv) < 2:
-    print("verb tense person")
-    print("tenses=" + str(Tenses))
-    print("persons=" + str(Persons))
+#     print("verb tense person")
+#     print("tenses=" + str(Tenses))
+#     print("persons=" + str(Persons))
+    for verb in Espanol_Dictionary.verbDictionary.values():
+        verb.conjugate_all_tenses()
     exit(0)
     
 phrase_str = sys.argv[1]

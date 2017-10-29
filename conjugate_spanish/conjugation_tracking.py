@@ -19,6 +19,7 @@ class ConjugationNote:
         self._person = person
         self._core_verb = None
         self._ending = None
+        self._conjugation = None
     
     @property
     def not_applied(self):
