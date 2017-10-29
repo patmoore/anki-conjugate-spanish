@@ -3,7 +3,7 @@ import collections
 import re
 import sys
 import traceback
-from enum import IntEnum, Enum
+from enum import IntEnum, Enum, unique
 
 # Used as prefix to actions, models, etc.
 ADDON_PREFIX = 'EspañolConjugator'
@@ -198,6 +198,60 @@ Persons_Indirect = [
     'se'
     ]
 
+#
+# Parse up the infinitive string: 
+# verb forms: 
+#  1. verb ( has proper spanish infinitive ending )
+#  2. reflexive verb ( has proper spanish infinitive ending -se)
+#  3. derived verb ( prefix'-'base_verb) 
+#  4. (prefix words)* (prefix_characters*)-()-se (suffix words)
+#  4. (prefix words)* (verb_form_1) (suffix words)*
+#  5. (prefix words)* (verb_form_2) (suffix words)* 
+# group 1 = prefix words (if present)
+# group 2 = prefix characters (if present)
+# group 3 = core verb (note: special case of 'ir' and 'irse'
+# group 4 = infinitive ending ( -ir,-er,-ar )
+# group 5 = reflexive se or -se if present
+# group 6 = suffix words
+# use '-' to separate out the prefix from the base verb
+# use '/' to force the selection of the verb in complex cases or for cases where prefix words end in -ir,-ar,-er
+_phrase_parsing = re_compile('^\s*([^/]*?)[\s/]*([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?[/\s]*(.*?)\s*$')
+class PhraseGroup(BaseConst):
+    PREFIX_WORDS = (1, 'prefix_words', None)
+    PREFIX_CHARS = (2, 'prefix', None)
+    CORE_VERB = (3, 'core_characters', None)
+    INF_ENDING = (4, 'inf_ending', None)
+    REFLEXIVE_ENDING = (5, 'reflexive', None)
+    SUFFIX_WORDS = (6, 'suffix_words', None)
+    
+    def extract(self, phrase_match):
+        return phrase_match.group(self.code)
+
+    @classmethod
+    def is_verb(cls, phrase_string):
+        return _phrase_parsing.match(phrase_string)
+    
+@unique
+class Reflexive(Enum):
+    not_reflexive = 0
+    reflexive = 1
+    base_reflexive = 2
+    @classmethod
+    def get(cls, value):
+        if value is None:
+            return cls.non_reflexive
+        else:
+            return Reflexive(value)
+
+    @classmethod
+    def getFromEnding(cls, phrase_match):
+        reflexive_ending = phrase_match.group(PhraseGroup.REFLEXIVE_ENDING)
+        if is_empty_str(reflexive_ending):
+            return cls.not_reflexive
+        elif reflexive_ending == '-se':
+            return cls.base_reflexive
+        else:
+            return cls.reflexive
 
 def get_iterable(x):
     """
@@ -246,24 +300,3 @@ def is_empty_str(string):
         return False
     else:
         raise Exception("value is not a string")
-#####
-# some standard methods to help document the cryptic keys used by anki
-# Not elegant or 'good' practice but this isolates the anki constants. 
-#####
-def deck_id(dict_, value=None):    
-    if value == None:
-        return dict_.get('did', None)
-    else:
-        dict_['did'] = value
-        
-def model_id(dict_, value=None):
-    if value == None:
-        return dict_.get('mid', None)
-    else:
-        dict_['mid'] = value
-        
-def model_fields(dict_, value=None):
-    if value == None:
-        return dict_.get('flds',None)
-    else:
-        dict_['flds'] = value

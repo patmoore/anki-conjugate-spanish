@@ -22,51 +22,6 @@ from conjugate_spanish.conjugation_tracking import ConjugationTracking
 _ending_vowel_check = re_compile(Vowels.all_group+'$')
 # check for word with only a single vowel ( used in imperative conjugation )
 _single_vowel_re = re_compile('^('+Vowels.consonants+'*)('+Vowels.all_group+')('+Vowels.consonants+'*)$')
-#
-# Parse up the infinitive string: 
-# verb forms: 
-#  1. verb ( has proper spanish infinitive ending )
-#  2. reflexive verb ( has proper spanish infinitive ending -se)
-#  3. derived verb ( prefix'-'base_verb) 
-#  4. (prefix words)* (prefix_characters*)-()-se (suffix words)
-#  4. (prefix words)* (verb_form_1) (suffix words)*
-#  5. (prefix words)* (verb_form_2) (suffix words)* 
-# group 1 = prefix words (if present)
-# group 2 = prefix characters (if present)
-# group 3 = core verb (note: special case of 'ir' and 'irse'
-# group 4 = infinitive ending ( -ir,-er,-ar )
-# group 5 = reflexive se or -se if present
-# group 6 = suffix words
-# use '-' to separate out the prefix from the base verb
-# use '/' to force the selection of the verb in complex cases or for cases where prefix words end in -ir,-ar,-er
-_phrase_parsing = re_compile('^\s*([^/]*?)[\s/]*([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?[/\s]*(.*?)\s*$')
-PREFIX_WORDS = 1
-PREFIX_CHARS = 2
-CORE_VERB = 3
-INF_ENDING = 4
-REFLEXIVE_ENDING = 5
-SUFFIX_WORDS = 6
-
-@unique
-class Reflexive(Enum):
-    not_reflexive = 0
-    reflexive = 1
-    base_reflexive = 2
-    @classmethod
-    def get(cls, value):
-        if value is None:
-            return cls.non_reflexive
-        else:
-            return Reflexive(value)
-
-    @classmethod
-    def getFromEnding(cls, phrase_match):
-        if is_empty_str(phrase_match.group(REFLEXIVE_ENDING)):
-            return cls.not_reflexive
-        elif phrase_match.group(REFLEXIVE_ENDING) == '-se':
-            return cls.base_reflexive
-        else:
-            return cls.reflexive
     
 class Verb(Phrase):
     '''
@@ -119,7 +74,7 @@ class Verb(Phrase):
         self.inf_ending = inf_ending
         self.reflexive = Reflexive.get(reflexive)        
         self.suffix_words = suffix_words
-        self.conjugation_tracking = ConjugationTracking()
+        self.conjugation_tracking = ConjugationTracking(self)
         self.correct_infinitive()
         
                         
@@ -190,12 +145,12 @@ class Verb(Phrase):
         if phrase_match is None:
             raise Exception(phrase+": does not appear to be a verb or phrase with verb infinitive in it.")            
             
-        for key,value in [['prefix_words', lambda: phrase_match.group(PREFIX_WORDS)], 
-                    ['prefix', lambda: phrase_match.group(PREFIX_CHARS)],
-                    ['core_characters', lambda:phrase_match.group(CORE_VERB)],
-                    ['inf_ending', lambda: phrase_match.group(INF_ENDING)],
+        for key,value in [['prefix_words', lambda: PhraseGroup.PREFIX_WORDS.extract(phrase_match)], 
+                    ['prefix', lambda: PhraseGroup.PREFIX_CHARS.extract(phrase_match)], 
+                    ['core_characters', lambda: PhraseGroup.CORE_VERB.extract(phrase_match)], 
+                    ['inf_ending', lambda: PhraseGroup.INF_ENDING.extract(phrase_match)], 
                     ['reflexive', lambda: Reflexive.getFromEnding(phrase_match)  ],
-                    ['suffix_words', lambda: phrase_match.group(SUFFIX_WORDS)]]:
+                    ['suffix_words', lambda: PhraseGroup.SUFFIX_WORDS.extract(phrase_match)] ]:
             if key not in kwargs:
                 kwargs[key] = value()
         # determine base verb string
@@ -234,7 +189,7 @@ class Verb(Phrase):
         return verb
     @classmethod        
     def is_verb(cls, phrase_string):
-        return _phrase_parsing.match(phrase_string)
+        return PhraseGroup.is_verb(phrase_string)
                 
     def print_all_tenses(self):
         conjugations= self.conjugate_all_tenses()
@@ -342,17 +297,17 @@ class Verb(Phrase):
             
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
         """           
-        conjugation_note = self.conjugation_tracking.conjugation_note(tense, person, operation="base")     
+        conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)     
         if tense in Tenses.imperative and person == Persons.first_person_singular:
-            conjugation_note.change(None)
+            conjugation_notes.change(core_verb = None, ending = None)
             return None        
         if tense not in Tenses.Person_Agnostic and person not in Persons.all:
             self.__raise("Tense "+Tenses[tense]+" needs a person", tense, person)
         if self.base_verb is not None:            
-            conjugation = self.__derived_conjugation(tense, person, options)
-            conjugation_note.change(conjugation)
+            conjugation = self.__derived_conjugation(conjugation_notes, options)
+            conjugation_notes.change(conjugation)
         else:            
-            conjugation_overrides = self.__get_override(tense, person, 'conjugations')
+            conjugation_overrides = self.__get_override(conjugation_notes, 'conjugations')
             
             if conjugation_overrides is not None:
                 for conjugation_override in conjugation_overrides:
@@ -371,26 +326,26 @@ class Verb(Phrase):
                 if pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE,self.reflexive) and not is_empty_str(conjugation):
                     # needed in imperative to correctly add in the reflexive pronoun 
                     # TODO: may not to check for explicit accent.
-                    conjugation = self.__apply_reflexive_pronoun(tense, person, conjugation, False)
+                    conjugation = self.__apply_reflexive_pronoun(conjugation_notes, conjugation, False)
             else:
-                conjugation = self._conjugate_stem_and_endings(tense, person, options)
+                conjugation = self._conjugate_stem_and_endings(conjugation_notes, options)
             
         self._check_for_multiple_accents(tense, person, conjugation)
         return conjugation
     
-    def _conjugate_stem_and_endings(self,tense, person,options):
+    def _conjugate_stem_and_endings(self, conjugation_notes, options):
         """
         exists so that third person verbs can decide to conjugate normally for present subjective and past subjective
         """
-        if tense not in Tenses.imperative:
-            current_conjugation_ending = self.conjugate_ending(tense, person)            
-            current_conjugation_stem = self.conjugate_stem(tense, person, current_conjugation_ending)
-            conjugation = self.conjugation_joining(tense, person, current_conjugation_stem, current_conjugation_ending)
+        if conjugation_notes.tense not in Tenses.imperative:
+            current_conjugation_ending = self.conjugate_ending(conjugation_notes.tense, conjugation_notes.person)            
+            current_conjugation_stem = self.conjugate_stem(conjugation_notes.tense, conjugation_notes.person, current_conjugation_ending)
+            conjugation = self.conjugation_joining(conjugation_notes.tense, conjugation_notes.person, current_conjugation_stem, current_conjugation_ending)
         else:
-            conjugation = self.__conjugation_imperative(tense, person)
+            conjugation = self.__conjugation_imperative(conjugation_notes)
         return conjugation
         
-    def __derived_conjugation(self, tense, person, options):
+    def __derived_conjugation(self, conjugation_notes, options):
         """ This verb is based on another verb: example: abstenerse is based on tener
         these base verbs are not allowed to be reflexive verbs (I haven't found any examples yet where this is an issue)
         
@@ -404,7 +359,7 @@ class Verb(Phrase):
         """
         # we never want the base verb to apply the reflexive pronoun - irregardless of reflexive_override
         _options = { **options, **{ConjugationOverride.REFLEXIVE_OVERRIDE : False} }
-        base_verb_conjugation = self.base_verb.conjugate(tense, person, _options)
+        base_verb_conjugation = self.base_verb.conjugate(conjugation_notes.tense, conjugation_notes.person, _options)
         if base_verb_conjugation is None:
             # imperative, third-person only verbs
             return None
@@ -415,7 +370,7 @@ class Verb(Phrase):
         # TODO: look for 2/3 vowel dipthongs as well
         single_vowel_match = _single_vowel_re.match(base_verb_conjugation)        
         
-        if tense == Tenses.imperative_positive and person == Persons.second_person_singular:
+        if conjugation_notes.tense == Tenses.imperative_positive and conjugation_notes.person == Persons.second_person_singular:
             #
             # Accent a single vowel base verb conjugation
             # 
@@ -444,7 +399,7 @@ class Verb(Phrase):
             _conjugation = self.full_prefix + base_verb_conjugation
             
         if _reflexive:
-            _conjugation = self.__apply_reflexive_pronoun(tense,person,_conjugation, explicit_accent_already_applied)
+            _conjugation = self.__apply_reflexive_pronoun(conjugation_notes,_conjugation, explicit_accent_already_applied)
         
         if not is_empty_str(self.prefix_words):
             returned_conjugation = self.prefix_words
@@ -454,18 +409,19 @@ class Verb(Phrase):
         if not is_empty_str(self.suffix_words):
             returned_conjugation += ' '+self.suffix_words
         return returned_conjugation
-    def __apply_reflexive_pronoun(self, tense, person, _conjugation, explicit_accent_already_applied):
+    def __apply_reflexive_pronoun(self, conjugation_notes, _conjugation, explicit_accent_already_applied):
         """
         assume that self.is_reflexive has been checked 
         """
-        if tense in Tenses.imperative:
-            returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation, explicit_accent_already_applied)                        
-        elif tense not in Tenses.Person_Agnostic:
-            returned_conjugation = Persons_Indirect[person] +" "+ _conjugation
-        elif tense == Tenses.gerund:
+        if conjugation_notes.tense in Tenses.imperative:
+            returned_conjugation = self.__apply_imperative_reflexive_pronoun(conjugation_notes, _conjugation, explicit_accent_already_applied)                        
+        elif conjugation_notes.tense not in Tenses.Person_Agnostic:
+            returned_conjugation = Persons_Indirect[conjugation_notes.person] +" "+ _conjugation
+        elif conjugation_notes.tense == Tenses.gerund:
             returned_conjugation = Vowels.accent(_conjugation)+'se'
         else:
             returned_conjugation = _conjugation
+        self.conjugation_tracking.conjugation(conjugation_notes.tense, conjugation_notes.person, returned_conjugation, operation="apply_reflexive")
         return returned_conjugation
             
     def conjugate_stem(self, tense, person, current_conjugation_ending):
@@ -483,6 +439,7 @@ class Verb(Phrase):
                     message = "Trying to conjugate " + formatted
                     self.__raise(message, tense, person, tb)
             return current_conjugation_stem
+        conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
         if tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense, Tenses.gerund, Tenses.past_participle]:
             current_conjugation_stem = self.stem
         elif tense == Tenses.adjective:
@@ -490,16 +447,18 @@ class Verb(Phrase):
         elif tense in [ Tenses.future_tense, Tenses.conditional_tense]:
             current_conjugation_stem = Vowels.remove_accent(self.inf_verb_string)
         elif tense == Tenses.present_subjective_tense:
-            current_conjugation_stem = self.__conjugation_present_subjective_stem(tense, person)
+            current_conjugation_stem = self.__conjugation_present_subjective_stem(conjugation_notes)
         elif tense == Tenses.past_subjective_tense:
-            current_conjugation_stem = self.__conjugation_past_subjective_stem(tense, person)
+            current_conjugation_stem = self.__conjugation_past_subjective_stem(conjugation_notes)
         else:
             self.__raise(": Can't be handled", tense, person)
+        conjugation_notes.core_verb = current_conjugation_stem
             
-        overrides = self.__get_override(tense, person, 'conjugation_stems')
+        overrides = self.__get_override(conjugation_notes, 'conjugation_stems')
         if overrides is not None:
             for override in get_iterable(overrides):
                 current_conjugation_stem = __check_override(override, current_conjugation_stem)
+                conjugation_notes.core_verb = current_conjugation_stem
         
         if current_conjugation_stem is None:
             self.__raise("no stem created", tense, person)
@@ -525,11 +484,14 @@ class Verb(Phrase):
             current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense]
         else:
             current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][tense][person]
-            
-        overrides = self.__get_override(tense, person, 'conjugation_endings')
+        
+        conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
+        conjugation_notes.ending = current_conjugation_ending
+        overrides = self.__get_override(conjugation_notes, 'conjugation_endings')
         if overrides is not None:
             for override in get_iterable(overrides):
                 current_conjugation_ending = __check_override(override, current_conjugation_ending)
+                conjugation_notes.ending = current_conjugation_ending
         return current_conjugation_ending
     
     def conjugation_joining(self, tense, person, current_conjugation_stem, current_conjugation_ending):
@@ -547,7 +509,8 @@ class Verb(Phrase):
             else:
                 results = [current_conjugation_stem, current_conjugation_ending]
             return results
-        overrides = self.__get_override(tense, person, 'conjugation_joins')
+        conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
+        overrides = self.__get_override(conjugation_notes, 'conjugation_joins')
         if overrides is not None:
             for override in get_iterable(overrides):
                 [current_conjugation_stem, current_conjugation_ending]  = __check_override(override, current_conjugation_stem, current_conjugation_ending)
@@ -555,12 +518,11 @@ class Verb(Phrase):
                     self.__raise("stem is not string", tense, person)
                 if not isinstance(current_conjugation_ending, str):
                     self.__raise("ending is not string", tense, person) 
+                conjugation_notes.change(core_verb=current_conjugation_stem, ending = current_conjugation_ending)
  
         return current_conjugation_stem+current_conjugation_ending
     
-    
-    
-    def __conjugation_imperative(self, tense, person, conjugation=None):
+    def __conjugation_imperative(self, conjugation_notes, conjugation=None):
         """
         :conjugation: - the overridden conjugation
         
@@ -590,37 +552,37 @@ class Verb(Phrase):
         """
         Handle the very odd cases first
         """        
-        if person == Persons.first_person_singular:
+        if conjugation_notes.person == Persons.first_person_singular:
             # no such conjugation
             return None
         
         # Step #1 - for verbs with no override conjugation - get the conjugation        
         if conjugation is None:
             # For most persons the conjugation is the present_subjective ( because imperative is a "mood" - enhancement to the present_subjective )
-            if tense == Tenses.imperative_negative or person not in Persons.second_person:
+            if conjugation_notes.tense == Tenses.imperative_negative or conjugation_notes.person not in Persons.second_person:
                 # all negative imperatives use the present_subjective AND all positives EXCEPT second person
-                _conjugation = self.conjugate(Tenses.present_subjective_tense, person)
+                _conjugation = self.conjugate(Tenses.present_subjective_tense, conjugation_notes.person)
 #                 if person == Persons.first_person_plural and verb.reflexive:
 #                     # properly prepare the verb by removing the trailing 's'
 #                     # TODO: notice we don't handle a case of irregular nosotros - that does not have a trailing 's'
 #                     # this seems to not be a problem for anything - but we will raise an exception if it is
 #                     # this seems to only be a problem for irse
 #                     _conjugation = _replace_last_letter_of_stem(_conjugation, u's', u'')
-            elif person == Persons.second_person_singular and tense == Tenses.imperative_positive:
+            elif conjugation_notes.person == Persons.second_person_singular and conjugation_notes.tense == Tenses.imperative_positive:
                 # positive tu form uses present tense usted                
                 _conjugation = self.conjugate(Tenses.present_tense, Persons.third_person_singular)
-            elif person == Persons.second_person_plural and tense == Tenses.imperative_positive:                
+            elif conjugation_notes.person == Persons.second_person_plural and conjugation_notes.tense == Tenses.imperative_positive:                
                 # remove 'r' from infinitive - and replace it with 'd'
                 _conjugation = _replace_last_letter_of_stem(self.inf_verb_string, 'r', 'd')
             else:
-                self.__raise("Missed case"+tense+" "+person)  
+                self.__raise("Missed case"+conjugation_notes.tense+" "+conjugation_notes.person)  
         else:
             _conjugation = conjugation                      
         
-        returned_conjugation = self.__apply_imperative_reflexive_pronoun(tense, person, _conjugation)
+        returned_conjugation = self.__apply_imperative_reflexive_pronoun(conjugation_notes, _conjugation)
         return returned_conjugation
     
-    def __apply_imperative_reflexive_pronoun(self, tense, person, conjugation, explicit_accent_already_applied=False):
+    def __apply_imperative_reflexive_pronoun(self, conjugation_notes, conjugation, explicit_accent_already_applied=False):
         # Step 3 - handle the placement of the indirect pronoun for reflexive verbs.  
         # The important issue here is the effect on the accent.      
         if is_empty_str(conjugation):
@@ -633,23 +595,23 @@ class Verb(Phrase):
                 return Vowels.accent(conjugation)
         if self.is_reflexive:
             #Now apply the reflexive pronoun rules.
-            if person in Persons.third_person:
+            if conjugation_notes.person in Persons.third_person:
                 # simple!
-                returned_conjugation = handle_explicit_accent_() + Persons_Indirect[person]
-            elif person == Persons.first_person_plural:
+                returned_conjugation = handle_explicit_accent_() + Persons_Indirect[conjugation_notes.person]
+            elif conjugation_notes.person == Persons.first_person_plural:
                 # mostly simple (same as third person except trailing 's' is dropped before adding the indirect pronoun
-                returned_conjugation = _replace_last_letter_of_stem(handle_explicit_accent_(), 's', Persons_Indirect[person])
-            elif tense == Tenses.imperative_negative:
+                returned_conjugation = _replace_last_letter_of_stem(handle_explicit_accent_(), 's', Persons_Indirect[conjugation_notes.person])
+            elif conjugation_notes.tense == Tenses.imperative_negative:
                 # second person negative : simple as well!
                 # reflexive pronoun is a separate word in front of the verb. (i.e. 'no te abstengas')
                 # notice that the second person cases negative do not have any accent issues.
-                returned_conjugation = Persons_Indirect[person]+ " " + conjugation
-            elif person == Persons.second_person_singular: # (imperative positive) 
+                returned_conjugation = Persons_Indirect[conjugation_notes.person]+ " " + conjugation
+            elif conjugation_notes.person == Persons.second_person_singular: # (imperative positive) 
                 # Need to put explicit accent in SOME cases for example: quitarse ( quítate ) but not in all: abstener ( abstente )
                 # ( could it be that 'ten' is a single vowel word and retains the accent on the ten - even with the prefix? )
                 # ensure that there is an accent somewhere (note that in abstenerse case the accent should already be on the abs-tén 
-                returned_conjugation = handle_explicit_accent_() + Persons_Indirect[person]
-            elif person == Persons.second_person_plural:  # (imperative positive) 
+                returned_conjugation = handle_explicit_accent_() + Persons_Indirect[conjugation_notes.person]
+            elif conjugation_notes.person == Persons.second_person_plural:  # (imperative positive) 
                 # TODO look for single vowel in conjugation for model verb.
                 # TODO : Would like to make this a conjugation override - but conjugation overrides are not applied on derived verbs
                 if self.verb_ending_index == Infinitive_Endings.ir_verb:
@@ -663,17 +625,17 @@ class Verb(Phrase):
                     elif conjugation[-2:] == 'íd':
                         returned_conjugation = _replace_last_letter_of_stem(conjugation, 'd', Persons_Indirect[Persons.second_person_plural])
                     else:
-                        self.__raise("don't know how to handle:"+conjugation, tense, person)
+                        self.__raise("don't know how to handle:"+conjugation, conjugation_notes.tense, conjugation_notes.person)
                 else:
                     # ex: ¡Sentaos! - Sit down! ( the spoken accent will be on the ending a )
                     returned_conjugation = _replace_last_letter_of_stem(Vowels.remove_accent(conjugation), 'd', Persons_Indirect[Persons.second_person_plural])
             else:
-                self.__raise("applying reflexive pronoun", tense, person)
+                self.__raise("applying reflexive pronoun", conjugation_notes.tense, conjugation_notes.person)
         else:
             returned_conjugation = conjugation
         return returned_conjugation
              
-    def __conjugation_present_subjective_stem(self, tense, person):
+    def __conjugation_present_subjective_stem(self, conjugation_notes):
         # need to force for verbs that are normally third person only
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
@@ -687,11 +649,11 @@ class Verb(Phrase):
             return None
 #             self.__raise("First person conjugation does not end in 'o' = "+first_person_conjugation)
         # HACK: Not certain if this is correct - but i checked enviar and reunierse - shich both have an accented 1st sing present stem.
-        if person in [ Persons.first_person_plural, Persons.second_person_plural ]:
+        if conjugation_notes.person in [ Persons.first_person_plural, Persons.second_person_plural ]:
             conjugation_stem = Vowels.remove_accent(conjugation_stem)
         return conjugation_stem
 
-    def __conjugation_past_subjective_stem(self, tense, person):
+    def __conjugation_past_subjective_stem(self, conjugation_notes):
         """
         in First person plural, accent if third person plural ends in a vowel after dropping -ron        
         """
@@ -700,17 +662,17 @@ class Verb(Phrase):
         third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options)
         if third_person_plural_conjugation[-3:] == 'ron':
             conjugation_stem = third_person_plural_conjugation[:-3]
-            if person == Persons.first_person_plural:
+            if conjugation_notes.person == Persons.first_person_plural:
                 # accent on last vowel                                
                 if _ending_vowel_check.search(conjugation_stem):
                     conjugation_stem = Vowels.accent_at(conjugation_stem)
                 else:
                     # assuming last stem character is a vowel
                     # and assuming already accented for some reason
-                    self.__raise("No ending vowel", tense, person)
+                    self.__raise("No ending vowel", conjugation_notes.tense, conjugation_notes.person)
             return conjugation_stem
         else:
-            self.__raise("Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation, tense, person)
+            self.__raise("Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation, conjugation_notes.tense, conjugation_notes.person)
             
     def _overrides(self, tense, overrides, attr_name,persons=None):
         """
@@ -801,17 +763,17 @@ class Verb(Phrase):
         else:
             return result
         
-    def __get_override(self, tense, person, attr_name):
+    def __get_override(self, conjugation_notes, attr_name):
         """
         :return a list of the overrides for this tense/person ( list because a series of overrides can be applied) 
         """
         if hasattr(self, attr_name):
             self_overrides = getattr(self, attr_name)
-            if self_overrides[tense] is not None:
-                if tense in Tenses.Person_Agnostic:
-                    return self_overrides[tense]
+            if self_overrides[conjugation_notes.tense] is not None:
+                if conjugation_notes.tense in Tenses.Person_Agnostic:
+                    return self_overrides[conjugation_notes.tense]
                 else:
-                    return self_overrides[tense][person]
+                    return self_overrides[conjugation_notes.tense][conjugation_notes.person]
         return None
     
     @property

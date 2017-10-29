@@ -895,10 +895,11 @@ Defective_CO.override_tense(tenses, lambda self, **kwargs: '')
 #     )
 # Third person only conjugations
 
-def __block_conjugation(self, options, **kwargs):
+def __block_conjugation(self, tense, person, options, **kwargs):
     force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
     if force_conjugation:
-        conjugation = self._conjugate_stem_and_endings(options=options, **kwargs)
+        conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
+        conjugation = self._conjugate_stem_and_endings(conjugation_notes = conjugation_notes, options=options, **kwargs)
         return conjugation
     else:
         return None
