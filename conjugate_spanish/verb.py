@@ -305,7 +305,7 @@ class Verb(Phrase):
             self.__raise("Tense "+Tenses[tense]+" needs a person", tense, person)
         if self.base_verb is not None:            
             conjugation = self.__derived_conjugation(conjugation_notes, options)
-            conjugation_notes.change(conjugation)
+            conjugation_notes.change(conjugation=conjugation)
         else:            
             conjugation_overrides = self.__get_override(conjugation_notes, 'conjugations')
             
@@ -313,7 +313,7 @@ class Verb(Phrase):
                 for conjugation_override in conjugation_overrides:
                     if isinstance(conjugation_override, str):
                         conjugation = conjugation_override
-                        conjugation_note.change(conjugation)
+                        conjugation_notes.change(conjugation = conjugation)
                     elif conjugation_override is not None:
                         override_call = { 'tense': tense, 'person': person, "options":options }
                         try:
