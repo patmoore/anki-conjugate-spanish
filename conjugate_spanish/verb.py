@@ -428,6 +428,7 @@ class Verb(Phrase):
         return returned_conjugation
             
     def conjugate_stem(self, tense, person, current_conjugation_ending):
+        conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
         def __check_override(override, current_conjugation_stem):
             if isinstance(override, str):
                 current_conjugation_stem = override
@@ -442,7 +443,7 @@ class Verb(Phrase):
                     message = "Trying to conjugate " + formatted
                     self.__raise(message, tense, person, tb)
             return current_conjugation_stem
-        conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
+
         if tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense, Tenses.gerund, Tenses.past_participle]:
             current_conjugation_stem = self.stem
         elif tense == Tenses.adjective:
