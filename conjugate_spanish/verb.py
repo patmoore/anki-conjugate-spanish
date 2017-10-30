@@ -5,7 +5,6 @@
 '''
 
 import inspect
-import sys
 from .conjugation_override import *
 from .constants import *
 from .vowel import Vowels
@@ -13,10 +12,8 @@ import traceback
 from .utils import cs_debug
 import types
 from .phrase import Phrase, Phrase_Association
-from functools import reduce
 from .standard_endings import Standard_Conjugation_Endings
 from conjugate_spanish.conjugation_override import ConjugationOverride
-from enum import Enum, unique
 from conjugate_spanish.conjugation_tracking import ConjugationTracking
 
 _ending_vowel_check = re_compile(Vowels.all_group+'$')
@@ -88,7 +85,13 @@ class Verb(Phrase):
         # Note: self.overrides_string << top-level, human editable
         if isinstance(conjugation_overrides, str) and conjugation_overrides != '' and conjugation_overrides != Verb.REGULAR_VERB:
             self.overrides_string = conjugation_overrides
-            self.conjugation_overrides = conjugation_overrides.split(",")            
+            self.conjugation_overrides = conjugation_overrides.split(",")    
+        elif isinstance(conjugation_overrides, list):
+            self.overrides_string = ''
+            self.conjugation_overrides = conjugation_overrides
+        elif isinstance(conjugation_overrides, ConjugationOverride):
+            self.overrides_string = ''
+            self.conjugation_overrides = [ conjugation_overrides ]
         else:
             self.overrides_string = ''
             self.conjugation_overrides = []

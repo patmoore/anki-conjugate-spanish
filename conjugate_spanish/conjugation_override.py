@@ -813,7 +813,9 @@ Imperative_Infinitive_Stem_Only = make_std_override(key="imp_inf_stem_only",
     examples=['poner','salir','tener'])
 Imperative_Infinitive_Stem_Only.override_tense(Tenses.imperative_positive, lambda self, **kwargs: self.stem, Persons.second_person_singular)
 
-Past_Participle_To = make_std_override(key='pp_to')
+Past_Participle_To = make_std_override(key='pp_to',
+                           documentation='past participle ends in -to',
+                           examples=['arbir'])
 Past_Participle_To.override_tense_ending(Tenses.past_participle, 'to')
 Adjective_To = make_std_override(key='adj_to')
 Adjective_To.override_tense_ending(Tenses.adjective, 'to')

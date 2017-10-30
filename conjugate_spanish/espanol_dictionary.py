@@ -217,3 +217,4 @@ class Espanol_Dictionary_():
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary
 Phrase_Dictionary = Espanol_Dictionary.phraseDictionary
+import conjugate_spanish.special_cases
