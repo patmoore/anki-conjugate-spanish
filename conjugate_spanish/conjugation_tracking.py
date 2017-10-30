@@ -5,6 +5,7 @@ This code holds the history of how the verb is conjugated
 1. Shows the rules used (in order)
 2. Is responsible for the final joining together of the verb 
 """
+from conjugate_spanish.standard_endings import Infinitive_Endings
 
 class ConjugationNote:
     """
@@ -46,7 +47,7 @@ class ConjugationNote:
         elif self._core_verb is None:
             return "-" + self._ending
         else:
-            return self._core_verb + self._ending
+            return ""
         
     @conjugation.setter
     def conjugation(self, conjugation):        
@@ -88,10 +89,17 @@ class ConjugationNotes():
     Some alterations also will note if they cannot be applied
     but normally would.
     """ 
-    def __init__(self, tense, person=None):
+    def __init__(self, tense, person, phrase):
         self._tense = tense
         self._person = person
-        self._conjugation_note_list = [ ConjugationNote(self, self._tense, self._person) ]
+        self._conjugation_note_list = [ ]
+        infinitive_ending = Infinitive_Endings.index(phrase.verb_ending_index)
+        inf_conjugation_note = self._new_conjugation_note()
+        inf_conjugation_note.core_verb = phrase.core_characters
+        # TODO replace with infinitive_ending.code?
+        inf_conjugation_note.ending = phrase.inf_ending
+        std_conjugation_note = self._new_conjugation_note()
+        std_conjugation_note.ending = infinitive_ending.get_standard_conjugation_ending(self, phrase.verb_ending_index)
         
     def _new_conjugation_note(self):
         conjugation_note = ConjugationNote(self._tense, self._person)
@@ -169,7 +177,7 @@ class ConjugationTracking():
     def get_conjugation_notes(self, tense, person = None):
         if self.conjugation_notes[tense] is None:
             if tense in Tenses.Person_Agnostic:
-                self.conjugation_notes[tense] = ConjugationNotes(tense)
+                self.conjugation_notes[tense] = ConjugationNotes(tense, None, self._phrase)
             else:
                 self.conjugation_notes[tense] =\
                     [ None for person in Persons.all ]
@@ -178,7 +186,7 @@ class ConjugationTracking():
             conjugation_notes = self.conjugation_notes[tense] 
         elif self.conjugation_notes[tense][person] is None:
             conjugation_notes = self.conjugation_notes[tense][person] =\
-                    ConjugationNotes(tense, person)
+                    ConjugationNotes(tense, person, self._phrase)
         else:
             conjugation_notes = self.conjugation_notes[tense][person]
         

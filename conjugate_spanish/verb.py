@@ -12,7 +12,7 @@ import traceback
 from .utils import cs_debug
 import types
 from .phrase import Phrase, Phrase_Association
-from .standard_endings import Standard_Conjugation_Endings
+from .standard_endings import *
 from conjugate_spanish.conjugation_override import ConjugationOverride
 from conjugate_spanish.conjugation_tracking import ConjugationTracking
 
@@ -341,9 +341,9 @@ class Verb(Phrase):
         exists so that third person verbs can decide to conjugate normally for present subjective and past subjective
         """
         if conjugation_notes.tense not in Tenses.imperative:
-            current_conjugation_ending = self.conjugate_ending(conjugation_notes)            
-            current_conjugation_stem = self.conjugate_stem(conjugation_notes.tense, conjugation_notes.person, current_conjugation_ending)
-            conjugation = self.conjugation_joining(conjugation_notes.tense, conjugation_notes.person, current_conjugation_stem, current_conjugation_ending)
+            self.conjugate_ending(conjugation_notes)            
+            current_conjugation_stem = self.conjugate_stem(conjugation_notes.tense, conjugation_notes.person, conjugation_notes.ending)
+            conjugation = self.conjugation_joining(conjugation_notes.tense, conjugation_notes.person, current_conjugation_stem, conjugation_notes.ending)
         else:
             conjugation = self.__conjugation_imperative(conjugation_notes)
         return conjugation
@@ -469,32 +469,23 @@ class Verb(Phrase):
         return current_conjugation_stem
         
     def conjugate_ending(self, conjugation_notes):
-        def __check_override(override, current_conjugation_ending):
+        def __check_override(override):
             if isinstance(override, str):
-                current_conjugation_ending = override
+                conjugation_notes.ending = override
             elif override:
-                override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': self.stem, 'ending' : current_conjugation_ending }
+                override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': self.stem, 'ending' : conjugation_notes.ending }
                 try:
-                    current_conjugation_ending = override(**override_call)
+                    conjugation_notes.ending = override(**override_call)
                 except Exception as e:
                     extype, ex, traceback_ = sys.exc_info()
 #                         formatted = traceback_.format_exception_only(extype, ex)[-1]
                     message = "Trying to conjugate ending; %s" % ex.message
-                    self.__raise(message, tense, person, traceback_)
-            return current_conjugation_ending
+                    self.__raise(message, conjugation_notes.tense, conjugation_notes.person, traceback_)
         
-        if conjugation_notes.tense in Tenses.Person_Agnostic:
-            current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][conjugation_notes.tense]
-        else:
-            current_conjugation_ending = Standard_Conjugation_Endings[self.verb_ending_index][conjugation_notes.tense][conjugation_notes.person]
-        
-        conjugation_notes.ending = current_conjugation_ending
         overrides = self.__get_override(conjugation_notes, 'conjugation_endings')
         if overrides is not None:
             for override in get_iterable(overrides):
-                current_conjugation_ending = __check_override(override, current_conjugation_ending)
-                conjugation_notes.ending = current_conjugation_ending
-        return current_conjugation_ending
+                __check_override(override)
     
     def conjugation_joining(self, tense, person, current_conjugation_stem, current_conjugation_ending):
         def __check_override(override, current_conjugation_stem, current_conjugation_ending):

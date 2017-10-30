@@ -1,5 +1,31 @@
 # -*- coding: utf-8 -*-
-from .constants import Tenses,Persons,Infinitive_Endings
+from .constants import *
+
+class Infinitive_Ending(BaseConst):
+    ar_verb = (0, 'ar', '-ar')
+    er_verb = (1, 'er', '-er')
+    ir_verb = (2, 'ir', '-ir')
+    a_ir_verb = (2, 'ír', '-ír')
+    def get_standard_conjugation_ending(self, conjugation_notes, verb_ending_index):
+        """
+        verb_ending_index - eliminate asap - this should be the code ( but not certain how the ír verbs are handled) 
+        """
+        if conjugation_notes.tense in Tenses.Person_Agnostic:
+            return Standard_Conjugation_Endings[verb_ending_index][conjugation_notes.tense]
+        else:
+            return Standard_Conjugation_Endings[verb_ending_index][conjugation_notes.tense][conjugation_notes.person]
+    
+class Infinitive_Endings_(BaseConsts_):
+    ar_verb = Infinitive_Ending.ar_verb
+    er_verb = Infinitive_Ending.er_verb
+    ir_verb = Infinitive_Ending.ir_verb
+    
+         
+     
+Infinitive_Endings = Infinitive_Endings_(
+    [Infinitive_Ending.ar_verb, 
+         Infinitive_Ending.er_verb, 
+         Infinitive_Ending.ir_verb])
 
 Standard_Conjugation_Endings = [ [ [] for t in range(len(Tenses)) ] for v in range(len(Infinitive_Endings))]
 
@@ -115,4 +141,3 @@ Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.past_participle]
   Standard_Conjugation_Endings[Infinitive_Endings.er_verb][Tenses.adjective] = \
   Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.past_participle] = \
   Standard_Conjugation_Endings[Infinitive_Endings.ir_verb][Tenses.adjective] = 'ido'
-

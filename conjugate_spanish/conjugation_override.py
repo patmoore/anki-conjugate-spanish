@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import inspect
-from .standard_endings import Standard_Conjugation_Endings
+from .standard_endings import *
 from .constants import *
 from .vowel import Vowels
 from string import Template
