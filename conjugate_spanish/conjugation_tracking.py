@@ -95,7 +95,7 @@ class ConjugationNotes():
         self._conjugation_note_list = [ ]
         infinitive_ending = Infinitive_Endings.index(phrase.verb_ending_index)
         inf_conjugation_note = self._new_conjugation_note()
-        inf_conjugation_note.core_verb = phrase.core_characters
+        inf_conjugation_note.core_verb = phrase.stem
         # TODO replace with infinitive_ending.code?
         inf_conjugation_note.ending = phrase.inf_ending
         std_conjugation_note = self._new_conjugation_note()
