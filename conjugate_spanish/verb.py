@@ -430,46 +430,43 @@ class Verb(Phrase):
         return returned_conjugation
             
     def conjugate_stem(self, conjugation_notes, current_conjugation_ending):
-        def __check_override(override, current_conjugation_stem):
+        def __check_override(override):
             if isinstance(override, str):
-                current_conjugation_stem = override
+                conjugation_notes.core_verb = override
             elif override is not None:
-                override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': current_conjugation_stem, 'ending' : current_conjugation_ending }
+                override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': conjugation_notes.core_verb, 'ending' : conjugation_notes.ending }
                 try:
-                    current_conjugation_stem = override(**override_call)
+                    conjugation_notes.core_verb = override(**override_call)
                 except Exception as e:
                     extype, ex, tb = sys.exc_info()
                     traceback.print_tb(tb)
                     formatted = traceback.format_exception(extype, ex, tb)[-1]
                     message = "Trying to conjugate " + formatted
                     self.__raise(message, conjugation_notes.tense, conjugation_notes.person, tb)
-            return current_conjugation_stem
 
         if conjugation_notes.tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense, Tenses.gerund, Tenses.past_participle]:
-            current_conjugation_stem = self.stem
+            conjugation_notes.core_verb = self.stem
         elif conjugation_notes.tense == Tenses.adjective:
             past_participle_conjugation_notes = self.conjugation_tracking.get_conjugation_notes(Tenses.past_participle)
-            current_conjugation_stem = self.conjugate_stem(past_participle_conjugation_notes, current_conjugation_ending)
+            self.conjugate_stem(past_participle_conjugation_notes, current_conjugation_ending)
+            conjugation_notes.core_verb = past_participle_conjugation_notes.core_verb
         elif conjugation_notes.tense in [ Tenses.future_tense, Tenses.conditional_tense]:
-            current_conjugation_stem = Vowels.remove_accent(self.inf_verb_string)
+            conjugation_notes.core_verb = Vowels.remove_accent(self.inf_verb_string)
         elif conjugation_notes.tense == Tenses.present_subjective_tense:
-            current_conjugation_stem = self.__conjugation_present_subjective_stem(conjugation_notes)
+            conjugation_notes.core_verb = self.__conjugation_present_subjective_stem(conjugation_notes)
         elif conjugation_notes.tense == Tenses.past_subjective_tense:
-            current_conjugation_stem = self.__conjugation_past_subjective_stem(conjugation_notes)
+            conjugation_notes.core_verb = self.__conjugation_past_subjective_stem(conjugation_notes)
         else:
             self.__raise(": Can't be handled", conjugation_notes.tense, conjugation_notes.person)
-        conjugation_notes.core_verb = current_conjugation_stem
             
         overrides = self.__get_override(conjugation_notes, 'conjugation_stems')
         if overrides is not None:
             for override in get_iterable(overrides):
-                current_conjugation_stem = __check_override(override, current_conjugation_stem)
-                conjugation_notes.core_verb = current_conjugation_stem
+                __check_override(override)
         
-        if current_conjugation_stem is None:
+        if conjugation_notes.core_verb is None:
             self.__raise("no stem created", conjugation_notes.tense, conjugation_notes.person)
-        
-        return current_conjugation_stem
+        return conjugation_notes.core_verb
         
     def conjugate_ending(self, conjugation_notes):
         def __check_override(override):
@@ -489,6 +486,7 @@ class Verb(Phrase):
         if overrides is not None:
             for override in get_iterable(overrides):
                 __check_override(override)
+        return conjugation_notes.ending
     
     def conjugation_joining(self, conjugation_notes, current_conjugation_stem, current_conjugation_ending):
         def __check_override(override, current_conjugation_stem, current_conjugation_ending):
@@ -636,18 +634,17 @@ class Verb(Phrase):
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
         if first_person_conjugation[-1:] =='o':
-            conjugation_stem = first_person_conjugation[:-1]            
+            conjugation_notes.core_verb = first_person_conjugation[:-1]            
         elif first_person_conjugation[-2:] == 'oy':
             # estoy, doy, voy, etc.
-            conjugation_stem = first_person_conjugation[:-2]
+            conjugation_notes.core_verb = first_person_conjugation[:-2]
         else:
             # haber (he) is just such an example - but there better be an override available.
             return None
 #             self.__raise("First person conjugation does not end in 'o' = "+first_person_conjugation)
         # HACK: Not certain if this is correct - but i checked enviar and reunierse - shich both have an accented 1st sing present stem.
         if conjugation_notes.person in [ Persons.first_person_plural, Persons.second_person_plural ]:
-            conjugation_stem = Vowels.remove_accent(conjugation_stem)
-        return conjugation_stem
+            conjugation_notes.core_verb = Vowels.remove_accent(conjugation_notes.core_verb)
 
     def __conjugation_past_subjective_stem(self, conjugation_notes):
         """
@@ -657,16 +654,15 @@ class Verb(Phrase):
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
         third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options)
         if third_person_plural_conjugation[-3:] == 'ron':
-            conjugation_stem = third_person_plural_conjugation[:-3]
+            conjugation_notes.core_verb = third_person_plural_conjugation[:-3]
             if conjugation_notes.person == Persons.first_person_plural:
                 # accent on last vowel                                
-                if _ending_vowel_check.search(conjugation_stem):
-                    conjugation_stem = Vowels.accent_at(conjugation_stem)
+                if _ending_vowel_check.search(conjugation_notes.core_verb):
+                    conjugation_notes.core_verb = Vowels.accent_at(conjugation_notes.core_verb)
                 else:
                     # assuming last stem character is a vowel
                     # and assuming already accented for some reason
                     self.__raise("No ending vowel", conjugation_notes.tense, conjugation_notes.person)
-            return conjugation_stem
         else:
             self.__raise("Third person conjugation does not end in 'ron' = "+third_person_plural_conjugation, conjugation_notes.tense, conjugation_notes.person)
             

@@ -115,7 +115,8 @@ class ConjugationNotes():
     
     @core_verb.setter
     def core_verb(self, core_verb):
-        self._new_conjugation_note().core_verb = core_verb
+        if self.core_verb != core_verb:
+            self._new_conjugation_note().core_verb = core_verb
         
     @property
     def ending(self):
@@ -126,7 +127,8 @@ class ConjugationNotes():
     
     @ending.setter
     def ending(self, ending):
-        self._new_conjugation_note().ending = ending
+        if self.ending != ending:
+            self._new_conjugation_note().ending = ending
     
     def change(self, *, conjugation=None, core_verb=None, ending=None):
         """
