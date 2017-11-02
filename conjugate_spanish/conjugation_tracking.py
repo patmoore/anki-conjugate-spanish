@@ -115,7 +115,9 @@ class ConjugationNotes():
     
     @core_verb.setter
     def core_verb(self, core_verb):
-        if self.core_verb != core_verb:
+        if not isinstance(core_verb, str):
+            self.__raise("stem is not string", self.tense, self.person)
+        elif self.core_verb != core_verb:
             self._new_conjugation_note().core_verb = core_verb
         
     @property
@@ -127,7 +129,9 @@ class ConjugationNotes():
     
     @ending.setter
     def ending(self, ending):
-        if self.ending != ending:
+        if not isinstance(ending, str):
+            self.__raise("stem is not string", self.tense, self.person)
+        elif self.ending != ending:
             self._new_conjugation_note().ending = ending
     
     def change(self, *, conjugation=None, core_verb=None, ending=None):

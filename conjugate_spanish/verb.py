@@ -344,8 +344,8 @@ class Verb(Phrase):
         """
         if conjugation_notes.tense not in Tenses.imperative:
             self.conjugate_ending(conjugation_notes)            
-            current_conjugation_stem = self.conjugate_stem(conjugation_notes, conjugation_notes.ending)
-            conjugation = self.conjugation_joining(conjugation_notes, current_conjugation_stem, conjugation_notes.ending)
+            conjugation_notes.core_verb = self.conjugate_stem(conjugation_notes, conjugation_notes.ending)
+            conjugation = self.conjugation_joining(conjugation_notes)
         else:
             conjugation = self.__conjugation_imperative(conjugation_notes)
         return conjugation
@@ -453,9 +453,9 @@ class Verb(Phrase):
         elif conjugation_notes.tense in [ Tenses.future_tense, Tenses.conditional_tense]:
             conjugation_notes.core_verb = Vowels.remove_accent(self.inf_verb_string)
         elif conjugation_notes.tense == Tenses.present_subjective_tense:
-            conjugation_notes.core_verb = self.__conjugation_present_subjective_stem(conjugation_notes)
+            self.__conjugation_present_subjective_stem(conjugation_notes)
         elif conjugation_notes.tense == Tenses.past_subjective_tense:
-            conjugation_notes.core_verb = self.__conjugation_past_subjective_stem(conjugation_notes)
+            self.__conjugation_past_subjective_stem(conjugation_notes)
         else:
             self.__raise(": Can't be handled", conjugation_notes.tense, conjugation_notes.person)
             
@@ -488,33 +488,22 @@ class Verb(Phrase):
                 __check_override(override)
         return conjugation_notes.ending
     
-    def conjugation_joining(self, conjugation_notes, current_conjugation_stem, current_conjugation_ending):
-        def __check_override(override, current_conjugation_stem, current_conjugation_ending):
-            if override is not None:
-                override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': current_conjugation_stem, 'ending' : current_conjugation_ending }
-                try:
-                    results = override(**override_call)
-                except Exception as e:
-                    extype, ex, tb = sys.exc_info()
-                    traceback.print_tb(tb)
-                    formatted = traceback.format_exception(extype, ex, tb)[-1]
-                    message = "Trying to conjugate " + formatted
-                    self.__raise(message, conjugation_notes.tense, conjugation_notes.person, tb)
-            else:
-                results = [current_conjugation_stem, current_conjugation_ending]
-            return results
-        
+    def conjugation_joining(self, conjugation_notes):
         overrides = self.__get_override(conjugation_notes, 'conjugation_joins')
         if overrides is not None:
             for override in get_iterable(overrides):
-                [current_conjugation_stem, current_conjugation_ending]  = __check_override(override, current_conjugation_stem, current_conjugation_ending)
-                if not isinstance(current_conjugation_stem, str):
-                    self.__raise("stem is not string", conjugation_notes.tense, conjugation_notes.person)
-                if not isinstance(current_conjugation_ending, str):
-                    self.__raise("ending is not string", conjugation_notes.tense, conjugation_notes.person) 
-                conjugation_notes.change(core_verb=current_conjugation_stem, ending = current_conjugation_ending)
+                if override is not None:
+                    override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': conjugation_notes.core_verb, 'ending' : conjugation_notes.ending }
+                    try:
+                        [conjugation_notes.core_verb, conjugation_notes.ending] = override(**override_call)
+                    except Exception as e:
+                        extype, ex, tb = sys.exc_info()
+                        traceback.print_tb(tb)
+                        formatted = traceback.format_exception(extype, ex, tb)[-1]
+                        message = "Trying to conjugate " + formatted
+                        self.__raise(message, conjugation_notes.tense, conjugation_notes.person, tb)
  
-        return current_conjugation_stem+current_conjugation_ending
+        return conjugation_notes.core_verb + conjugation_notes.ending
     
     def __conjugation_imperative(self, conjugation_notes, conjugation=None):
         """
