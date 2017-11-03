@@ -302,7 +302,7 @@ class Verb(Phrase):
         """           
         conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)     
         if tense in Tenses.imperative and person == Persons.first_person_singular:
-            conjugation_notes.change(core_verb = None, ending = None)
+            conjugation_notes.change(operation="None", core_verb = None, ending = None)
             return None        
         elif tense not in Tenses.Person_Agnostic and person not in Persons.all:
             self.__raise("Tense "+Tenses[tense]+" needs a person", tense, person)
@@ -317,7 +317,7 @@ class Verb(Phrase):
                 for conjugation_override in conjugation_overrides:
                     if isinstance(conjugation_override, str):
                         conjugation = conjugation_override
-                        conjugation_notes.change(conjugation = conjugation)
+                        conjugation_notes.change("operation_conjugation", conjugation = conjugation)
                     elif conjugation_override is not None:
                         override_call = { 'tense': tense, 'person': person, "options":options }
                         try:

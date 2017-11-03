@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from .constants import *
+import json
+from .utils import cs_debug
 """
 This code holds the history of how the verb is conjugated
 1. Shows the rules used (in order)
@@ -11,7 +13,7 @@ class ConjugationNote:
     """
     Intended to be immutable
     """
-    def __init__(self, operation, tense, person=None):
+    def __init__(self, operation, tense, person):
         """
         conjugation - the new conjugation string
         """
@@ -79,9 +81,12 @@ class ConjugationNote:
 
     def change(self, conjugation):
         self.conjugation = conjugation
-          
+                  
     def __repr__(self):
-        return "conjugation=" + self.conjugation +"; core_verb=" + self.core_verb + "; ending=" +self.ending
+        return {'conjugation' : self.conjugation,
+                'core_verb' : self.core_verb,
+                'ending' : self.ending
+                }
             
 class ConjugationNotes():
     """
@@ -93,24 +98,35 @@ class ConjugationNotes():
         self._tense = tense
         self._person = person
         self._conjugation_note_list = [ ]
+        self._operation = None
         infinitive_ending = Infinitive_Endings.index(phrase.verb_ending_index)
-        inf_conjugation_note = self._new_conjugation_note()
+        inf_conjugation_note = self._new_conjugation_note("infinitive")
         inf_conjugation_note.core_verb = phrase.stem
         # TODO replace with infinitive_ending.code?
         inf_conjugation_note.ending = phrase.inf_ending
-        std_conjugation_note = self._new_conjugation_note()
+        std_conjugation_note = self._new_conjugation_note("std_ending")
         std_conjugation_note.ending = infinitive_ending.get_standard_conjugation_ending(self, phrase.verb_ending_index)
+        self._blocked = False
         
-    def _new_conjugation_note(self):
-        conjugation_note = ConjugationNote(self._tense, self._person)
+    def _new_conjugation_note(self, operation):
+        conjugation_note = ConjugationNote(operation, self._tense, self._person)
         self._conjugation_note_list.insert(0, conjugation_note)
         return conjugation_note
+        
+    @property
+    def operation(self):
+        return self._operation;
     
+    @operation.setter
+    def operation(self, operation):
+        self._operation = operation
+        
     @property
     def core_verb(self):
-        for conjugation_note in self._conjugation_note_list:
-            if conjugation_note.core_verb is not None:
-                return conjugation_note.core_verb
+        if not self.blocked:
+            for conjugation_note in self._conjugation_note_list:
+                if conjugation_note.core_verb is not None:
+                    return conjugation_note.core_verb
         return None
     
     @core_verb.setter
@@ -118,39 +134,38 @@ class ConjugationNotes():
         if not isinstance(core_verb, str):
             self.__raise("stem is not string", self.tense, self.person)
         elif self.core_verb != core_verb:
-            self._new_conjugation_note().core_verb = core_verb
+            self._new_conjugation_note(self.operation).core_verb = core_verb
         
     @property
     def ending(self):
-        for conjugation_note in self._conjugation_note_list:
-            if conjugation_note.ending is not None:
-                return conjugation_note.ending
+        if not self.blocked:
+            for conjugation_note in self._conjugation_note_list:
+                if conjugation_note.ending is not None:
+                    return conjugation_note.ending
         return None
     
     @ending.setter
     def ending(self, ending):
+        if self.blocked:
+            self.__
         if not isinstance(ending, str):
             self.__raise("stem is not string", self.tense, self.person)
         elif self.ending != ending:
-            self._new_conjugation_note().ending = ending
+            self._new_conjugation_note(self.operation).ending = ending
     
-    def change(self, *, conjugation=None, core_verb=None, ending=None):
+    def change(self, operation, *, conjugation=None, core_verb=None, ending=None):
         """
         Some tenses depend on other tenses / person
         """
-        conjugation_note = self._new_conjugation_note()
+        conjugation_note = self._new_conjugation_note(operation)
+        conjugation_note.operation = operation
         if conjugation is not None:
             conjugation_note.conjugation = conjugation
         else:
-            conjugation_note.core_verb = core_verb
-            conjugation_note.ending = ending
-        
-    def clear(self):
-        """
-        Way to make this tense person and not having a value 
-        TODO ?
-        """
-        pass
+            if core_verb is not None:
+                conjugation_note.core_verb = core_verb
+            if ending is not None:
+                conjugation_note.ending = ending
     
     @property
     def conjugation(self):
@@ -161,7 +176,7 @@ class ConjugationNotes():
       
     @conjugation.setter
     def conjugation(self, conjugation):
-        self._new_conjugation_note().conjugation = conjugation
+        self._new_conjugation_note(self._operation).conjugation = conjugation
         
     @property
     def tense(self):
@@ -170,6 +185,28 @@ class ConjugationNotes():
     @property
     def person(self):
         return self._person  
+    
+    def block(self):
+        """
+        Used to indicate a conjugation does not exist.
+        For example, first person singular imperative
+        or 3rd person only verbs
+        """
+        self._blocked = True
+        self._new_conjugation_note("blocked")
+        
+    def __raise(self, msg, traceback_=None):
+        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, 
+             Tenses[self.tense] if self.tense is not None else "-", 
+             Persons[self.person] if self.person is not None else "-", msg)
+        cs_debug(">>>>>>",msg_)
+        
+    def __repr__(self):
+        return { 
+            'tense' : self.tense,
+            'person' : self.person,
+            'changes' : [ conjugation_note.__repr__() for conjugation_note in self._conjugation_note_list ]
+        }.__str__()
     
 class ConjugationTracking():
     """
@@ -197,3 +234,7 @@ class ConjugationTracking():
             conjugation_notes = self.conjugation_notes[tense][person]
         
         return conjugation_notes
+    
+    def __repr__(self):
+        return json.dumps({'phrase' : self._phrase.__repr__(), 
+                           'conjugation_notes' : self.conjugation_notes.__repr__()})
