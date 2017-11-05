@@ -83,7 +83,9 @@ class ConjugationNote:
         self.conjugation = conjugation
                   
     def __repr__(self):
-        return {'conjugation' : self.conjugation,
+        return {
+                'operation' : self.operation,
+                'conjugation' : self.conjugation,
                 'core_verb' : self.core_verb,
                 'ending' : self.ending
                 }
@@ -99,6 +101,8 @@ class ConjugationNotes():
         self._person = person
         self._conjugation_note_list = [ ]
         self._operation = None
+        self._blocked = False
+        self._completed = False
         infinitive_ending = Infinitive_Endings.index(phrase.verb_ending_index)
         inf_conjugation_note = self._new_conjugation_note("infinitive")
         inf_conjugation_note.core_verb = phrase.stem
@@ -106,9 +110,10 @@ class ConjugationNotes():
         inf_conjugation_note.ending = phrase.inf_ending
         std_conjugation_note = self._new_conjugation_note("std_ending")
         std_conjugation_note.ending = infinitive_ending.get_standard_conjugation_ending(self, phrase.verb_ending_index)
-        self._blocked = False
         
     def _new_conjugation_note(self, operation):
+        if self.completed:
+            self.__raise("Already completed")
         conjugation_note = ConjugationNote(operation, self._tense, self._person)
         self._conjugation_note_list.insert(0, conjugation_note)
         return conjugation_note
@@ -131,8 +136,10 @@ class ConjugationNotes():
     
     @core_verb.setter
     def core_verb(self, core_verb):
-        if not isinstance(core_verb, str):
-            self.__raise("stem is not string", self.tense, self.person)
+        if self.blocked:
+            self.__raise("blocked")
+        elif not isinstance(core_verb, str):
+            self.__raise("stem is not string")
         elif self.core_verb != core_verb:
             self._new_conjugation_note(self.operation).core_verb = core_verb
         
@@ -147,8 +154,8 @@ class ConjugationNotes():
     @ending.setter
     def ending(self, ending):
         if self.blocked:
-            self.__
-        if not isinstance(ending, str):
+            self.__raise("blocked")
+        elif not isinstance(ending, str):
             self.__raise("stem is not string", self.tense, self.person)
         elif self.ending != ending:
             self._new_conjugation_note(self.operation).ending = ending
@@ -157,21 +164,25 @@ class ConjugationNotes():
         """
         Some tenses depend on other tenses / person
         """
-        conjugation_note = self._new_conjugation_note(operation)
-        conjugation_note.operation = operation
-        if conjugation is not None:
-            conjugation_note.conjugation = conjugation
+        if self.blocked:
+            self.__raise("blocked")
         else:
-            if core_verb is not None:
-                conjugation_note.core_verb = core_verb
-            if ending is not None:
-                conjugation_note.ending = ending
+            conjugation_note = self._new_conjugation_note(operation)
+            conjugation_note.operation = operation
+            if conjugation is not None:
+                conjugation_note.conjugation = conjugation
+            else:
+                if core_verb is not None:
+                    conjugation_note.core_verb = core_verb
+                if ending is not None:
+                    conjugation_note.ending = ending
     
     @property
     def conjugation(self):
-        for conjugation_note in self._conjugation_note_list:
-            if conjugation_note.conjugation is not None:
-                return conjugation_note.conjugation
+        if not self.blocked:
+            for conjugation_note in self._conjugation_note_list:
+                if conjugation_note.conjugation is not None:
+                    return conjugation_note.conjugation
         return None
       
     @conjugation.setter
@@ -194,6 +205,17 @@ class ConjugationNotes():
         """
         self._blocked = True
         self._new_conjugation_note("blocked")
+        
+    @property
+    def blocked(self):
+        return self._blocked
+    
+    @property
+    def completed(self):
+        return self._completed
+    
+    def complete(self):
+        self._completed = True
         
     def __raise(self, msg, traceback_=None):
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, 
@@ -236,5 +258,5 @@ class ConjugationTracking():
         return conjugation_notes
     
     def __repr__(self):
-        return json.dumps({'phrase' : self._phrase.__repr__(), 
+        return json.dumps({'phrase' : self._phrase.full_phrase, 
                            'conjugation_notes' : self.conjugation_notes.__repr__()})
