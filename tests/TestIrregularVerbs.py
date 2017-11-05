@@ -24,3 +24,14 @@ class TestIrregularVerbs(unittest.TestCase):
         verb = Espanol_Dictionary.get("despedirse")
         conjugation = verb.conjugate(Tenses.incomplete_past_tense, Persons.first_person_singular)
         self.assertEqual(conjugation, "me despedía")
+
+    def test_correct_accent_derived_ends_in(self):
+        """
+        despedirse - derived from despedir which is derived from pedir
+        """
+        verb = Espanol_Dictionary.get("obtener")
+        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        self.assertEqual(conjugation, "obtén")
+        verb = Espanol_Dictionary.get("deshacer")
+        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        self.assertEqual(conjugation, "deshaz")

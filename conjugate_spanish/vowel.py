@@ -32,6 +32,7 @@ class Vowels_():
         i_eq_group = re_group(i_eq)
         qu_gu = "(?:[gq]["+u+u_u+"])"
         h = 'h'
+        self._ends_in_ns = re_compile('.*[ns]+$')
         self.unaccented = unaccented = [a,e,i,o,u]
         self.accented = accented = [a_a, e_a, i_a, o_a, u_a]
         self.accented_vowel_check = re_compile(re_group(accented))
@@ -204,6 +205,9 @@ class Vowels_():
         for regex, replace in self._replace_accents:
             result = regex.sub(replace, result)
         return result
+        
+    def ends_in_ns(self, string_):
+       return self._ends_in_ns.match(string_) 
     
 Vowels = Vowels_()
 if True:
