@@ -15,6 +15,7 @@ encoding//tests/Test501verbs.py=utf-8
 encoding//tests/TestBasic.py=utf-8
 encoding//tests/TestDerivedVerb.py=utf-8
 encoding//tests/TestImperativeConjugation.py=utf-8
+encoding//tests/TestIrregularVerbs.py=utf-8
 encoding//tests/TestStandardConjugationOverrides.py=utf-8
 encoding//tests/TestThirdPersonOnly.py=utf-8
 encoding/conjugate.py=utf-8

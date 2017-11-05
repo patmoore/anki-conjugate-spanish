@@ -14,6 +14,7 @@ from .nonconjugated_phrase import NonConjugatedPhrase
 from .utils import cs_debug
 from .storage import Storage
 from conjugate_spanish.verb import Reflexive
+import conjugate_spanish
 
 """
 load dictionaries/*-verbs.csv

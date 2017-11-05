@@ -166,6 +166,8 @@ class ConjugationNotes():
         """
         if self.blocked:
             self.__raise("blocked")
+        elif conjugation is None and core_verb is None and ending is None:
+            self.__raise(operation + " supplied only None arguments - probable error")
         else:
             conjugation_note = self._new_conjugation_note(operation)
             conjugation_note.operation = operation

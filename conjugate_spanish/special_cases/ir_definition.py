@@ -22,7 +22,7 @@ Ir_Definition = Verb_Dictionary.add('ir', conjugation_overrides=_ir_conjugation_
 # Note: inherit from parent is implicit
 _irse_conjugation_overrides = ConjugationOverride(key="irse_irregular")
 # Also note that the negative is "no nos vayamos" -- we don't have a way to handle that.
-_irse_conjugation_overrides.override_tense(Tenses.imperative_positive, 'vámo', Persons.first_person_plural, documentation="vámonos only for POSITIVE")
-_irse_conjugation_overrides.override_tense(Tenses.imperative_negative, 'nos vayamos', Persons.first_person_plural, documentation="no nos vayamos")
+_irse_conjugation_overrides.override_tense(Tenses.imperative_positive, 'vámos', Persons.first_person_plural, documentation="vámonos only for POSITIVE")
+# _irse_conjugation_overrides.override_tense(Tenses.imperative_negative, 'nos vayamos', Persons.first_person_plural, documentation="no nos vayamos")
 _irse_conjugation_overrides.override_tense(Tenses.imperative_positive, 'idos', Persons.second_person_plural, documentation="idos only for POSITIVE")
 Irse_Definition = Verb_Dictionary.add('irse', conjugation_overrides=_irse_conjugation_overrides, definition="to go")
