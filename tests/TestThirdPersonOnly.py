@@ -35,6 +35,7 @@ class TestThirdPersonOnly(unittest.TestCase):
             ['suceda','sucedan'],
             ['suceda','sucedan'],
             'sucediendo',
+            'sucedido',
             'sucedido'
         ]
         for tense in Tenses.all:
