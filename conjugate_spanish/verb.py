@@ -8,13 +8,11 @@ import inspect
 from .conjugation_override import *
 from .constants import *
 from .vowel import Vowels
-import traceback
 from .utils import cs_debug
 import types
-from .phrase import Phrase, Phrase_Association
+from .phrase import Phrase
 from .standard_endings import *
-from conjugate_spanish.conjugation_override import ConjugationOverride
-from conjugate_spanish.conjugation_tracking import ConjugationTracking
+from conjugate_spanish.conjugation_tracking import ConjugationTracking, ConjugationNotes
 
 _ending_vowel_check = re_compile(Vowels.all_group+'$')
 # check for word with only a single vowel ( used in imperative conjugation )
@@ -302,7 +300,11 @@ class Verb(Phrase):
         """           
         conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
         if conjugation_notes.completed:
-            return conjugation_notes.conjugation     
+            force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
+            if not force_conjugation:
+                return conjugation_notes.conjugation 
+            else:
+                conjugation_notes = ConjugationNotes(tense, person, self)    
         if tense in Tenses.imperative and person == Persons.first_person_singular:
             conjugation_notes.block()
             return None        
@@ -385,7 +387,7 @@ class Verb(Phrase):
         # TODO: look for 2/3 vowel dipthongs as well
         single_vowel_match = _single_vowel_re.match(base_verb_conjugation)        
         
-        if conjugation_notes.tense == Tenses.imperative_positive and conjugation_notes.person == Persons.second_person_singular:
+        if conjugation_notes.tense == Tenses.imperative_positive and conjugation_notes.person == Persons.second_person_singular and single_vowel_match is not None:
             #
             # Accent a single vowel base verb conjugation
             # 
@@ -398,15 +400,12 @@ class Verb(Phrase):
             # but not no always decir  ( di ) but maldecir ( maldice )
             # TODO accenting ( obtén - for example )
             # reflexive verbs are going to get 'te' at the end, so no need for an accent.
-            if single_vowel_match is not None:
-                explicit_accent_already_applied = True
-                if not _reflexive and Vowels.ends_in_ns(base_verb_conjugation) is not None:
-                    # obtén (obtener) get the accent but deshaz ( deshacer ) does not 
-                    _conjugation = self.prefix + Vowels.accent_at(base_verb_conjugation, single_vowel_match.start(2))
-                else:
-                    _conjugation = self.prefix + base_verb_conjugation                
+            explicit_accent_already_applied = True
+            if not _reflexive and Vowels.ends_in_ns(base_verb_conjugation) is not None:
+                # obtén (obtener) get the accent but deshaz ( deshacer ) does not 
+                _conjugation = self.prefix + Vowels.accent_at(base_verb_conjugation, single_vowel_match.start(2))
             else:
-                _conjugation = self.prefix + base_verb_conjugation
+                _conjugation = self.prefix + base_verb_conjugation                
 #         elif single_vowel_match is not None:
             # leave comment in so that i know this has been checked.
             # traer and atraer -- this is fine : no accenting
@@ -456,13 +455,13 @@ class Verb(Phrase):
                     self.__raise(message, conjugation_notes.tense, conjugation_notes.person, tb)
 
         if conjugation_notes.tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense, Tenses.gerund, Tenses.past_participle]:
-            conjugation_notes.core_verb = self.stem
+            conjugation_notes.change(operation="std_stem", core_verb = self.stem)
         elif conjugation_notes.tense == Tenses.adjective:
             past_participle_conjugation_notes = self.conjugation_tracking.get_conjugation_notes(Tenses.past_participle)
             self.conjugate_stem(past_participle_conjugation_notes, current_conjugation_ending)
-            conjugation_notes.core_verb = past_participle_conjugation_notes.core_verb
+            conjugation_notes.change(operation="std_stem", core_verb = past_participle_conjugation_notes.core_verb)
         elif conjugation_notes.tense in [ Tenses.future_tense, Tenses.conditional_tense]:
-            conjugation_notes.core_verb = Vowels.remove_accent(self.inf_verb_string)
+            conjugation_notes.change(operation="std_stem", core_verb = Vowels.remove_accent(self.inf_verb_string))
         elif conjugation_notes.tense == Tenses.present_subjective_tense:
             self.__conjugation_present_subjective_stem(conjugation_notes)
         elif conjugation_notes.tense == Tenses.past_subjective_tense:
@@ -639,10 +638,10 @@ class Verb(Phrase):
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
         if first_person_conjugation[-1:] =='o':
-            conjugation_notes.core_verb = first_person_conjugation[:-1]            
+            conjugation_notes.change(operation="std_stem_from_1st_present", core_verb = first_person_conjugation[:-1])            
         elif first_person_conjugation[-2:] == 'oy':
             # estoy, doy, voy, etc.
-            conjugation_notes.core_verb = first_person_conjugation[:-2]
+            conjugation_notes.change(operation="std_stem_from_1st_present_drop_oy", core_verb = first_person_conjugation[:-2])
         else:
             # haber (he) is just such an example - but there better be an override available.
             return None
@@ -659,11 +658,11 @@ class Verb(Phrase):
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
         third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options)
         if third_person_plural_conjugation[-3:] == 'ron':
-            conjugation_notes.core_verb = third_person_plural_conjugation[:-3]
+            conjugation_notes.change(operation="std_stem", core_verb = third_person_plural_conjugation[:-3])
             if conjugation_notes.person == Persons.first_person_plural:
                 # accent on last vowel                                
                 if _ending_vowel_check.search(conjugation_notes.core_verb):
-                    conjugation_notes.core_verb = Vowels.accent_at(conjugation_notes.core_verb)
+                    conjugation_notes.change(operation="correct accent", core_verb = Vowels.accent_at(conjugation_notes.core_verb))
                 else:
                     # assuming last stem character is a vowel
                     # and assuming already accented for some reason

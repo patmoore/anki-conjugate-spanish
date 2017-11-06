@@ -11,7 +11,7 @@ def re_compile(string_):
     """
     unicode, ignore case
     """
-    return re.compile(string_, re.UNICODE+re.IGNORECASE)
+    return re.compile(string_, re.IGNORECASE)
 
 def re_group(args, not_=False):
     multiple = any([len(arg) > 1 for arg in args]) 
@@ -79,7 +79,7 @@ class BaseConst(IntEnum):
         else:
             return NotImplemented
         
-        
+@unique
 class Tense(BaseConst):
     present_tense = (0, 'present', 'Present')
     incomplete_past_tense = (1, 'incomplete_past',  'Incomplete Past')
@@ -147,6 +147,7 @@ class Tenses_(BaseConsts_):
 # names also used in manually defined override files
 Tenses = Tenses_(list(Tense))
 
+@unique
 class Person(BaseConst):
     first_person_singular = (0, 'yo', 'yo')
     second_person_singular = (1, 'tú', 'tú')
@@ -182,6 +183,26 @@ Persons_Indirect = [
     'se'
     ]
 
+class IrregularNature(BaseConst):
+    """
+    Note: we don't track if from base or not because we want to know reason
+    """
+    regular = (0, 'regular', 'regular')
+    """ 
+    preserve the sound when spoken
+    """
+    sound_consistence = (1, 'sound', 'preserves sound')
+    standard_irregular = (2, 'std_irregular', 'irregularity comes from a standard irregular pattern')
+    custom = (3, 'custom', 'irregularity is unique to this verb')
+    
+    
+class IrregularNatures_(BaseConsts_):
+    regular = IrregularNature.regular
+    sound_consistence = IrregularNature.sound_consistence
+    standard_irregular = IrregularNature.standard_irregular
+    custom = IrregularNature.custom
+
+IrregularNatures = IrregularNatures_(list(IrregularNature))
 #
 # Parse up the infinitive string: 
 # verb forms: 

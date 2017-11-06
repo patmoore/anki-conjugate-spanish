@@ -42,11 +42,12 @@ class TestThirdPersonOnly(unittest.TestCase):
                 conjugation = verb.conjugate(tense)
                 self.assertEqual(results[tense], conjugation)
             else:
+                index = 0
                 for person in Persons.third_person:
-                    expected = results[tense][person/3]
+                    expected = results[tense][index]
                     conjugation = verb.conjugate(tense, person)
                     self.assertEqual(expected, conjugation)
-                
+                    index += 1
         
     def test_third_sing_only(self):
         verb = Verb.importString('helar','freeze', conjugation_overrides=['3rd_sing_only',"e:ie"])

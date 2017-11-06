@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from conjugate_spanish.conjugation_override import ConjugationOverride
-from conjugate_spanish.constants import *
-from conjugate_spanish.standard_endings import * 
+from conjugate_spanish.constants import Tenses, Persons
+from conjugate_spanish.standard_endings import Standard_Conjugation_Endings, Infinitive_Endings
 from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from .ir_definition import Past_Tense_IR_CO
 

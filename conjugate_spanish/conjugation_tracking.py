@@ -103,13 +103,16 @@ class ConjugationNotes():
         self._operation = None
         self._blocked = False
         self._completed = False
+        self._phrase = phrase
         infinitive_ending = Infinitive_Endings.index(phrase.verb_ending_index)
         inf_conjugation_note = self._new_conjugation_note("infinitive")
         inf_conjugation_note.core_verb = phrase.stem
         # TODO replace with infinitive_ending.code?
         inf_conjugation_note.ending = phrase.inf_ending
-        std_conjugation_note = self._new_conjugation_note("std_ending")
-        std_conjugation_note.ending = infinitive_ending.get_standard_conjugation_ending(self, phrase.verb_ending_index)
+        std_ending = infinitive_ending.get_standard_conjugation_ending(self, phrase.verb_ending_index)
+        if std_ending is not None:
+            std_conjugation_note = self._new_conjugation_note("std_ending")
+            std_conjugation_note.ending = std_ending 
         
     def _new_conjugation_note(self, operation):
         if self.completed:
@@ -199,6 +202,10 @@ class ConjugationNotes():
     def person(self):
         return self._person  
     
+    @property
+    def phrase(self):
+        return self._phrase
+    
     def block(self):
         """
         Used to indicate a conjugation does not exist.
@@ -220,7 +227,7 @@ class ConjugationNotes():
         self._completed = True
         
     def __raise(self, msg, traceback_=None):
-        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, 
+        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.phrase.full_phrase, 
              Tenses[self.tense] if self.tense is not None else "-", 
              Persons[self.person] if self.person is not None else "-", msg)
         cs_debug(">>>>>>",msg_)
