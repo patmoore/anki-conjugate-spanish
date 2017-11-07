@@ -300,11 +300,8 @@ class Verb(Phrase):
         """           
         conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
         if conjugation_notes.completed:
-            force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
-            if not force_conjugation:
-                return conjugation_notes.conjugation 
-            else:
-                conjugation_notes = ConjugationNotes(tense, person, self)    
+            return conjugation_notes.conjugation 
+                    
         if tense in Tenses.imperative and person == Persons.first_person_singular:
             conjugation_notes.block()
             return None        
@@ -356,7 +353,7 @@ class Verb(Phrase):
         """
         if conjugation_notes.tense not in Tenses.imperative:
             self.conjugate_ending(conjugation_notes)            
-            conjugation_notes.core_verb = self.conjugate_stem(conjugation_notes, conjugation_notes.ending)
+            conjugation_notes.core_verb = self.conjugate_stem(conjugation_notes)
             conjugation_notes.conjugation = self.conjugation_joining(conjugation_notes)
         else:
             conjugation_notes.conjugation = self.__conjugation_imperative(conjugation_notes)
@@ -439,7 +436,7 @@ class Verb(Phrase):
         conjugation_notes.conjugation = returned_conjugation
         return returned_conjugation
             
-    def conjugate_stem(self, conjugation_notes, current_conjugation_ending):
+    def conjugate_stem(self, conjugation_notes):
         def __check_override(override):
             if isinstance(override, str):
                 conjugation_notes.core_verb = override
@@ -458,7 +455,8 @@ class Verb(Phrase):
             conjugation_notes.change(operation="std_stem", core_verb = self.stem)
         elif conjugation_notes.tense == Tenses.adjective:
             past_participle_conjugation_notes = self.conjugation_tracking.get_conjugation_notes(Tenses.past_participle)
-            self.conjugate_stem(past_participle_conjugation_notes, current_conjugation_ending)
+            if not past_participle_conjugation_notes.completed:
+                self.conjugate_stem(past_participle_conjugation_notes)
             conjugation_notes.change(operation="std_stem", core_verb = past_participle_conjugation_notes.core_verb)
         elif conjugation_notes.tense in [ Tenses.future_tense, Tenses.conditional_tense]:
             conjugation_notes.change(operation="std_stem", core_verb = Vowels.remove_accent(self.inf_verb_string))
@@ -1058,7 +1056,7 @@ class Verb(Phrase):
                 self.__raise("Too many accents in "+conjugation, tense, person)
                 
     def __raise(self, msg, tense=None, person=None, traceback_=None):
-        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense] if tense is not None else "-", Persons[person] if person is not None else "-", msg)
+        msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense].human_readable if tense is not None else "-", Persons[person] if person is not None else "-", msg)
         cs_error(">>>>>>",msg_, traceback_)
         
     def __str__(self):

@@ -228,8 +228,8 @@ class ConjugationNotes():
         
     def __raise(self, msg, traceback_=None):
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.phrase.full_phrase, 
-             Tenses[self.tense] if self.tense is not None else "-", 
-             Persons[self.person] if self.person is not None else "-", msg)
+             Tenses[self.tense].human_readable if self.tense is not None else "-", 
+             Persons[self.person].human_readable if self.person is not None else "-", msg)
         cs_debug(">>>>>>",msg_)
         
     def __repr__(self):

@@ -3,6 +3,7 @@ import json
 import inspect
 from .standard_endings import *
 from .constants import *
+from .conjugation_tracking import ConjugationNotes
 from .vowel import Vowels
 from string import Template
 """
@@ -900,7 +901,7 @@ Defective_CO.override_tense(tenses, lambda self, **kwargs: '')
 def __block_conjugation(self, tense, person, options, **kwargs):
     force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
     if force_conjugation:
-        conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
+        conjugation_notes = ConjugationNotes(tense, person, self)
         conjugation = self._conjugate_stem_and_endings(conjugation_notes = conjugation_notes, options=options, **kwargs)
         return conjugation
     else:
