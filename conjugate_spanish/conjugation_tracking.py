@@ -22,7 +22,7 @@ class ConjugationNote:
         self._person = person
         self._core_verb = None
         self._ending = None
-        self._conjugation = None
+        self.irregular_nature = IrregularNature.regular
     
     @property
     def not_applied(self):
@@ -42,14 +42,10 @@ class ConjugationNote:
     
     @property
     def conjugation(self):
-        if self._conjugation is not None:
+        if hasattr(self, "_conjugation"):
             return self._conjugation 
-        elif self._core_verb is None and self._ending is None:
-            return ""
-        elif self._core_verb is None:
-            return "-" + self._ending
         else:
-            return ""
+            return None
         
     @conjugation.setter
     def conjugation(self, conjugation):        
@@ -81,6 +77,14 @@ class ConjugationNote:
 
     def change(self, conjugation):
         self.conjugation = conjugation
+        
+    @property
+    def irregular_nature(self):
+        return self._irregular_nature
+    
+    @irregular_nature.setter
+    def irregular_nature(self, irregular_nature):
+        self._irregular_nature = irregular_nature
                   
     def __repr__(self):
         return {
@@ -136,15 +140,6 @@ class ConjugationNotes():
                 if conjugation_note.core_verb is not None:
                     return conjugation_note.core_verb
         return None
-    
-    @core_verb.setter
-    def core_verb(self, core_verb):
-        if self.blocked:
-            self.__raise("blocked")
-        elif not isinstance(core_verb, str):
-            self.__raise("stem is not string")
-        elif self.core_verb != core_verb:
-            self._new_conjugation_note(self.operation).core_verb = core_verb
         
     @property
     def ending(self):
@@ -154,33 +149,20 @@ class ConjugationNotes():
                     return conjugation_note.ending
         return None
     
-    @ending.setter
-    def ending(self, ending):
-        if self.blocked:
-            self.__raise("blocked")
-        elif not isinstance(ending, str):
-            self.__raise("stem is not string", self.tense, self.person)
-        elif self.ending != ending:
-            self._new_conjugation_note(self.operation).ending = ending
-    
-    def change(self, operation, *, conjugation=None, core_verb=None, ending=None):
+    def change(self, operation, **kwargs):
         """
         Some tenses depend on other tenses / person
         """
         if self.blocked:
             self.__raise("blocked")
-        elif conjugation is None and core_verb is None and ending is None:
-            self.__raise(operation + " supplied only None arguments - probable error")
-        else:
+        change_keys = []
+        for change_key in ['conjugation', 'core_verb', 'ending']:
+            if change_key in kwargs and getattr(self, change_key) != kwargs[change_key]:
+                change_keys.append(change_key)
+        if len(change_keys) > 0:
             conjugation_note = self._new_conjugation_note(operation)
-            conjugation_note.operation = operation
-            if conjugation is not None:
-                conjugation_note.conjugation = conjugation
-            else:
-                if core_verb is not None:
-                    conjugation_note.core_verb = core_verb
-                if ending is not None:
-                    conjugation_note.ending = ending
+            for change_key in change_keys:
+                setattr(conjugation_note, change_key, kwargs[change_key])
     
     @property
     def conjugation(self):
@@ -188,11 +170,7 @@ class ConjugationNotes():
             for conjugation_note in self._conjugation_note_list:
                 if conjugation_note.conjugation is not None:
                     return conjugation_note.conjugation
-        return None
-      
-    @conjugation.setter
-    def conjugation(self, conjugation):
-        self._new_conjugation_note(self._operation).conjugation = conjugation
+        return self.core_verb+self.ending
         
     @property
     def tense(self):
@@ -206,6 +184,14 @@ class ConjugationNotes():
     def phrase(self):
         return self._phrase
     
+    @property
+    def full_conjugation(self):
+        full = '' if self.phrase.prefix_words is None else self.phrase.prefix_words + ' '
+        full += self.conjugation
+        if self.phrase.suffix_words is not None:
+            full += ' ' + self.phrase.suffix_words
+        return full
+    
     def block(self):
         """
         Used to indicate a conjugation does not exist.
@@ -214,6 +200,7 @@ class ConjugationNotes():
         """
         self._blocked = True
         self._new_conjugation_note("blocked")
+        self.complete()
         
     @property
     def blocked(self):

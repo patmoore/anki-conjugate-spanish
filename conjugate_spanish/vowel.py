@@ -1,4 +1,5 @@
 from .constants import *
+from .utils import cs_debug, cs_error
 class Vowels_():
     """
     Long form creation allows developers to easily see if all needed vowel combinations are handled.
@@ -195,7 +196,7 @@ class Vowels_():
             result = string_[:index_] + self.to_accent_mapping[vowel] + string_[index_+1:]
             return result
         else:
-            raise Exception(string_+" at index="+index_+" there is no vowel.")
+            raise Exception(string_+" at index="+str(index_)+" there is no vowel.")
             
     def remove_accent(self, string_):
         """
