@@ -342,9 +342,8 @@ class Verb(Phrase):
             if pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE,self.is_reflexive) and not is_empty_str(conjugation_notes.conjugation):
                 # needed in imperative to correctly add in the reflexive pronoun 
                 # TODO: may not to check for explicit accent.
-                conjugation_notes.conjugation = self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
+                self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
                 
-            self._check_for_multiple_accents(tense, person, conjugation_notes.conjugation)
         conjugation_notes.complete()
         return conjugation_notes.conjugation
     
@@ -415,14 +414,14 @@ class Verb(Phrase):
                              conjugation = self.prefix + base_verb_conjugation)
             
         if _reflexive:
-            conjugation_notes.change(operation="add_reflexive",
-                     conjugation = self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied))
+            self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
         
         return conjugation_notes.full_conjugation
     
     def __apply_reflexive_pronoun(self, conjugation_notes, explicit_accent_already_applied):
         """
         assume that self.is_reflexive has been checked 
+        Note: Past_participle and adjective have no reflexive attached
         """
         if conjugation_notes.tense in Tenses.imperative:
             conjugation_notes.change(operation="apply_reflexive",
@@ -1041,15 +1040,6 @@ class Verb(Phrase):
         if self.root_verb_string and self.root_verb_string != self.base_verb_string:
             _tags.append(self.root_verb_string)
         return _tags
-    
-    def _check_for_multiple_accents(self, tense, person, conjugation):
-        """
-        Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
-        """
-        if not is_empty_str(conjugation):
-            accented = Vowels.accented_vowel_check.findall(conjugation)
-            if len(accented) > 1:
-                self.__raise("Too many accents in "+conjugation, tense, person)
                 
     def __raise(self, msg, tense=None, person=None, traceback_=None):
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.full_phrase, Tenses[tense].human_readable if tense is not None else "-", Persons[person] if person is not None else "-", msg)
@@ -1075,5 +1065,3 @@ class Verb(Phrase):
         insert_values_ = super().sql_insert_values()
         insert_values_.extend( [self.prefix_words, self.prefix, self.core_characters, self.inf_ending, self.verb_ending_index, self.reflexive.value, self.suffix_words, ",".join(self.conjugation_overrides), ",".join(self.appliedOverrides), self.manual_overrides_string, self.base_verb_string, self.root_verb_string, self.is_generated])    
         return insert_values_
-    
-    

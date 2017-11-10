@@ -2,6 +2,7 @@
 from .constants import *
 import json
 from .utils import cs_debug
+from .vowel import Vowels
 """
 This code holds the history of how the verb is conjugated
 1. Shows the rules used (in order)
@@ -125,6 +126,15 @@ class ConjugationNotes():
         self._conjugation_note_list.insert(0, conjugation_note)
         return conjugation_note
         
+    def _check_for_multiple_accents(self):
+        """
+        Error checking to make sure code did not accent multiple vowels. (or to make sure that we didn't forget to remove an accent)
+        """
+        if not is_empty_str(self.conjugation):
+            accented = Vowels.accented_vowel_check.findall(self.conjugation)
+            if len(accented) > 1:
+                self.__raise("Too many accents in "+self.conjugation, self.tense, self.person)
+                
     @property
     def operation(self):
         return self._operation;
@@ -170,7 +180,7 @@ class ConjugationNotes():
             for conjugation_note in self._conjugation_note_list:
                 if conjugation_note.conjugation is not None:
                     return conjugation_note.conjugation
-        return self.core_verb+self.ending
+        return (self.core_verb if self.core_verb is not None else '') + (self.ending if self.ending is not None else '')
         
     @property
     def tense(self):
@@ -212,6 +222,7 @@ class ConjugationNotes():
     
     def complete(self):
         self._completed = True
+        self._check_for_multiple_accents()
         
     def __raise(self, msg, traceback_=None):
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.phrase.full_phrase, 
