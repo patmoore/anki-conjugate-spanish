@@ -86,6 +86,10 @@ class ConjugationNote:
     @irregular_nature.setter
     def irregular_nature(self, irregular_nature):
         self._irregular_nature = irregular_nature
+        
+    @property
+    def is_irregular(self):
+        return self.irregular_nature != None and self.irregular_nature != IrregularNature.regular 
                   
     def __repr__(self):
         return {
@@ -114,10 +118,12 @@ class ConjugationNotes():
         inf_conjugation_note.core_verb = phrase.stem
         # TODO replace with infinitive_ending.code?
         inf_conjugation_note.ending = phrase.inf_ending
+        inf_conjugation_note.irregular_nature = IrregularNature.regular
         std_ending = infinitive_ending.get_standard_conjugation_ending(self, phrase.verb_ending_index)
         if std_ending is not None:
             std_conjugation_note = self._new_conjugation_note("std_ending")
             std_conjugation_note.ending = std_ending 
+            std_conjugation_note.irregular_nature = IrregularNature.regular
         
     def _new_conjugation_note(self, operation):
         if self.completed:
@@ -173,6 +179,8 @@ class ConjugationNotes():
             conjugation_note = self._new_conjugation_note(operation)
             for change_key in change_keys:
                 setattr(conjugation_note, change_key, kwargs[change_key])
+            irregular_nature = kwargs['irregular_nature'] if 'irregular_nature' in kwargs else IrregularNature.custom
+            conjugation_note.irregular_nature = irregular_nature
     
     @property
     def conjugation(self):
@@ -234,7 +242,7 @@ class ConjugationNotes():
         return { 
             'tense' : self.tense,
             'person' : self.person,
-            'changes' : [ conjugation_note.__repr__() for conjugation_note in self._conjugation_note_list ]
+            'changes' : [ conjugation_note.__repr__() for conjugation_note in self._conjugation_note_list if conjugation_note.is_irregular]
         }.__str__()
     
 class ConjugationTracking():

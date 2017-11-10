@@ -315,13 +315,17 @@ class Verb(Phrase):
             # a derived verb might override the base verb ( irse in the imperative) 
             for conjugation_override in conjugation_overrides:
                 if isinstance(conjugation_override, str):                    
-                    conjugation_notes.change("operation_conjugation", conjugation = conjugation_override)
+                    conjugation_notes.change("operation_conjugation",
+                                             irregular_nature=IrregularNature.custom,
+                                              conjugation = conjugation_override)
                     explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
                 elif conjugation_override is not None:
                     override_call = { 'tense': tense, 'person': person, "options":options }
                     try:
                         conjugation = conjugation_override(**override_call)
-                        conjugation_notes.change("operation_conjugation", conjugation = conjugation)
+                        conjugation_notes.change("operation_conjugation",
+                                                 irregular_nature=IrregularNature.custom,
+                                                  conjugation = conjugation)
                         explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
                     except Exception as e:
                         extype, ex, traceback_ = sys.exc_info()
@@ -651,11 +655,14 @@ class Verb(Phrase):
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
         third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options)
         if third_person_plural_conjugation[-3:] == 'ron':
-            conjugation_notes.change(operation="std_stem", core_verb = third_person_plural_conjugation[:-3])
+            conjugation_notes.change(operation="std_stem", irregular_nature=IrregularNature.regular,
+                                     core_verb = third_person_plural_conjugation[:-3])
             if conjugation_notes.person == Persons.first_person_plural:
                 # accent on last vowel                                
                 if _ending_vowel_check.search(conjugation_notes.core_verb):
-                    conjugation_notes.change(operation="correct accent", core_verb = Vowels.accent_at(conjugation_notes.core_verb))
+                    conjugation_notes.change(operation="correct accent",
+                                             irregular_nature = IrregularNature.sound_consistence,
+                                              core_verb = Vowels.accent_at(conjugation_notes.core_verb))
                 else:
                     # assuming last stem character is a vowel
                     # and assuming already accented for some reason
