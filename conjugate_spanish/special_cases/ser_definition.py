@@ -5,8 +5,8 @@ from conjugate_spanish.standard_endings import Standard_Conjugation_Endings, Inf
 from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from .ir_definition import Past_Tense_IR_CO
 
-def _remove_i(self, tense,person, **kwargs):
-    return Standard_Conjugation_Endings[Infinitive_Endings.er_verb][tense][person][1:]
+def _remove_i(self, conjugation_notes, **kwargs):
+    return Standard_Conjugation_Endings[Infinitive_Endings.er_verb][conjugation_notes.tense][conjugation_notes.person][1:]
 
 _conjugation_overrides = ConjugationOverride(parents=[Past_Tense_IR_CO, 'oy'], key="ser")
 _conjugation_overrides.override_tense(Tenses.present_tense, [None, 'eres', 'es', 'somos', 'sois', 'son'])

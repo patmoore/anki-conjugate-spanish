@@ -184,12 +184,20 @@ class ConjugationNotes():
     
     @property
     def conjugation(self):
+        explicit_conjugation_ = self.explicit_conjugation
+        if explicit_conjugation_ is not None:
+            return explicit_conjugation_
+        else:
+            return (self.core_verb if self.core_verb is not None else '') + (self.ending if self.ending is not None else '')
+        
+    @property
+    def explicit_conjugation(self):
         if not self.blocked:
             for conjugation_note in self._conjugation_note_list:
                 if conjugation_note.conjugation is not None:
                     return conjugation_note.conjugation
-        return (self.core_verb if self.core_verb is not None else '') + (self.ending if self.ending is not None else '')
-        
+        return None
+    
     @property
     def tense(self):
         return self._tense

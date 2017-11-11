@@ -320,7 +320,7 @@ class Verb(Phrase):
                                               conjugation = conjugation_override)
                     explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
                 elif conjugation_override is not None:
-                    override_call = { 'tense': tense, 'person': person, "options":options }
+                    override_call = { 'conjugation_notes': conjugation_notes, "options":options }
                     try:
                         conjugation = conjugation_override(**override_call)
                         conjugation_notes.change("operation_conjugation",
@@ -329,7 +329,7 @@ class Verb(Phrase):
                         explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
                     except Exception as e:
                         extype, ex, traceback_ = sys.exc_info()
-                        formatted = traceback.format_exception_only(traceback_,extype, ex)[-1]
+                        formatted = traceback.format_exception_only(traceback_,extype)[-1]
                         message = "Trying to conjugate irregular:%s %s" % ex.message, formatted
                         self.__raise(message, tense, person, traceback_)
             
@@ -442,7 +442,7 @@ class Verb(Phrase):
             if isinstance(override, str):
                 conjugation_notes.change(operation='stem_override', core_verb = override)
             elif override is not None:
-                override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': conjugation_notes.core_verb, 'ending' : conjugation_notes.ending }
+                override_call = { 'conjugation_notes': conjugation_notes }
                 try:
                     conjugation_notes.change(operation='stem_override', core_verb = override(**override_call))
                 except Exception as e:
@@ -482,7 +482,7 @@ class Verb(Phrase):
             if isinstance(override, str):
                 conjugation_notes.change(operation = "ending_override", ending = override)
             elif override:
-                override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': self.stem, 'ending' : conjugation_notes.ending }
+                override_call = { 'conjugation_notes': conjugation_notes }
                 try:
                     conjugation_notes.change(operation = "ending_override", ending = override(**override_call))
                 except Exception as e:
@@ -502,10 +502,10 @@ class Verb(Phrase):
         if overrides is not None:
             for override in get_iterable(overrides):
                 if override is not None:
-                    override_call = { 'tense': conjugation_notes.tense, 'person': conjugation_notes.person, 'stem': conjugation_notes.core_verb, 'ending' : conjugation_notes.ending }
+                    override_call = { 'conjugation_notes': conjugation_notes }
                     try:
-                        [core_verb, ending] = override(**override_call)
-                        conjugation_notes.change(operation='conjugation_override', core_verb=core_verb, ending=ending)
+                        override(**override_call)
+#                         conjugation_notes.change(operation='conjugation_override', core_verb=core_verb, ending=ending)
                     except Exception as e:
                         extype, ex, tb = sys.exc_info()
                         traceback.print_tb(tb)
@@ -548,7 +548,7 @@ class Verb(Phrase):
             return None
         
         # Step #1 - for verbs with no override conjugation - get the conjugation        
-        if conjugation_notes.conjugation is None:
+        if conjugation_notes.explicit_conjugation is None:
             # For most persons the conjugation is the present_subjective ( because imperative is a "mood" - enhancement to the present_subjective )
             if conjugation_notes.tense == Tenses.imperative_negative or conjugation_notes.person not in Persons.second_person:
                 # all negative imperatives use the present_subjective AND all positives EXCEPT second person

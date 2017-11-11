@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # See github page to report issues or to contribute:
 import sys
-import conjugate_spanish
 from conjugate_spanish import Espanol_Dictionary
 from conjugate_spanish.constants import Tense, Tenses, Persons, Person
 Espanol_Dictionary.load()

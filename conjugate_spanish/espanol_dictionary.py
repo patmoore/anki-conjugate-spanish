@@ -2,19 +2,14 @@
 
 # These are the standard words (special case)
 import codecs
-import traceback
 import csv
 from .verb import Verb
 from .constants import *
 
-from .conjugation_override import ConjugationOverride
 import os
-from test.test_decimal import directory
 from .nonconjugated_phrase import NonConjugatedPhrase
 from .utils import cs_debug
 from .storage import Storage
-from conjugate_spanish.verb import Reflexive
-import conjugate_spanish
 
 """
 load dictionaries/*-verbs.csv
