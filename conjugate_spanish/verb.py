@@ -63,12 +63,12 @@ class Verb(Phrase):
         if phrase_match is None:
             self.__raise(self.phrase_string+": does not appear to be a verb or phrase with verb infinitive in it.")            
 
-        self.prefix_words = prefix_words
+        self._prefix_words = prefix_words
         self.prefix = prefix
         self.core_characters = core_characters
         self.inf_ending = inf_ending
         self.reflexive = Reflexive.get(reflexive)        
-        self.suffix_words = suffix_words
+        self._suffix_words = suffix_words
         self.conjugation_tracking = ConjugationTracking(self)
         self.correct_infinitive()
         
@@ -620,7 +620,7 @@ class Verb(Phrase):
                     elif conjugation_notes.conjugation[-2:] == 'íd':
                         returned_conjugation = _replace_last_letter_of_stem(conjugation_notes.conjugation, 'd', pronoun_indirect)
                     else:
-                        self.__raise("don't know how to handle:"+conjugation_notes.conjugation, conjugation_notes.tense, conjugation_notes.person)
+                        self.__raise("don't know how to handle:'"+conjugation_notes.conjugation+"'", conjugation_notes.tense, conjugation_notes.person)
                 else:
                     # ex: ¡Sentaos! - Sit down! ( the spoken accent will be on the ending a )
                     returned_conjugation = _replace_last_letter_of_stem(Vowels.remove_accent(conjugation_notes.conjugation), 'd', pronoun_indirect)
@@ -817,6 +817,22 @@ class Verb(Phrase):
     def canApply(self,override_or_key):
         key = override_or_key if isinstance(override_or_key, str) else override_or_key.key
         return key not in self.doNotApply and key not in self.appliedOverrides        
+    
+    @property
+    def prefix_words(self):
+        return self._prefix_words
+    
+    @property
+    def has_prefix_words(self):
+        return self._prefix_words is not None and len(self._prefix_words) > 0
+    
+    @property
+    def suffix_words(self):
+        return self._suffix_words
+    
+    @property
+    def has_suffix_words(self):
+        return self._suffix_words is not None and len(self._suffix_words) > 0
     
     @property
     def prefix(self):

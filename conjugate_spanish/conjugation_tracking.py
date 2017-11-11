@@ -212,9 +212,11 @@ class ConjugationNotes():
     
     @property
     def full_conjugation(self):
-        full = '' if self.phrase.prefix_words is None else self.phrase.prefix_words + ' '
-        full += self.conjugation
-        if self.phrase.suffix_words is not None:
+        if self.phrase.has_prefix_words:
+            full = self.phrase.prefix_words + ' ' + self.conjugation
+        else:
+            full = self.conjugation
+        if self.phrase.has_suffix_words:
             full += ' ' + self.phrase.suffix_words
         return full
     
