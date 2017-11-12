@@ -10,6 +10,7 @@ if len(sys.argv) < 2:
 #     print("tenses=" + str(Tenses))
 #     print("persons=" + str(Persons))
     for verb in Espanol_Dictionary.verbDictionary.values():
+        print(verb.full_phrase)
         verb.conjugate_all_tenses()
     exit(0)
     

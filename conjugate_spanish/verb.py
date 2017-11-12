@@ -353,17 +353,17 @@ class Verb(Phrase):
             if not _reflexive and Vowels.ends_in_ns(base_verb_conjugation) is not None:
                 # obtén (obtener) get the accent but deshaz ( deshacer ) does not 
                 conjugation_notes.change(operation="single_vowel_accented_prefix", 
-                         conjugation = self.prefix + Vowels.accent_at(base_verb_conjugation, single_vowel_match.start(2)))
+                         conjugation = self.prefix + Vowels.accent_at(base_verb_conjugation, single_vowel_match.start(2)), irregular_nature=IrregularNature.regular)
             else:
                 conjugation_notes.change(operation="single_vowel_unaccented_noprefix",
-                                 conjugation = self.prefix + base_verb_conjugation)                
+                                 conjugation = self.prefix + base_verb_conjugation, irregular_nature=IrregularNature.regular)                
 #         elif single_vowel_match is not None:
             # leave comment in so that i know this has been checked.
             # traer and atraer -- this is fine : no accenting
 #             self.__raise("Single vowel case in tense", tense, person)
         else:
             conjugation_notes.change(operation="add_prefix", 
-                             conjugation = self.prefix + base_verb_conjugation)
+                             conjugation = self.prefix + base_verb_conjugation, irregular_nature=IrregularNature.regular)
             
         if _reflexive:
             self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
@@ -388,11 +388,11 @@ class Verb(Phrase):
     def conjugate_stem(self, conjugation_notes):
         def __check_override(override):
             if isinstance(override, str):
-                conjugation_notes.change(operation='stem_override', core_verb = override)
+                conjugation_notes.change(operation='stem_override', core_verb = override, irregular_nature=IrregularNature.custom)
             elif override is not None:
                 override_call = { 'conjugation_notes': conjugation_notes }
                 try:
-                    conjugation_notes.change(operation='stem_override', core_verb = override(**override_call))
+                    core_verb = override(**override_call)
                 except Exception as e:
                     extype, ex, tb = sys.exc_info()
                     traceback.print_tb(tb)
@@ -401,14 +401,14 @@ class Verb(Phrase):
                     self.__raise(message, conjugation_notes.tense, conjugation_notes.person, tb)
 
         if conjugation_notes.tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense, Tenses.gerund, Tenses.past_participle]:
-            conjugation_notes.change(operation="std_stem", core_verb = self.stem)
+            conjugation_notes.change(operation="std_stem", core_verb = self.stem, irregular_nature=IrregularNature.regular)
         elif conjugation_notes.tense == Tenses.adjective:
             past_participle_conjugation_notes = self.conjugation_tracking.get_conjugation_notes(Tenses.past_participle)
             if not past_participle_conjugation_notes.completed:
                 self.conjugate_stem(past_participle_conjugation_notes)
-            conjugation_notes.change(operation="std_stem", core_verb = past_participle_conjugation_notes.core_verb)
+            conjugation_notes.change(operation="std_stem", core_verb = past_participle_conjugation_notes.core_verb, irregular_nature=IrregularNature.regular)
         elif conjugation_notes.tense in [ Tenses.future_tense, Tenses.conditional_tense]:
-            conjugation_notes.change(operation="std_stem", core_verb = Vowels.remove_accent(self.inf_verb_string))
+            conjugation_notes.change(operation="std_stem", core_verb = Vowels.remove_accent(self.inf_verb_string), irregular_nature=IrregularNature.regular)
         elif conjugation_notes.tense == Tenses.present_subjective_tense:
             self.__conjugation_present_subjective_stem(conjugation_notes)
         elif conjugation_notes.tense == Tenses.past_subjective_tense:
@@ -428,11 +428,11 @@ class Verb(Phrase):
     def conjugate_ending(self, conjugation_notes):
         def __check_override(override):
             if isinstance(override, str):
-                conjugation_notes.change(operation = "ending_override", ending = override)
+                conjugation_notes.change(operation = "ending_override", ending = override, irregular_nature=IrregularNature.custom)
             elif override:
                 override_call = { 'conjugation_notes': conjugation_notes }
                 try:
-                    conjugation_notes.change(operation = "ending_override", ending = override(**override_call))
+                    override(**override_call)
                 except Exception as e:
                     extype, ex, traceback_ = sys.exc_info()
 #                         formatted = traceback_.format_exception_only(extype, ex)[-1]
@@ -453,7 +453,6 @@ class Verb(Phrase):
                     override_call = { 'conjugation_notes': conjugation_notes }
                     try:
                         override(**override_call)
-#                         conjugation_notes.change(operation='conjugation_override', core_verb=core_verb, ending=ending)
                     except Exception as e:
                         extype, ex, tb = sys.exc_info()
                         traceback.print_tb(tb)
@@ -501,7 +500,7 @@ class Verb(Phrase):
             if conjugation_notes.tense == Tenses.imperative_negative or conjugation_notes.person not in Persons.second_person:
                 # all negative imperatives use the present_subjective AND all positives EXCEPT second person
                 conjugation_notes.change(operation='', 
-                     conjugation = self.conjugate(Tenses.present_subjective_tense, conjugation_notes.person))
+                     conjugation = self.conjugate(Tenses.present_subjective_tense, conjugation_notes.person), irregular_nature=IrregularNature.regular)
 #                 if person == Persons.first_person_plural and verb.reflexive:
 #                     # properly prepare the verb by removing the trailing 's'
 #                     # TODO: notice we don't handle a case of irregular nosotros - that does not have a trailing 's'
@@ -510,10 +509,10 @@ class Verb(Phrase):
 #                     _conjugation = _replace_last_letter_of_stem(_conjugation, u's', u'')
             elif conjugation_notes.person == Persons.second_person_singular and conjugation_notes.tense == Tenses.imperative_positive:
                 # positive tu form uses present tense usted                
-                conjugation_notes.change(operation = '', conjugation = self.conjugate(Tenses.present_tense, Persons.third_person_singular))
+                conjugation_notes.change(operation = '', conjugation = self.conjugate(Tenses.present_tense, Persons.third_person_singular), irregular_nature=IrregularNature.regular)
             elif conjugation_notes.person == Persons.second_person_plural and conjugation_notes.tense == Tenses.imperative_positive:                
                 # remove 'r' from infinitive - and replace it with 'd'
-                conjugation_notes.change(operation = '', conjugation = _replace_last_letter_of_stem(self.inf_verb_string, 'r', 'd'))
+                conjugation_notes.change(operation = '', conjugation = _replace_last_letter_of_stem(self.inf_verb_string, 'r', 'd'), irregular_nature=IrregularNature.regular)
             else:
                 self.__raise("Missed case"+conjugation_notes.tense+" "+conjugation_notes.person)                      
         
@@ -583,17 +582,17 @@ class Verb(Phrase):
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
         first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
         if first_person_conjugation[-1:] =='o':
-            conjugation_notes.change(operation="std_stem_from_1st_present", core_verb = first_person_conjugation[:-1])            
+            conjugation_notes.change(operation="std_stem_from_1st_present", core_verb = first_person_conjugation[:-1], irregular_nature=IrregularNature.regular)            
         elif first_person_conjugation[-2:] == 'oy':
             # estoy, doy, voy, etc.
-            conjugation_notes.change(operation="std_stem_from_1st_present_drop_oy", core_verb = first_person_conjugation[:-2])
+            conjugation_notes.change(operation="std_stem_from_1st_present_drop_oy", core_verb = first_person_conjugation[:-2], irregular_nature=IrregularNature.regular)
         else:
             # haber (he) is just such an example - but there better be an override available.
             return None
 #             self.__raise("First person conjugation does not end in 'o' = "+first_person_conjugation)
         # HACK: Not certain if this is correct - but i checked enviar and reunierse - shich both have an accented 1st sing present stem.
         if conjugation_notes.person in [ Persons.first_person_plural, Persons.second_person_plural ]:
-            conjugation_notes.change(operation='remove_accent', core_verb = Vowels.remove_accent(conjugation_notes.core_verb))
+            conjugation_notes.change(operation='remove_accent', core_verb = Vowels.remove_accent(conjugation_notes.core_verb), irregular_nature=IrregularNature.regular)
 
     def __conjugation_past_subjective_stem(self, conjugation_notes):
         """

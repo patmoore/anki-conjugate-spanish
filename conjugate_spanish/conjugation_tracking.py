@@ -145,9 +145,18 @@ class ConjugationNotes():
     def operation(self):
         return self._operation;
     
-    @operation.setter
-    def operation(self, operation):
+    @property
+    def irregular_nature(self):
+        return reduce(lambda x,y: x if x > y else y, [conjugation_note.irregular_nature for conjugation_note in self._conjugation_note_list ])
+    
+    def batch(self, operation, irregular_nature):
         self._operation = operation
+        self._irregular_nature_in_progress = irregular_nature
+        return self
+        
+    def end_batch(self):
+        self._operation = None
+        return self
         
     @property
     def core_verb(self):
@@ -165,12 +174,22 @@ class ConjugationNotes():
                     return conjugation_note.ending
         return None
     
-    def change(self, operation, **kwargs):
+    def change(self, operation=None, irregular_nature=None, **kwargs):
         """
         Some tenses depend on other tenses / person
         """
         if self.blocked:
             self.__raise("blocked")
+        if operation is None:
+            operation = self.operation
+        else:
+            self._operation = None
+            
+        if irregular_nature is None:
+            irregular_nature = self._irregular_nature_in_progress
+        else:
+            self._irregular_nature_in_progress = None
+            
         change_keys = []
         for change_key in ['conjugation', 'core_verb', 'ending']:
             if change_key in kwargs and getattr(self, change_key) != kwargs[change_key]:
@@ -179,7 +198,6 @@ class ConjugationNotes():
             conjugation_note = self._new_conjugation_note(operation)
             for change_key in change_keys:
                 setattr(conjugation_note, change_key, kwargs[change_key])
-            irregular_nature = kwargs['irregular_nature'] if 'irregular_nature' in kwargs else IrregularNature.custom
             conjugation_note.irregular_nature = irregular_nature
     
     @property
