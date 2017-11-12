@@ -13,6 +13,7 @@ import types
 from .phrase import Phrase
 from .standard_endings import *
 from conjugate_spanish.conjugation_tracking import ConjugationTracking, ConjugationNotes
+from conjugate_spanish.constants import IrregularNature
 
 _ending_vowel_check = re_compile(Vowels.all_group+'$')
 # check for word with only a single vowel ( used in imperative conjugation )
@@ -281,10 +282,8 @@ class Verb(Phrase):
                         message = "Trying to conjugate irregular:%s %s" % ex.message, formatted
                         self.__raise(message, tense, person, traceback_)
             
-        elif self.base_verb is not None:  
-            # should not save it in the conjugation...           
-            conjugation = self.__derived_conjugation(conjugation_notes, options)
-            conjugation_notes.change(operation="derived", conjugation=conjugation)
+        elif self.base_verb is not None:            
+            self.__derived_conjugation(conjugation_notes, options)
         else:            
             self._conjugate_stem_and_endings(conjugation_notes, options)
                 
@@ -308,8 +307,7 @@ class Verb(Phrase):
             self.conjugate_stem(conjugation_notes)
             self.conjugation_joining(conjugation_notes)
         else:
-            conjugation_notes.change(operation='',conjugation = self.__conjugation_imperative(conjugation_notes))
-        return conjugation_notes.conjugation
+            self.__conjugation_imperative(conjugation_notes)
         
     def __derived_conjugation(self, conjugation_notes, options):
         """ This verb is based on another verb: example: abstenerse is based on tener
@@ -367,8 +365,6 @@ class Verb(Phrase):
             
         if _reflexive:
             self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
-        
-        return conjugation_notes.full_conjugation
     
     def __apply_reflexive_pronoun(self, conjugation_notes, explicit_accent_already_applied):
         """
@@ -376,14 +372,11 @@ class Verb(Phrase):
         Note: Past_participle and adjective have no reflexive attached
         """
         if conjugation_notes.tense in Tenses.imperative:
-            conjugation_notes.change(operation="apply_reflexive",
-                      conjugation = self.__apply_imperative_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied))                       
+            self.__apply_imperative_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)                      
         elif conjugation_notes.tense not in Tenses.Person_Agnostic:
             conjugation_notes.change(operation="apply_reflexive", conjugation = Persons_Indirect[conjugation_notes.person] +" "+ conjugation_notes.conjugation)
         elif conjugation_notes.tense == Tenses.gerund:
             conjugation_notes.change(operation="apply_reflexive",conjugation = Vowels.accent(conjugation_notes.conjugation)+Persons_Indirect[Person.third_person_plural])
-        
-        return conjugation_notes.conjugation
             
     def conjugate_stem(self, conjugation_notes):
         def __check_override(override):
@@ -423,7 +416,6 @@ class Verb(Phrase):
         
         if conjugation_notes.core_verb is None:
             self.__raise("no stem created", conjugation_notes.tense, conjugation_notes.person)
-        return conjugation_notes.core_verb
         
     def conjugate_ending(self, conjugation_notes):
         def __check_override(override):
@@ -443,7 +435,6 @@ class Verb(Phrase):
         if overrides is not None:
             for override in get_iterable(overrides):
                 __check_override(override)
-        return conjugation_notes.ending
     
     def conjugation_joining(self, conjugation_notes):
         overrides = self.__get_override(conjugation_notes, 'conjugation_joins')
@@ -516,8 +507,7 @@ class Verb(Phrase):
             else:
                 self.__raise("Missed case"+conjugation_notes.tense+" "+conjugation_notes.person)                      
         
-        returned_conjugation = self.__apply_imperative_reflexive_pronoun(conjugation_notes)
-        return returned_conjugation
+        self.__apply_imperative_reflexive_pronoun(conjugation_notes)
     
     def __apply_imperative_reflexive_pronoun(self, conjugation_notes, explicit_accent_already_applied=False):
         # Step 3 - handle the placement of the indirect pronoun for reflexive verbs.  
@@ -575,7 +565,7 @@ class Verb(Phrase):
                 self.__raise("applying reflexive pronoun", conjugation_notes.tense, conjugation_notes.person)
         else:
             returned_conjugation = conjugation_notes.conjugation
-        return returned_conjugation
+        conjugation_notes.change(operation='__apply_imperative_reflexive_pronoun', irregular_nature=IrregularNature.regular, conjugation= returned_conjugation)
              
     def __conjugation_present_subjective_stem(self, conjugation_notes):
         # need to force for verbs that are normally third person only
