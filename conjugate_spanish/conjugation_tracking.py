@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from .constants import *
 import json
+from functools import reduce
 from .utils import cs_debug
 from .vowel import Vowels
 """
@@ -96,7 +97,8 @@ class ConjugationNote:
                 'operation' : self.operation,
                 'conjugation' : self.conjugation,
                 'core_verb' : self.core_verb,
-                'ending' : self.ending
+                'ending' : self.ending,
+                'irregular_nature' : self.irregular_nature
                 }
             
 class ConjugationNotes():
@@ -141,6 +143,10 @@ class ConjugationNotes():
             if len(accented) > 1:
                 self.__raise("Too many accents in "+self.conjugation, self.tense, self.person)
                 
+    @property
+    def conjugation_note_list(self):
+        return self._conjugation_note_list
+    
     @property
     def operation(self):
         return self._operation;
@@ -247,6 +253,7 @@ class ConjugationNotes():
         self._blocked = True
         self._new_conjugation_note("blocked")
         self.complete()
+        return self
         
     @property
     def blocked(self):
@@ -259,6 +266,11 @@ class ConjugationNotes():
     def complete(self):
         self._completed = True
         self._check_for_multiple_accents()
+        return self
+    
+    @property
+    def is_regular(self):
+        return self.irregular_nature == IrregularNature.regular
         
     def __raise(self, msg, traceback_=None):
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.phrase.full_phrase, 

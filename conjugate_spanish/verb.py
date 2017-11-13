@@ -296,7 +296,7 @@ class Verb(Phrase):
                 self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
                 
         conjugation_notes.complete()
-        return conjugation_notes.conjugation
+        return conjugation_notes
     
     def _conjugate_stem_and_endings(self, conjugation_notes, options):
         """
@@ -324,15 +324,16 @@ class Verb(Phrase):
         # we never want the base verb to apply the reflexive pronoun - irregardless of reflexive_override
         _options = { **options, **{ConjugationOverride.REFLEXIVE_OVERRIDE : False} }
         base_verb_conjugation = self.base_verb.conjugate(conjugation_notes.tense, conjugation_notes.person, _options)
-        if base_verb_conjugation is None:
+        if base_verb_conjugation.blocked:
             # imperative, third-person only verbs
-            return None
+            conjugation_notes.block()
+            return
         
         # done because of multiple layers of derivation.
         _reflexive = pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE, self.is_reflexive)
         explicit_accent_already_applied = False
         # TODO: look for 2/3 vowel dipthongs as well
-        single_vowel_match = _single_vowel_re.match(base_verb_conjugation)        
+        single_vowel_match = _single_vowel_re.match(base_verb_conjugation.conjugation)        
         
         if conjugation_notes.tense == Tenses.imperative_positive and conjugation_notes.person == Persons.second_person_singular and single_vowel_match is not None:
             #
@@ -351,17 +352,17 @@ class Verb(Phrase):
             if not _reflexive and Vowels.ends_in_ns(base_verb_conjugation) is not None:
                 # obtén (obtener) get the accent but deshaz ( deshacer ) does not 
                 conjugation_notes.change(operation="single_vowel_accented_prefix", 
-                         conjugation = self.prefix + Vowels.accent_at(base_verb_conjugation, single_vowel_match.start(2)), irregular_nature=IrregularNature.regular)
+                         conjugation = self.prefix + Vowels.accent_at(base_verb_conjugation.conjugation, single_vowel_match.start(2)), irregular_nature=base_verb_conjugation.irregular_nature)
             else:
                 conjugation_notes.change(operation="single_vowel_unaccented_noprefix",
-                                 conjugation = self.prefix + base_verb_conjugation, irregular_nature=IrregularNature.regular)                
+                                 conjugation = self.prefix + base_verb_conjugation.conjugation, irregular_nature=base_verb_conjugation.irregular_nature)                
 #         elif single_vowel_match is not None:
             # leave comment in so that i know this has been checked.
             # traer and atraer -- this is fine : no accenting
 #             self.__raise("Single vowel case in tense", tense, person)
         else:
             conjugation_notes.change(operation="add_prefix", 
-                             conjugation = self.prefix + base_verb_conjugation, irregular_nature=IrregularNature.regular)
+                             conjugation = self.prefix + base_verb_conjugation.conjugation, irregular_nature=base_verb_conjugation.irregular_nature)
             
         if _reflexive:
             self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
@@ -374,9 +375,11 @@ class Verb(Phrase):
         if conjugation_notes.tense in Tenses.imperative:
             self.__apply_imperative_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)                      
         elif conjugation_notes.tense not in Tenses.Person_Agnostic:
-            conjugation_notes.change(operation="apply_reflexive", conjugation = Persons_Indirect[conjugation_notes.person] +" "+ conjugation_notes.conjugation)
+            conjugation_notes.change(operation="apply_reflexive", conjugation = Persons_Indirect[conjugation_notes.person] +" "+ conjugation_notes.conjugation,
+                                     irregular_nature=IrregularNature.regular)
         elif conjugation_notes.tense == Tenses.gerund:
-            conjugation_notes.change(operation="apply_reflexive",conjugation = Vowels.accent(conjugation_notes.conjugation)+Persons_Indirect[Person.third_person_plural])
+            conjugation_notes.change(operation="apply_reflexive",conjugation = Vowels.accent(conjugation_notes.conjugation)+Persons_Indirect[Person.third_person_plural],
+                                     irregular_nature=IrregularNature.regular)
             
     def conjugate_stem(self, conjugation_notes):
         def __check_override(override):

@@ -104,7 +104,8 @@ class BaseConsts_(list):
         
     @property
     def all(self):
-        return list(range(len(self)))
+        return self
+    
     def all_except(self, _except):
         if not isinstance(_except, list):
             _except = [ _except ]
