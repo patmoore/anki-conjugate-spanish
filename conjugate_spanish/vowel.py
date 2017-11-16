@@ -208,7 +208,7 @@ class Vowels_():
         return result
         
     def ends_in_ns(self, string_):
-       return self._ends_in_ns.match(string_) 
+        return self._ends_in_ns.match(string_) 
     
 Vowels = Vowels_()
 if True:

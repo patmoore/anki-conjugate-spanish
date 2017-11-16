@@ -197,6 +197,14 @@ class ConjugationNotes():
             self._irregular_nature_in_progress = None
             
         change_keys = []
+        if 'conjugation' in kwargs and isinstance(kwargs['conjugation'], ConjugationNotes):
+            conjugation = kwargs['conjugation']
+            if conjugation.conjugation is not None:
+                self._conjugation_note_list = [ ]
+                kwargs['conjugation'] = conjugation.conjugation
+                kwargs['core_verb'] = conjugation.core_verb
+                kwargs['ending'] = conjugation.ending
+                
         for change_key in ['conjugation', 'core_verb', 'ending']:
             if change_key in kwargs and getattr(self, change_key) != kwargs[change_key]:
                 change_keys.append(change_key)
@@ -250,9 +258,10 @@ class ConjugationNotes():
         For example, first person singular imperative
         or 3rd person only verbs
         """
-        self._blocked = True
-        self._new_conjugation_note("blocked")
-        self.complete()
+        if not self.blocked: 
+            self._blocked = True
+            self._new_conjugation_note("blocked")
+            self.complete()
         return self
         
     @property

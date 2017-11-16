@@ -1,6 +1,6 @@
 from interface import implements, Interface
 from .constants import Persons, Tenses
-from conjugate_spanish.constants import BaseConst
+from conjugate_spanish.constants import BaseConst, IrregularNature
     
 class PhrasePrinter(Interface):
     def print(self, *, tenses=Tenses.all, persons=Persons.all, options={}):
@@ -42,8 +42,9 @@ class CsvPrinter(implements(PhrasePrinter)):
         return result
     
 class ScreenPrinter(implements(PhrasePrinter)):
-    def __init__(self, phrase):
+    def __init__(self, phrase, irregular_nature = IrregularNature.regular):
         self._phrase = phrase
+        self._irregular_nature = irregular_nature
         
     @property
     def phrase(self):
@@ -55,25 +56,37 @@ class ScreenPrinter(implements(PhrasePrinter)):
             self.print_tense(tense, persons)
                 
     def print_tense(self, tense, persons=Persons.all):
-        print(tense.human_readable+ "(" 
-          + str(tense._value_) + "):")
-        print('\t', end='')
+        def _print_header_():
+            print(tense.human_readable+ "(" 
+              + str(tense._value_) + "):")
+            print('\t', end='')
+        _print_header_()
         if tense in Tenses.Person_Agnostic:
             conjugation_notes = self.phrase.conjugate(tense)
-            self._print_conjugation_notes(conjugation_notes) 
+            if conjugation_notes.irregular_nature >= self._irregular_nature:
+                _print_header_()
+                self._print_conjugation_notes(conjugation_notes) 
+                print()
         else:
+            conj_list = []
             for person in persons:
                 conjugation_notes = self.phrase.conjugate(tense, person)
-                print(person.human_readable + "(" 
-                  + str(person._value_) + "):", end=' ')
+                if conjugation_notes is not None and conjugation_notes.irregular_nature >= self._irregular_nature:
+                    conj_list.append(conjugation_notes)
+            
+            if len(conj_list) > 0:
+                _print_header_()
+                for conjugation_notes in conj_list:
+                    print(conjugation_notes.person.human_readable + "(" 
+                          + str(conjugation_notes.person._value_) + "):", end=' ')
                 
-                self._print_conjugation_notes(conjugation_notes)    
-        print()
+                    self._print_conjugation_notes(conjugation_notes)    
+                print()
     
     def _print_conjugation_notes(self, conjugation_notes):
         if conjugation_notes is None:
             print("---", end='; ')
-        else:
+        elif conjugation_notes.irregular_nature >= self._irregular_nature:
             print(conjugation_notes.full_conjugation, end='')            
             if not conjugation_notes.is_regular:
                 print('', end=' <= ')

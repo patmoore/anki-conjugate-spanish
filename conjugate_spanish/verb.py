@@ -248,54 +248,50 @@ class Verb(Phrase):
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
         """           
         conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
-        if conjugation_notes.completed:
-            return conjugation_notes.conjugation 
-                    
         if tense in Tenses.imperative and person == Persons.first_person_singular:
-            conjugation_notes.block()
-            return None        
+            conjugation_notes.block()        
         elif tense not in Tenses.Person_Agnostic and person not in Persons.all:
             self.__raise("Tense "+Tenses[tense]+" needs a person", tense, person)
+        elif not conjugation_notes.completed:
+            conjugation_overrides = self.__get_override(conjugation_notes, 'conjugations')
+            explicit_accent_already_applied = False
             
-        conjugation_overrides = self.__get_override(conjugation_notes, 'conjugations')
-        explicit_accent_already_applied = False
-        
-        if conjugation_overrides is not None:
-            # a derived verb might override the base verb ( irse in the imperative) 
-            for conjugation_override in conjugation_overrides:
-                if isinstance(conjugation_override, str):                    
-                    conjugation_notes.change("operation_conjugation",
-                                             irregular_nature=IrregularNature.custom,
-                                              conjugation = conjugation_override)
-                    explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
-                elif conjugation_override is not None:
-                    override_call = { 'conjugation_notes': conjugation_notes, "options":options }
-                    try:
-                        conjugation = conjugation_override(**override_call)
+            if conjugation_overrides is not None:
+                # a derived verb might override the base verb ( irse in the imperative) 
+                for conjugation_override in conjugation_overrides:
+                    if isinstance(conjugation_override, str):                    
                         conjugation_notes.change("operation_conjugation",
                                                  irregular_nature=IrregularNature.custom,
-                                                  conjugation = conjugation)
+                                                  conjugation = conjugation_override)
                         explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
-                    except Exception as e:
-                        extype, ex, traceback_ = sys.exc_info()
-                        formatted = traceback.format_exception_only(traceback_,extype)[-1]
-                        message = "Trying to conjugate irregular:%s %s" % ex.message, formatted
-                        self.__raise(message, tense, person, traceback_)
-            
-        elif self.base_verb is not None:            
-            self.__derived_conjugation(conjugation_notes, options)
-        else:            
-            self._conjugate_stem_and_endings(conjugation_notes, options)
+                    elif conjugation_override is not None:
+                        override_call = { 'conjugation_notes': conjugation_notes, "options":options }
+                        try:
+                            conjugation = conjugation_override(**override_call)
+                            conjugation_notes.change("operation_conjugation",
+                                                     irregular_nature=IrregularNature.custom,
+                                                      conjugation = conjugation)
+                            explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
+                        except Exception as e:
+                            extype, ex, traceback_ = sys.exc_info()
+                            formatted = traceback.format_exception_only(traceback_,extype)[-1]
+                            message = "Trying to conjugate irregular:%s %s" % ex.message, formatted
+                            self.__raise(message, tense, person, traceback_)
                 
-        if self.base_verb is None:
-            # The derived conjugation code had to add in the prefix characters and other words already
-            # and other words in the phrase may be accented.
-            if pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE,self.is_reflexive) and not is_empty_str(conjugation_notes.conjugation):
-                # needed in imperative to correctly add in the reflexive pronoun 
-                # TODO: may not to check for explicit accent.
-                self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
-                
-        conjugation_notes.complete()
+            elif self.base_verb is not None:            
+                self.__derived_conjugation(conjugation_notes, options)
+            else:            
+                self._conjugate_stem_and_endings(conjugation_notes, options)
+                    
+            if self.base_verb is None:
+                # The derived conjugation code had to add in the prefix characters and other words already
+                # and other words in the phrase may be accented.
+                if pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE,self.is_reflexive) and not is_empty_str(conjugation_notes.conjugation):
+                    # needed in imperative to correctly add in the reflexive pronoun 
+                    # TODO: may not to check for explicit accent.
+                    self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
+                    
+            conjugation_notes.complete()
         return conjugation_notes
     
     def _conjugate_stem_and_endings(self, conjugation_notes, options):
@@ -573,7 +569,7 @@ class Verb(Phrase):
     def __conjugation_present_subjective_stem(self, conjugation_notes):
         # need to force for verbs that are normally third person only
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
-        first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
+        first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options).conjugation
         if first_person_conjugation[-1:] =='o':
             conjugation_notes.change(operation="std_stem_from_1st_present", core_verb = first_person_conjugation[:-1], irregular_nature=IrregularNature.regular)            
         elif first_person_conjugation[-2:] == 'oy':
