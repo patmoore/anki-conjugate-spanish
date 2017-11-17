@@ -57,14 +57,13 @@ class ScreenPrinter(implements(PhrasePrinter)):
                 
     def print_tense(self, tense, persons=Persons.all):
         def _print_header_():
-            print(tense.human_readable+ "(" 
+            print("  "+tense.human_readable+ "(" 
               + str(tense._value_) + "):")
-            print('\t', end='')
+
         _print_header_()
         if tense in Tenses.Person_Agnostic:
             conjugation_notes = self.phrase.conjugate(tense)
             if conjugation_notes.irregular_nature >= self._irregular_nature:
-                _print_header_()
                 self._print_conjugation_notes(conjugation_notes) 
                 print()
         else:
@@ -75,7 +74,7 @@ class ScreenPrinter(implements(PhrasePrinter)):
                     conj_list.append(conjugation_notes)
             
             if len(conj_list) > 0:
-                _print_header_()
+                print('    ', end='')
                 for conjugation_notes in conj_list:
                     print(conjugation_notes.person.human_readable + "(" 
                           + str(conjugation_notes.person._value_) + "):", end=' ')

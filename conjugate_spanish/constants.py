@@ -140,7 +140,7 @@ class Tenses_(BaseConsts_):
     imperative = [ imperative_negative, imperative_positive ]
     future_cond = [ future_tense, conditional_tense]
     # Most of the time these 2 have same conjugation
-    past_part_adj = [ past_participle, adjective]
+#     past_part_adj = [ past_participle, adjective]
     # these tenses are the ones that are most commonly needed used in normal conversation
     # note that future tense can be "cheated" with "ir a"    
     core = [ present_tense, past_tense ]

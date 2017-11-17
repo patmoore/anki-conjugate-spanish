@@ -645,7 +645,7 @@ Accent_All_But_3_PastTense_CO.override_tense_join(Tenses.past_tense, _accent_i_c
 Accent_I_PastParticipleAdjective_CO = make_std_override(key='accent_i_pp_adj', 
     documentation='-aer, -eer, -oír, and -oer verbs: past participle and adjective tense (accented i) if stem still ends in a vowel'
     )
-Accent_I_PastParticipleAdjective_CO.override_tense_join(Tenses.past_part_adj, _accent_i_check,
+Accent_I_PastParticipleAdjective_CO.override_tense_join(Tenses.past_participle, _accent_i_check,
     documentation="change i to accented i")
 
 I_I_CO = make_std_override(key="i_i_remove",
@@ -838,7 +838,7 @@ Past_Participle_Olver = make_std_override(key="pp_olver",
     parents=Past_Adj_To,
     documentation="past participle that has a olver -to ending rather than the normal -ado, -ando",
     examples=['absolver', 'resolver', 'volver'])
-Past_Participle_Olver.override_tense_join(Tenses.past_part_adj, _olver_)
+Past_Participle_Olver.override_tense_join(Tenses.past_participle, _olver_)
 def _abrir_(self, conjugation_notes, **kwargs):
     _check_and_change(conjugation_notes, ENDS_WITH_R,
         stem_ending_replacement='ier', operation="pp_rir", irregular_nature=IrregularNature.standard_irregular)
@@ -847,7 +847,7 @@ Past_Participle_Rir = make_std_override(key="pp_rir",
     parents=Past_Adj_To,
     documentation="past participle that has a -rir -to ending rather than the normal -ado, -ando",
     examples=['abrir', 'cubrir'])
-Past_Participle_Rir.override_tense_join(Tenses.past_part_adj, _abrir_)
+Past_Participle_Rir.override_tense_join(Tenses.past_participle, _abrir_)
 def _morir_(self, conjugation_notes, **kwargs):
     _check_and_change(conjugation_notes, ENDS_WITH_OR,
         stem_ending_replacement='uer', operation="pp_orir", irregular_nature=IrregularNature.standard_irregular)
@@ -856,7 +856,7 @@ Past_Participle_Orir = make_std_override(key="pp_orir",
     parents=Past_Adj_To,
     documentation="past participle that has a olver -to ending rather than the normal -ado, -ando",
     examples=['morir'])
-Past_Participle_Orir.override_tense_join(Tenses.past_part_adj, _morir_)
+Past_Participle_Orir.override_tense_join(Tenses.past_participle, _morir_)
 def _cribir_(self, conjugation_notes, **kwargs):
     _check_and_change(conjugation_notes, ENDS_WITH_B,
         stem_ending_replacement='', operation="pp_cribir", irregular_nature=IrregularNature.standard_irregular)
@@ -866,7 +866,7 @@ Past_Participle_Cribir = make_std_override(key="pp_cribir",
     parents=Past_Adj_To,
     documentation="past participle that has a cribir -to ending rather than the normal -ado, -ando",
     examples=['escribir','transcribir','inscribir', 'describir' ])
-Past_Participle_Cribir.override_tense_join(Tenses.past_part_adj, _cribir_)
+Past_Participle_Cribir.override_tense_join(Tenses.past_participle, _cribir_)
 
 def _ver_(self, conjugation_notes, **kwargs):
     _check_and_change(conjugation_notes,
@@ -875,7 +875,7 @@ Past_Participle_Ver = make_std_override(key="pp_ver",
     parents=Past_Adj_To,
     documentation="past participle that has a ver -to ending rather than the normal -ado, -ando",
     examples=['ver'])
-Past_Participle_Ver.override_tense_join(Tenses.past_part_adj, _ver_)
+Past_Participle_Ver.override_tense_join(Tenses.past_participle, _ver_)
 
 def _acer_(self, conjugation_notes, **kwargs):
     _check_and_change(conjugation_notes,
@@ -886,7 +886,7 @@ def _acer_(self, conjugation_notes, **kwargs):
 Past_Participle_Acer = make_std_override(key="pp_acer",
     documentation="past participle that has a acer -to ending rather than the normal -ado, -ando",
     examples=['hacer', 'satisfacer'])
-Past_Participle_Acer.override_tense_join(Tenses.past_part_adj, _acer_)
+Past_Participle_Acer.override_tense_join(Tenses.past_participle, _acer_)
 
 UnaccentPresent_Past_CO = make_std_override(key='unaccent_present_past', documentation='small verbs have no accent on past and present tense conjugations',
     examples= ['dar','ir'])

@@ -396,6 +396,7 @@ class Verb(Phrase):
             conjugation_notes.change(operation="std_stem", core_verb = self.stem, irregular_nature=IrregularNature.regular)
         elif conjugation_notes.tense == Tenses.adjective:
             past_participle_conjugation_notes = self.conjugation_tracking.get_conjugation_notes(Tenses.past_participle)
+            print(past_participle_conjugation_notes)
             if not past_participle_conjugation_notes.completed:
                 self.conjugate_stem(past_participle_conjugation_notes)
             conjugation_notes.change(operation="std_stem", core_verb = past_participle_conjugation_notes.core_verb, irregular_nature=IrregularNature.regular)
@@ -589,7 +590,7 @@ class Verb(Phrase):
         """
         # need to force for verbs that are normally third person only
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
-        third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options)
+        third_person_plural_conjugation = self.conjugate(Tenses.past_tense, Persons.third_person_plural, options).conjugation
         if third_person_plural_conjugation[-3:] == 'ron':
             conjugation_notes.change(operation="std_stem", irregular_nature=IrregularNature.regular,
                                      core_verb = third_person_plural_conjugation[:-3])
@@ -597,7 +598,7 @@ class Verb(Phrase):
                 # accent on last vowel                                
                 if _ending_vowel_check.search(conjugation_notes.core_verb):
                     conjugation_notes.change(operation="correct accent",
-                                             irregular_nature = IrregularNature.sound_consistence,
+                                             irregular_nature = IrregularNature.regular,
                                               core_verb = Vowels.accent_at(conjugation_notes.core_verb))
                 else:
                     # assuming last stem character is a vowel
