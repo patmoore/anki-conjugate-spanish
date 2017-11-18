@@ -52,20 +52,26 @@ class ScreenPrinter(implements(PhrasePrinter)):
     
     def print(self, tenses=Tenses.all, persons=Persons.all, **kwargs):
         print(self.phrase.full_phrase+ ' : ' + self.phrase.definition)
+        irregular_nature = IrregularNature.regular
         for tense in tenses:
-            self.print_tense(tense, persons)
+            returned_irregular_nature = self.print_tense(tense, persons)
+            if returned_irregular_nature > irregular_nature:
+                irregular_nature = returned_irregular_nature
+        print(irregular_nature.human_readable)
                 
     def print_tense(self, tense, persons=Persons.all):
         def _print_header_():
             print("  "+tense.human_readable+ "(" 
               + str(tense._value_) + "):")
+        irregular_nature = IrregularNature.regular
 
-        _print_header_()
         if tense in Tenses.Person_Agnostic:
             conjugation_notes = self.phrase.conjugate(tense)
             if conjugation_notes.irregular_nature >= self._irregular_nature:
+                _print_header_()
                 self._print_conjugation_notes(conjugation_notes) 
                 print()
+                irregular_nature = conjugation_notes.irregular_nature
         else:
             conj_list = []
             for person in persons:
@@ -73,14 +79,18 @@ class ScreenPrinter(implements(PhrasePrinter)):
                 if conjugation_notes is not None and conjugation_notes.irregular_nature >= self._irregular_nature:
                     conj_list.append(conjugation_notes)
             
-            if len(conj_list) > 0:
+            if len(conj_list) > 0:                
+                _print_header_()
                 print('    ', end='')
                 for conjugation_notes in conj_list:
                     print(conjugation_notes.person.human_readable + "(" 
                           + str(conjugation_notes.person._value_) + "):", end=' ')
                 
-                    self._print_conjugation_notes(conjugation_notes)    
+                    self._print_conjugation_notes(conjugation_notes) 
+                    if irregular_nature < conjugation_notes.irregular_nature:
+                        irregular_nature = conjugation_notes.irregular_nature
                 print()
+        return irregular_nature
     
     def _print_conjugation_notes(self, conjugation_notes):
         if conjugation_notes is None:

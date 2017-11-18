@@ -396,7 +396,6 @@ class Verb(Phrase):
             conjugation_notes.change(operation="std_stem", core_verb = self.stem, irregular_nature=IrregularNature.regular)
         elif conjugation_notes.tense == Tenses.adjective:
             past_participle_conjugation_notes = self.conjugation_tracking.get_conjugation_notes(Tenses.past_participle)
-            print(past_participle_conjugation_notes)
             if not past_participle_conjugation_notes.completed:
                 self.conjugate_stem(past_participle_conjugation_notes)
             conjugation_notes.change(operation="std_stem", core_verb = past_participle_conjugation_notes.core_verb, irregular_nature=IrregularNature.regular)

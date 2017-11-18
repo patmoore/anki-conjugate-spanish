@@ -807,7 +807,7 @@ Go_CO = make_std_override(key='go', documentation="go verbs -ig if last stem let
 Go_CO.override_tense_stem(Tenses.present_tense, __go, Persons.first_person_singular, documentation="go verb")
 
 Oy_CO = make_std_override(key='oy', documentation="oy verbs")
-Oy_CO.override_tense_ending(Tenses.present_tense, "oy", Persons.first_person_singular, documentation="oy verb")
+Oy_CO.override_tense_ending(Tenses.present_tense, lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation='oy', irregular_nature=IrregularNature.standard_irregular, ending="oy"), Persons.first_person_singular, documentation="oy verb")
 
 Infinitive_Stems_E2D = make_std_override(key='e2d', documentation="Future Tense/Conditional Tense:Some verbs convert the -er ending infinitive stem to a 'd'",
         examples=['tener'])
