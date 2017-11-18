@@ -75,9 +75,10 @@ class ScreenPrinter(implements(PhrasePrinter)):
         else:
             conj_list = []
             for person in persons:
-                conjugation_notes = self.phrase.conjugate(tense, person)
-                if conjugation_notes is not None and conjugation_notes.irregular_nature >= self._irregular_nature:
-                    conj_list.append(conjugation_notes)
+                if person != Persons.first_person_singular or tense not in Tenses.imperative:
+                    conjugation_notes = self.phrase.conjugate(tense, person)
+                    if conjugation_notes is not None and conjugation_notes.irregular_nature >= self._irregular_nature:
+                        conj_list.append(conjugation_notes)
             
             if len(conj_list) > 0:                
                 _print_header_()

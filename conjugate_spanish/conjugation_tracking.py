@@ -2,7 +2,7 @@
 from .constants import *
 import json
 from functools import reduce
-from .utils import cs_debug
+from .utils import cs_debug, cs_error
 from .vowel import Vowels
 """
 This code holds the history of how the verb is conjugated
