@@ -313,7 +313,7 @@ class Radical_Stem_Conjugation_Override(ConjugationOverride):
                             changed_stem = match_.group(1)+vowels_to+match_.group(3)
                     
                     conjugation_notes.change(operation='rad_vowels',
-                                              irregular_nature=IrregularNature.standard_irregular,
+                                              irregular_nature=IrregularNature.radical_stem_change,
                                                core_verb=changed_stem)
                     return
                 self.__raise(msg=key+":No vowels in stem=u"+conjugation_notes.core_verb,**kwargs)
@@ -825,9 +825,13 @@ Imperative_Infinitive_Stem_Only.override_tense(Tenses.imperative_positive, lambd
 Past_Participle_To = make_std_override(key='pp_to',
                            documentation='past participle ends in -to',
                            examples=['arbir'])
-Past_Participle_To.override_tense_ending(Tenses.past_participle, 'to')
-Adjective_To = make_std_override(key='adj_to')
-Adjective_To.override_tense_ending(Tenses.adjective, 'to')
+Past_Participle_To.override_tense_ending(Tenses.past_participle, 
+      lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation='pp_to', irregular_nature=IrregularNature.standard_irregular, ending='to'))
+Adjective_To = make_std_override(key='adj_to',
+                documentation="adjective ends in -to but NOT the past participle")
+Adjective_To.override_tense_ending(Tenses.adjective,   
+   lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation='adj_to', irregular_nature=IrregularNature.standard_irregular, ending='to'))
+
 Past_Adj_To = make_std_override(key='pa_to', parents=[Past_Participle_To, Adjective_To])
 
 def _olver_(self, conjugation_notes, **kwargs):

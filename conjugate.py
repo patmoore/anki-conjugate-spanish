@@ -11,9 +11,9 @@ if len(sys.argv) < 2:
 #     print("verb tense person")
 #     print("tenses=" + str(Tenses))
 #     print("persons=" + str(Persons))
-    for verb in Espanol_Dictionary.verbDictionary.values():
-        print(verb.full_phrase)
-        verb.conjugate_all_tenses()
+    for phrase in Espanol_Dictionary.verbDictionary.values():
+        printer = ScreenPrinter(phrase, irregular_nature=IrregularNature.sound_consistence)
+        printer.print(tenses=Tenses.all)
     exit(0)
     
 phrase_str = sys.argv[1]

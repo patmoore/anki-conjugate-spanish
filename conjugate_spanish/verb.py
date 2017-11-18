@@ -345,7 +345,7 @@ class Verb(Phrase):
             # TODO accenting ( obtén - for example )
             # reflexive verbs are going to get 'te' at the end, so no need for an accent.
             explicit_accent_already_applied = True
-            if not _reflexive and Vowels.ends_in_ns(base_verb_conjugation) is not None:
+            if not _reflexive and Vowels.ends_in_ns(base_verb_conjugation.conjugation) is not None:
                 # obtén (obtener) get the accent but deshaz ( deshacer ) does not 
                 conjugation_notes.change(operation="single_vowel_accented_prefix", 
                          conjugation = self.prefix + Vowels.accent_at(base_verb_conjugation.conjugation, single_vowel_match.start(2)), irregular_nature=base_verb_conjugation.irregular_nature)

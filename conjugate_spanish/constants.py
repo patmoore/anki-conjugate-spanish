@@ -193,15 +193,19 @@ class IrregularNature(BaseConst):
     preserve the sound when spoken
     """
     sound_consistence = (1, 'sound', 'preserves sound')
-    standard_irregular = (2, 'std_irregular', 'irregularity comes from a standard irregular pattern')
-    custom = (3, 'custom', 'irregularity is unique to this verb')
+    radical_stem_change =(2, 'radical', "i:ie, o:ue, e:i")
+    standard_irregular = (3, 'std_irregular', 'irregularity comes from a standard irregular pattern')
+    custom = (4, 'custom', 'irregularity is unique to this verb')
+    blocked = (5, 'blocked', 'no conjugation')
     
     
 class IrregularNatures_(BaseConsts_):
     regular = IrregularNature.regular
     sound_consistence = IrregularNature.sound_consistence
+    radical_stem_change = IrregularNature.radical_stem_change
     standard_irregular = IrregularNature.standard_irregular
     custom = IrregularNature.custom
+    blocked = IrregularNature.blocked
 
 IrregularNatures = IrregularNatures_(list(IrregularNature))
 #

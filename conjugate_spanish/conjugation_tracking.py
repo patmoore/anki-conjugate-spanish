@@ -153,7 +153,10 @@ class ConjugationNotes():
     
     @property
     def irregular_nature(self):
-        return reduce(lambda x,y: x if x > y else y, [conjugation_note.irregular_nature for conjugation_note in self._conjugation_note_list ])
+        if len(self._conjugation_note_list) > 0:
+            return reduce(lambda x,y: x if x > y else y, [conjugation_note.irregular_nature for conjugation_note in self._conjugation_note_list ])
+        else:
+            return IrregularNature.blocked
     
     def batch(self, operation, irregular_nature):
         self._operation = operation
@@ -260,7 +263,8 @@ class ConjugationNotes():
         """
         if not self.blocked: 
             self._blocked = True
-            self._new_conjugation_note("blocked")
+            conjugation_note =self._new_conjugation_note("blocked")
+            conjugation_note.irregular_nature = IrregularNature.blocked
             self.complete()
         return self
         
@@ -285,7 +289,7 @@ class ConjugationNotes():
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.phrase.full_phrase, 
              Tenses[self.tense].human_readable if self.tense is not None else "-", 
              Persons[self.person].human_readable if self.person is not None else "-", msg)
-        cs_debug(">>>>>>",msg_)
+        cs_error(">>>>>>",msg_)
         
     def __repr__(self):
         return { 
