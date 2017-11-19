@@ -19,6 +19,9 @@ if len(sys.argv) < 2:
     
 phrase_str = sys.argv[1]
 phrase = Espanol_Dictionary.get(phrase_str)
+if phrase is None:
+    print(phrase_str+ " : not in dictionary")
+    exit(1)
 printer = ScreenPrinter(phrase, irregular_nature=irregular_nature)
     
 if len(sys.argv) < 3:

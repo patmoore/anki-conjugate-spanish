@@ -565,9 +565,14 @@ class Verb(Phrase):
         conjugation_notes.change(operation='__apply_imperative_reflexive_pronoun', irregular_nature=IrregularNature.regular, conjugation= returned_conjugation)
              
     def __conjugation_present_subjective_stem(self, conjugation_notes):
-        # need to force for verbs that are normally third person only
-        options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
-        first_person_conjugation = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options).conjugation
+        # need to force for verbs that are normally third person only        
+        first_person_conjugation_notes = self.conjugate(Tenses.present_tense, Persons.first_person_singular)
+        if first_person_conjugation_notes.blocked:
+            # verbs like gustar
+            options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
+            first_person_conjugation_notes = ConjugationNotes(Tenses.present_tense, Persons.first_person_singular, self)
+            self._conjugate_stem_and_endings(conjugation_notes = first_person_conjugation_notes, options=options)
+        first_person_conjugation = first_person_conjugation_notes.conjugation
         if first_person_conjugation[-1:] =='o':
             conjugation_notes.change(operation="std_stem_from_1st_present", core_verb = first_person_conjugation[:-1], irregular_nature=IrregularNature.regular)            
         elif first_person_conjugation[-2:] == 'oy':

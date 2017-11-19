@@ -52,8 +52,16 @@ class ScreenPrinter(implements(PhrasePrinter)):
     def phrase(self):
         return self._phrase
     
+    @property
+    def detailed(self):
+        return 'detailed' in self._options and self._options['detailed']
+    
+    @property
+    def print_blocked(self):
+        return 'blocked' in self._options and self._options['blocked']
+    
     def print(self, tenses=Tenses.all, persons=Persons.all, **kwargs):
-        print(self.phrase.full_phrase+ ' : ' + self.phrase.definition)
+        print(self.phrase.full_phrase+ ' : ' + self.phrase.definition + ' (' + self.phrase.overrides_string + ')')
         irregular_nature = IrregularNature.regular
         for tense in tenses:
             returned_irregular_nature = self.print_tense(tense, persons)
@@ -79,13 +87,13 @@ class ScreenPrinter(implements(PhrasePrinter)):
             for person in persons:
                 if person != Persons.first_person_singular or tense not in Tenses.imperative:
                     conjugation_notes = self.phrase.conjugate(tense, person)
-                    if conjugation_notes is not None and conjugation_notes.irregular_nature >= self._irregular_nature:
+                    if conjugation_notes is not None and conjugation_notes.irregular_nature >= self._irregular_nature and (self.print_blocked or not conjugation_notes.blocked):
                         conj_list.append(conjugation_notes)
             
             if len(conj_list) > 0:                
                 _print_header_()
                 print('    ', end='')
-                for conjugation_notes in conj_list:
+                for conjugation_notes in conj_list:                    
                     print(conjugation_notes.person.human_readable + "(" 
                           + str(conjugation_notes.person._value_) + "):", end=' ')
                 
@@ -100,7 +108,7 @@ class ScreenPrinter(implements(PhrasePrinter)):
             print("---", end='; ')
         elif conjugation_notes.irregular_nature >= self._irregular_nature:
             print(conjugation_notes.full_conjugation, end='')            
-            if not conjugation_notes.is_regular:
+            if not conjugation_notes.is_regular and self.detailed:
                 print('', end=' <= ')
                 core_verb = None
                 ending = None
