@@ -218,7 +218,9 @@ class ConjugationNotes():
             conjugation_note.irregular_nature = irregular_nature
     
     @property
-    def conjugation(self):
+    def conjugation(self):        
+        if self.blocked:
+            return None
         explicit_conjugation_ = self.explicit_conjugation
         if explicit_conjugation_ is not None:
             return explicit_conjugation_

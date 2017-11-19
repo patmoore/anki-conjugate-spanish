@@ -196,8 +196,7 @@ class IrregularNature(BaseConst):
     radical_stem_change =(2, 'radical', "i:ie, o:ue, e:i")
     standard_irregular = (3, 'std_irregular', 'irregularity comes from a standard irregular pattern')
     custom = (4, 'custom', 'irregularity is unique to this verb')
-    blocked = (5, 'blocked', 'no conjugation')
-    
+    blocked = (5, 'blocked', 'no conjugation') 
     
 class IrregularNatures_(BaseConsts_):
     regular = IrregularNature.regular

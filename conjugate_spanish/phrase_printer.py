@@ -1,6 +1,7 @@
 from interface import implements, Interface
 from .constants import Persons, Tenses
 from conjugate_spanish.constants import BaseConst, IrregularNature
+import copy
     
 class PhrasePrinter(Interface):
     def print(self, *, tenses=Tenses.all, persons=Persons.all, options={}):
@@ -42,9 +43,10 @@ class CsvPrinter(implements(PhrasePrinter)):
         return result
     
 class ScreenPrinter(implements(PhrasePrinter)):
-    def __init__(self, phrase, irregular_nature = IrregularNature.regular):
+    def __init__(self, phrase, irregular_nature = IrregularNature.regular, options=None):
         self._phrase = phrase
         self._irregular_nature = irregular_nature
+        self._options = {} if options is None else copy.copy(options) 
         
     @property
     def phrase(self):
@@ -143,7 +145,7 @@ class ScreenPrinter(implements(PhrasePrinter)):
                             if not self.is_reflexive:
                                 print( Persons[person]+" "+conjugations[tense][person], end="; ")
                             elif tense not in Tenses.imperative:
-                                print( conjugations[tense][person], end="; ")
+                                print(conjugations[tense][person], end="; ")
                             else:
                                 print(conjugations[tense][person])
                                  

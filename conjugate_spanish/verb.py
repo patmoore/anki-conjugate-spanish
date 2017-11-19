@@ -271,7 +271,8 @@ class Verb(Phrase):
 #                             conjugation_notes.change("operation_conjugation",
 #                                                      irregular_nature=IrregularNature.custom,
 #                                                       conjugation = conjugation)
-                            explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
+                            if not conjugation_notes.blocked:
+                                explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
                         except Exception as e:
                             extype, ex, traceback_ = sys.exc_info()
                             formatted = traceback.format_exception_only(traceback_,extype)[-1]
@@ -283,7 +284,7 @@ class Verb(Phrase):
             else:            
                 self._conjugate_stem_and_endings(conjugation_notes, options)
                     
-            if self.base_verb is None:
+            if not conjugation_notes.blocked and self.base_verb is None:
                 # The derived conjugation code had to add in the prefix characters and other words already
                 # and other words in the phrase may be accented.
                 if pick(options,ConjugationOverride.REFLEXIVE_OVERRIDE,self.is_reflexive) and not is_empty_str(conjugation_notes.conjugation):
