@@ -7,18 +7,19 @@ from conjugate_spanish.constants import Tense, Tenses, Persons, Person,\
     IrregularNature
 from conjugate_spanish.phrase_printer import ScreenPrinter
 Espanol_Dictionary.load()
+irregular_nature=IrregularNature.regular
 if len(sys.argv) < 2:
 #     print("verb tense person")
 #     print("tenses=" + str(Tenses))
 #     print("persons=" + str(Persons))
     for phrase in Espanol_Dictionary.verbDictionary.values():
-        printer = ScreenPrinter(phrase, irregular_nature=IrregularNature.sound_consistence)
+        printer = ScreenPrinter(phrase, irregular_nature=irregular_nature)
         printer.print(tenses=Tenses.all)
     exit(0)
     
 phrase_str = sys.argv[1]
 phrase = Espanol_Dictionary.get(phrase_str)
-printer = ScreenPrinter(phrase, irregular_nature=IrregularNature.sound_consistence)
+printer = ScreenPrinter(phrase, irregular_nature=irregular_nature)
     
 if len(sys.argv) < 3:
     printer.print()

@@ -920,10 +920,9 @@ def __block_conjugation(self, conjugation_notes, options, **kwargs):
     force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
     if force_conjugation:
         conjugation_notes = ConjugationNotes(conjugation_notes.tense, conjugation_notes.person, self)
-        conjugation = self._conjugate_stem_and_endings(conjugation_notes = conjugation_notes, options=options, **kwargs)
-        return conjugation
+        self._conjugate_stem_and_endings(conjugation_notes = conjugation_notes, options=options, **kwargs)
     else:
-        return None
+        conjugation_notes.block()
     
 Third_Person_Only_CO = make_std_override(key='3rd_only', examples=['gustar'])
 Third_Person_Only_CO.override_tense(tenses=Tenses.all_except(Tenses.Person_Agnostic), overrides=__block_conjugation, persons=Persons.all_except(Persons.third_person), documentation="third person only verbs don't conjugate for any other person")

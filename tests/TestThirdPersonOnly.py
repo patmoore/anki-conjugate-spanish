@@ -40,14 +40,14 @@ class TestThirdPersonOnly(unittest.TestCase):
         ]
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
-                conjugation = verb.conjugate(tense)
-                self.assertEqual(results[tense], conjugation)
+                conjugation_notes = verb.conjugate(tense)
+                self.assertEqual(results[tense], conjugation_notes.conjugation)
             else:
                 index = 0
                 for person in Persons.third_person:
                     expected = results[tense][index]
-                    conjugation = verb.conjugate(tense, person)
-                    self.assertEqual(expected, conjugation)
+                    conjugation_notes = verb.conjugate(tense, person)
+                    self.assertEqual(expected, conjugation_notes.conjugation)
                     index += 1
         
     def test_third_sing_only(self):

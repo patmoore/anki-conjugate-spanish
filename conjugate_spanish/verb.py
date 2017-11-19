@@ -267,10 +267,7 @@ class Verb(Phrase):
                     elif conjugation_override is not None:
                         override_call = { 'conjugation_notes': conjugation_notes, "options":options }
                         try:
-                            conjugation = conjugation_override(**override_call)
-#                             conjugation_notes.change("operation_conjugation",
-#                                                      irregular_nature=IrregularNature.custom,
-#                                                       conjugation = conjugation)
+                            conjugation_override(**override_call)
                             if not conjugation_notes.blocked:
                                 explicit_accent_already_applied = Vowels.find_accented(conjugation_notes.conjugation) is not None
                         except Exception as e:
