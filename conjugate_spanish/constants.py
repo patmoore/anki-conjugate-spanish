@@ -195,14 +195,16 @@ class IrregularNature(BaseConst):
     sound_consistence = (1, 'sound', 'preserves sound (c->qu)')
     radical_stem_change =(2, 'radical', "Radical Stem Change (e.g: i:ie, o:ue, e:i)")
     standard_irregular = (3, 'std_irregular', 'irregularity comes from a standard irregular pattern')
-    custom = (4, 'custom', 'irregularity is unique to this verb')
-    blocked = (5, 'blocked', 'no conjugation') 
+    rare= (4, 'rare', 'irregularity is not unique but only occurs in a few verbs')
+    custom = (5, 'custom', 'irregularity is unique to this verb')
+    blocked = (6, 'blocked', 'no conjugation') 
     
 class IrregularNatures_(BaseConsts_):
     regular = IrregularNature.regular
     sound_consistence = IrregularNature.sound_consistence
     radical_stem_change = IrregularNature.radical_stem_change
     standard_irregular = IrregularNature.standard_irregular
+    rare = IrregularNature.rare
     custom = IrregularNature.custom
     blocked = IrregularNature.blocked
 

@@ -8,7 +8,7 @@ from .constants import *
 
 import os
 from .nonconjugated_phrase import NonConjugatedPhrase
-from .utils import cs_debug
+from .utils import cs_debug, cs_error
 from .storage import Storage
 
 """
@@ -17,9 +17,9 @@ load dictionaries/*-phrases.csv
 ----
 in user directory
 load cs_dictionaries/*-verbs.csv
-load cs_dictionari
+load cs_dictionaries/*.csv
 """
-class Dictionary_(dict):
+class LanguageDictionary_(dict):
     def __init__(self):
         self.by = {}
 
@@ -48,7 +48,7 @@ class Dictionary_(dict):
                     traceback.print_exc()
         cs_debug("loaded dictionary",fileName," (",str(count),"items)")
 
-class Verb_Dictionary_(Dictionary_):
+class Verb_Dictionary_(LanguageDictionary_):
     VERBS_FILENAME = re_compile('(.*)-verbs.csv$')                            
     def add(self, phrase, definition='', generated=False, force_add=False, **kwargs):
         conjugation_overrides=kwargs.get('conjugation_overrides')
@@ -162,7 +162,7 @@ class Verb_Dictionary_(Dictionary_):
                     f.write(verb.print_csv(False))
                     f.write("\n")
 
-class Phrase_Dictionary_(Dictionary_):
+class Phrase_Dictionary_(LanguageDictionary_):
     PHRASES_FILENAME = re_compile('(.*)-phrases.csv$')
     def add(self,phrase, definition,associated_verbs=None,**kwargs):
         phraseObj = NonConjugatedPhrase(phrase, definition,associated_verbs,**kwargs)

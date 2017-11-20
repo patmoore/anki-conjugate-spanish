@@ -820,6 +820,10 @@ class Verb(Phrase):
     
     @property
     def base_verb_string(self):
+        """
+        if verb is reflexive, the nonreflexive base verb
+        if this is a phrase, the verb being conjugated.
+        """ 
         if self.is_derived:                
             _base_verb_str= getattr(self, '_base_verb_string', None)
             if is_empty_str(_base_verb_str):

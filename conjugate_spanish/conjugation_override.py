@@ -495,7 +495,11 @@ def _check_and_change(conjugation_notes,
 
 Use_Er_Conjugation_In_Past = make_std_override(key='use_er',
     documentation='some -ar verbs use -er conjugation in past tense', examples= ['andar','estar'])
-Use_Er_Conjugation_In_Past.override_tense_ending(Tenses.past_tense, lambda self, conjugation_notes, **kwargs: Standard_Conjugation_Endings[Infinitive_Endings.er_verb][conjugation_notes.tense][conjugation_notes.person])
+Use_Er_Conjugation_In_Past.override_tense_ending(Tenses.past_tense,
+      lambda self, conjugation_notes, **kwargs: conjugation_notes.change(
+          operation='use_er',
+          irregular_nature=IrregularNature.rare,
+          ending=Standard_Conjugation_Endings[Infinitive_Endings.er_verb][conjugation_notes.tense][conjugation_notes.person]))
     
 """
 ==================================================
