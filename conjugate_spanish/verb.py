@@ -71,6 +71,7 @@ class Verb(Phrase):
         self.reflexive = Reflexive.get(reflexive)        
         self._suffix_words = suffix_words
         self.conjugation_tracking = ConjugationTracking(self)
+        self._verb_finder = None
         self.correct_infinitive()
         
                         
@@ -105,6 +106,24 @@ class Verb(Phrase):
         TODO: correct ir verbs that need an accented ír
         """
         pass
+
+    @property    
+    def verb_finder(self):
+        return self._verb_finder
+    
+    @verb_finder.setter
+    def verb_finder(self, verb_finder):
+        self._verb_finder = verb_finder
+    
+    def find_verb(self, verb_str):
+        # some verbs are based off of others (tener)
+        # TODO: maldecir has different tu affirmative than decir  
+        #HACK : would prefer to not trigger sql calls... but this works o.k. 
+        # and allows for out of ordering loading.      
+        from .espanol_dictionary import Verb_Dictionary
+        _base_verb = Verb_Dictionary.get(verb_str)
+        return _base_verb
+#         return self.verb_finder.get(verb_str)
         
     def process_conjugation_overrides(self):
         if self.__processed_conjugation_overrides:
@@ -797,13 +816,8 @@ class Verb(Phrase):
     def base_verb(self):
         if not self.is_derived:
             return None
-        elif not hasattr(self, '_base_verb'):
-            # some verbs are based off of others (tener)
-            # TODO: maldecir has different tu affirmative than decir  
-            #HACK : would prefer to not trigger sql calls... but this works o.k. 
-            # and allows for out of ordering loading.      
-            from .espanol_dictionary import Verb_Dictionary
-            _base_verb = Verb_Dictionary.get(self.base_verb_string)
+        elif not hasattr(self, '_base_verb'):            
+            _base_verb = self.find_verb(self.base_verb_string)
             if _base_verb is None:
                 # TODO - may not be in dictionary yet?
                 return None 
@@ -852,11 +866,14 @@ class Verb(Phrase):
             # TODO: maldecir has different tu affirmative than decir  
             #HACK : would prefer to not trigger sql calls... but this works o.k. 
             # and allows for out of ordering loading.
-        if self.root_verb_string:      
-            from .espanol_dictionary import Verb_Dictionary
-    
-            self._root_verb = Verb_Dictionary.get(self.root_verb_string)
+        if self.root_verb_string:
+            _root_verb = self.find_verb(self.root_verb_string)
+            if _root_verb is None:
                 # TODO - may not be in dictionary yet?
+                return None 
+            else:
+                self._root_verb = _root_verb
+
             return self._root_verb
 
         elif self.base_verb is not None:

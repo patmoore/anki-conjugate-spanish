@@ -48,12 +48,15 @@ class LanguageDictionary_(dict):
                     traceback.print_exc()
         cs_debug("loaded dictionary",fileName," (",str(count),"items)")
 
+# declare up here so Verb_Dictionary_() can access
+Verb_Dictionary=None
 class Verb_Dictionary_(LanguageDictionary_):
     VERBS_FILENAME = re_compile('(.*)-verbs.csv$')                            
     def add(self, phrase, definition='', generated=False, force_add=False, **kwargs):
         conjugation_overrides=kwargs.get('conjugation_overrides')
         if force_add or self._build_replacement_if_better(phrase, conjugation_overrides=conjugation_overrides, generated=generated):
             verb = Verb.importString(phrase, definition, generated=generated, **kwargs)
+            verb.verb_finder = self
             self[verb.full_phrase] = verb
             if verb.is_derived:
                 cs_debug(verb.full_phrase+" is derived from "+verb.root_verb_string+" base ="+verb.base_verb_string, " conjugation_overrides="+str(conjugation_overrides))
