@@ -39,7 +39,7 @@ class Dictionary_(dict):
                     try:
                         phrase = self.add(force_add=True,**definition)
                         current.append(phrase.full_phrase)
-                        count  +=1
+                        count += 1
                     except Exception as e:
                         cs_debug("error reading ",fileName+": ", repr(definition),repr(e))
                         traceback.print_exc()            
@@ -158,7 +158,7 @@ class Verb_Dictionary_(Dictionary_):
                 verb = self.get(phrase)
                 call = {"verb":verb}
                 if testfn(**call):   
-                    print("conjugating>>"+verb.full_phrase)
+                    cs_debug("conjugating>>"+verb.full_phrase)
                     f.write(verb.print_csv(False))
                     f.write("\n")
 
