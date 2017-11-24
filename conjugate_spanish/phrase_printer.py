@@ -61,7 +61,7 @@ class ScreenPrinter(implements(PhrasePrinter)):
         return 'blocked' in self._options and self._options['blocked']
     
     def print(self, tenses=Tenses.all, persons=Persons.all, **kwargs):
-        print(self.phrase.full_phrase+ ' : ' + self.phrase.definition + ' (' + self.phrase.overrides_string + ')')
+        print(self.phrase.full_phrase+ ' : ' + self.phrase.definition + ' (' + self.phrase.complete_overrides_string+ ')')
         irregular_nature = IrregularNature.regular
         for tense in tenses:
             returned_irregular_nature = self.print_tense(tense, persons)

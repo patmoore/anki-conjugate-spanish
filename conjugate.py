@@ -7,7 +7,7 @@ from conjugate_spanish.constants import Tense, Tenses, Persons, Person,\
     IrregularNature
 from conjugate_spanish.phrase_printer import ScreenPrinter
 Espanol_Dictionary.load()
-irregular_nature=IrregularNature.regular
+irregular_nature=IrregularNature.regular #sound_consistence
 if len(sys.argv) < 2:
 #     print("verb tense person")
 #     print("tenses=" + str(Tenses))

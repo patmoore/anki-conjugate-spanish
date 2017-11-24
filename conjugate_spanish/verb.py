@@ -748,16 +748,21 @@ class Verb(Phrase):
         elif isinstance(conjugation_override, ConjugationOverride):
             override = conjugation_override            
         elif len(conjugation_override) > 1:
-            lookup_key = conjugation_override if conjugation_override[0] != '-' else conjugation_override[1:]
+            doNotApply = conjugation_override[0] == '-'
+            if doNotApply:                
+                # we continue processing to make sure the override name was correct.
+                lookup_key = conjugation_override[1:]
+            else:
+                lookup_key = conjugation_override
             if lookup_key in Standard_Overrides:
                 override = Standard_Overrides[lookup_key]
             elif lookup_key in Dependent_Standard_Overrides:
                 override = Dependent_Standard_Overrides[lookup_key]
             else:
                 self.__raise(lookup_key+": override is not one of "+repr(list(Standard_Overrides.keys()))+" or "+repr(list(Dependent_Standard_Overrides.keys())))
-            if override is None:
-                self.__raise("no override with key ", lookup_key)
-            if conjugation_override[0] == '-':
+#             if override is None:
+#                 self.__raise("no override with key ", lookup_key)
+            if doNotApply:
                 self.add_doNotApply(override.key)
                 return False
         else:
@@ -990,7 +995,10 @@ class Verb(Phrase):
         return doNotApply_
     
     def add_doNotApply(self, applied):
-        self._doNotApply.append(applied)
+        if applied in self._doNotApply:
+            cs_debug(self.full_phrase+":"+applied + " already in "+ str(self._doNotApply))
+        else:
+            self._doNotApply.append(applied)
     
     @property    
     def conjugation_overrides(self):

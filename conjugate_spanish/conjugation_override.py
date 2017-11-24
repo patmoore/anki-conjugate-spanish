@@ -157,7 +157,7 @@ class ConjugationOverride(object):
                     if self_overrides[tense] is None:
                         self_overrides[tense] = [None] * len(Persons)
                         
-                    if isinstance(persons, int):
+                    if isinstance(persons, Person):
                         # a single person has an override
                         self_overrides[tense][persons] = overrides
                     else:
@@ -824,7 +824,9 @@ Infinitive_Stems_R_Only.override_tense_stem(Tenses.future_cond, lambda self, con
 Imperative_Infinitive_Stem_Only = make_std_override(key="imp_inf_stem_only", 
     documentation='in second person positive some verbs only use the infinitive stem with no ending',
     examples=['poner','salir','tener'])
-Imperative_Infinitive_Stem_Only.override_tense(Tenses.imperative_positive, lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation='imp_inf_stem_only', irregular_nature=IrregularNature.standard_irregular, core_verb=self.stem), Persons.second_person_singular)
+Imperative_Infinitive_Stem_Only.override_tense(Tenses.imperative_positive, 
+                                               lambda self, conjugation_notes, **kwargs: 
+                                               conjugation_notes.change(operation='imp_inf_stem_only', irregular_nature=IrregularNature.standard_irregular, core_verb=self.stem), Persons.second_person_singular)
 
 Past_Participle_To = make_std_override(key='pp_to',
                            documentation='past participle ends in -to',

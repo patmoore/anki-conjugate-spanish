@@ -11,6 +11,54 @@ from .nonconjugated_phrase import NonConjugatedPhrase
 from .utils import cs_debug, cs_error
 from .storage import Storage
 
+class DerivationNode():
+    def __init__(self, phrase_str):
+        """
+        phrase_str - because actual entry may change if a generated entry is replaced with a real entry
+        """
+        self._phrase_str = phrase_str
+        self._derived = []
+        self._parent_str = None
+        
+    def add_derived(self, derived):
+        if derived not in self._derived:
+            self._derived.append(derived)
+    
+    def add_parent(self, parent_str):
+        """
+        todo check to see if parent already set.
+        """
+        if self._parent_str is None:
+            self._parent_str = parent_str
+        else:
+            cs_error("parent already set")
+            
+    def __repr__(self):
+        return "{'phrase_str': '" + self._phrase_str + "', 'derived' :" + str(self._derived)+ '}';
+        
+class DerivationTree_():
+    def __init__(self):
+        self._map = {}
+        
+    def add_phrase(self, phrase):        
+        if phrase.is_derived:
+            self._add_derived(phrase, phrase.root_verb_string)
+            if phrase.root_verb_string != phrase.base_verb_string:
+                self._add_derived(phrase, phrase.base_verb_string)
+            
+    def _add_derived(self, phrase, parent_str):
+        if parent_str not in self._map:
+            self._map[parent_str] = DerivationNode(parent_str)        
+        self._map[parent_str].add_derived(phrase.full_phrase)
+        print(phrase.full_phrase+"->"+parent_str)
+        
+    def print_tree(self):
+        print('{')
+        for key in sorted(self._map.keys()):
+            print("'"+key+"': '" + str(self._map[key]))
+        print('}')
+        
+DerivationTree = DerivationTree_()
 """
 load dictionaries/*-verbs.csv
 load dictionaries/*-phrases.csv
@@ -58,6 +106,7 @@ class Verb_Dictionary_(LanguageDictionary_):
             verb = Verb.importString(phrase, definition, generated=generated, **kwargs)
             verb.verb_finder = self
             self[verb.full_phrase] = verb
+            DerivationTree.add_phrase(verb)
             if verb.is_derived:
                 cs_debug(verb.full_phrase+" is derived from "+verb.root_verb_string+" base ="+verb.base_verb_string, " conjugation_overrides="+str(conjugation_overrides))
                 verb.root_verb = self.add(verb.root_verb_string, conjugation_overrides=conjugation_overrides,generated=True)
@@ -194,6 +243,7 @@ class Espanol_Dictionary_():
                 elif phraseMatch is not None:
                     self.phraseDictionary.load(path+'/'+fileName, phraseMatch.group(1))
         self.verbDictionary.processAllVerbs()
+        DerivationTree.print_tree()
 
     def add_verb(self, phrase, definition, **kwargs):
         self.verbDictionary.add(phrase, definition, **kwargs)
