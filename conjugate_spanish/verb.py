@@ -267,6 +267,10 @@ class Verb(Phrase):
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
         """           
         conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
+        force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
+        if conjugation_notes.blocked and force_conjugation:
+            # temporary for conjugation
+            conjugation_notes = ConjugationNotes(tense, person, self)
         if tense in Tenses.imperative and person == Persons.first_person_singular:
             conjugation_notes.block()        
         elif tense not in Tenses.Person_Agnostic and person not in Persons.all:
@@ -401,7 +405,7 @@ class Verb(Phrase):
             elif override is not None:
                 override_call = { 'conjugation_notes': conjugation_notes }
                 try:
-                    core_verb = override(**override_call)
+                    override(**override_call)
                 except Exception as e:
                     extype, ex, tb = sys.exc_info()
                     traceback.print_tb(tb)
@@ -412,9 +416,7 @@ class Verb(Phrase):
         if conjugation_notes.tense in [ Tenses.present_tense, Tenses.incomplete_past_tense, Tenses.past_tense, Tenses.gerund, Tenses.past_participle]:
             conjugation_notes.change(operation="std_stem", core_verb = self.stem, irregular_nature=IrregularNature.regular)
         elif conjugation_notes.tense == Tenses.adjective:
-            past_participle_conjugation_notes = self.conjugation_tracking.get_conjugation_notes(Tenses.past_participle)
-            if not past_participle_conjugation_notes.completed:
-                self.conjugate_stem(past_participle_conjugation_notes)
+            past_participle_conjugation_notes = self.conjugate(Tenses.past_participle)
             conjugation_notes.change(operation="std_stem", core_verb = past_participle_conjugation_notes.core_verb, irregular_nature=IrregularNature.regular)
         elif conjugation_notes.tense in [ Tenses.future_tense, Tenses.conditional_tense]:
             conjugation_notes.change(operation="std_stem", core_verb = Vowels.remove_accent(self.inf_verb_string), irregular_nature=IrregularNature.regular)
@@ -447,6 +449,10 @@ class Verb(Phrase):
                     message = "Trying to conjugate ending; %s" % ex.message
                     self.__raise(message, conjugation_notes.tense, conjugation_notes.person, traceback_)
         
+        if conjugation_notes.tense == Tenses.adjective:
+            past_participle_conjugation_notes = self.conjugate(Tenses.past_participle)
+            conjugation_notes.change(operation="std_stem", ending = past_participle_conjugation_notes.ending, irregular_nature=IrregularNature.regular)
+            
         overrides = self.__get_override(conjugation_notes, 'conjugation_endings')
         if overrides is not None:
             for override in get_iterable(overrides):
@@ -584,13 +590,9 @@ class Verb(Phrase):
         conjugation_notes.change(operation='__apply_imperative_reflexive_pronoun', irregular_nature=IrregularNature.regular, conjugation= returned_conjugation)
              
     def __conjugation_present_subjective_stem(self, conjugation_notes):
-        # need to force for verbs that are normally third person only        
-        first_person_conjugation_notes = self.conjugate(Tenses.present_tense, Persons.first_person_singular)
-        if first_person_conjugation_notes.blocked:
-            # verbs like gustar
-            options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
-            first_person_conjugation_notes = ConjugationNotes(Tenses.present_tense, Persons.first_person_singular, self)
-            self._conjugate_stem_and_endings(conjugation_notes = first_person_conjugation_notes, options=options)
+        # need to force for verbs that are normally third person only 
+        options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }       
+        first_person_conjugation_notes = self.conjugate(Tenses.present_tense, Persons.first_person_singular, options)
         first_person_conjugation = first_person_conjugation_notes.conjugation
         if first_person_conjugation[-1:] =='o':
             conjugation_notes.change(operation="std_stem_from_1st_present", core_verb = first_person_conjugation[:-1], irregular_nature=IrregularNature.regular)            

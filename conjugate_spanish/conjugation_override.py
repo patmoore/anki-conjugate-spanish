@@ -924,10 +924,7 @@ Defective_CO.override_tense(tenses, lambda self, conjugation_notes, **kwargs: co
 
 def __block_conjugation(self, conjugation_notes, options, **kwargs):
     force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
-    if force_conjugation:
-        conjugation_notes = ConjugationNotes(conjugation_notes.tense, conjugation_notes.person, self)
-        self._conjugate_stem_and_endings(conjugation_notes = conjugation_notes, options=options, **kwargs)
-    else:
+    if not force_conjugation:
         conjugation_notes.block()
     
 Third_Person_Only_CO = make_std_override(key='3rd_only', examples=['gustar'])
