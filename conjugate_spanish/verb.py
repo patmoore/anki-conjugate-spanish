@@ -633,16 +633,7 @@ class Verb(Phrase):
     def _overrides(self, tense, overrides, attr_name,persons=None):
         """
         Called by Conjugation_Override as an override is applied
-        """        
-        def __convert_to_self_function(override):            
-            if inspect.isfunction(override) or inspect.ismethod(override):
-                boundfunc = types.MethodType(override, self)
-                return boundfunc                
-            elif isinstance(override, str):
-                return override                        
-            else:
-                self.__raise("Override must be function or string not"+type(override),tense)           
-            
+        """            
         if not hasattr(self, attr_name):
             self_overrides = [ None ] * len(Tenses)
             setattr(self, attr_name, self_overrides) 
@@ -650,11 +641,10 @@ class Verb(Phrase):
             self_overrides = getattr(self, attr_name)
             
         if tense in Tenses.Person_Agnostic:
-            override_ = __convert_to_self_function(overrides)
-            if isinstance(override_, str) or self_overrides[tense] is None:
-                self_overrides[tense] = [ override_ ]
+            if isinstance(overrides, str) or self_overrides[tense] is None:
+                self_overrides[tense] = [ overrides ]
             else:
-                self_overrides[tense].append(override_)
+                self_overrides[tense].append(overrides)
             return
         
         if persons is None:
@@ -670,25 +660,23 @@ class Verb(Phrase):
             self_overrides[tense] = [None] * len(Persons)
             
         if isinstance(overrides, str) or inspect.isfunction(overrides) or inspect.ismethod(overrides):            
-            fn = __convert_to_self_function(overrides)
             for person in _persons:
-                if isinstance(fn, str) or self_overrides[tense][person] is None:
+                if isinstance(overrides, str) or self_overrides[tense][person] is None:
                     # if a hard replacement (string), previous overrides are discarded because they will be replaced.
                     # or this is the first override
-                    self_overrides[tense][person] = [fn]
+                    self_overrides[tense][person] = [overrides]
                 else:
-                    self_overrides[tense][person].append(fn)                    
+                    self_overrides[tense][person].append(overrides)                    
         
         elif isinstance(overrides, list):
             for person, override in enumerate(overrides):
                 if override is not None:
-                    fn = __convert_to_self_function(override)
-                    if isinstance(fn, str) or self_overrides[tense][person] is None:
+                    if isinstance(override, str) or self_overrides[tense][person] is None:
                         # if a hard replacement (string), previous overrides are discarded because they will be replaced.
                         # or this is the first override
-                        self_overrides[tense][person] = [fn]
+                        self_overrides[tense][person] = [override]
                     else:
-                        self_overrides[tense][person].append(fn)                    
+                        self_overrides[tense][person].append(override)                    
                     
     def overrides_applied(self):
         result = {}

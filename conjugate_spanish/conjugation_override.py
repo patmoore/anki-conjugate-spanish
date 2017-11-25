@@ -237,6 +237,19 @@ class ConjugationOverride(object):
             return False
 
     def apply(self, verb):
+        """
+        Called by Conjugation_Override as an override is applied
+        """        
+        def __convert_to_self_function(override): 
+            if override is None:
+                return None           
+            elif inspect.isfunction(override) or inspect.ismethod(override):
+                boundfunc = types.MethodType(override, self)
+                return boundfunc
+            elif isinstance(override, str):
+                return override                        
+            else:
+                cs_error("Override must be function or string not"+type(override),tense)    
         if self.has_parents:
             for parent in self.parents:
                 verb.process_conjugation_override(parent)
@@ -246,7 +259,15 @@ class ConjugationOverride(object):
             if overrides != None:
                 for tense, conjugation_override in enumerate(overrides):
                     if conjugation_override is not None:
-                        verb._overrides(tense, conjugation_override, applies)
+                        ## temporary code while we collapse overriding so it is not exploded 
+                        # for each verb.
+                        if isinstance(conjugation_override, list):
+                            overrides_ = [ __convert_to_self_function(co) for co in conjugation_override ] 
+                        elif tense in Tenses.Person_Agnostic:
+                            overrides_ = __convert_to_self_function(conjugation_override)
+                        else:
+                            cs_error("something else")
+                        verb._overrides(tense, overrides_, applies)
                         
     def add_std(self):
         if self.key is not None:
