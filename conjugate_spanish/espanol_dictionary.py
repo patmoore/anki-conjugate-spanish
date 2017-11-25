@@ -243,7 +243,7 @@ class Espanol_Dictionary_():
                 elif phraseMatch is not None:
                     self.phraseDictionary.load(path+'/'+fileName, phraseMatch.group(1))
         self.verbDictionary.processAllVerbs()
-        DerivationTree.print_tree()
+#         DerivationTree.print_tree()
 
     def add_verb(self, phrase, definition, **kwargs):
         self.verbDictionary.add(phrase, definition, **kwargs)

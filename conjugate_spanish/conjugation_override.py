@@ -7,6 +7,8 @@ from .conjugation_tracking import ConjugationNotes
 from .vowel import Vowels
 from string import Template
 from conjugate_spanish.constants import IrregularNature
+import types
+from .utils import cs_error
 """
 Special casing
 key: need to allow verbs to opt out of special casing. For example, relucir does not have a c-> j substitution in past tense.

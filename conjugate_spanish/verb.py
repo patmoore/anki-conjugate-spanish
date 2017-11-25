@@ -696,13 +696,23 @@ class Verb(Phrase):
         if self.doNotApply is not None and self.doNotApply != []:
             result = '-' + ',-'.join(self.doNotApply)
         else:
-            result = None
+            result = ''
         if self.appliedOverrides is not None and self.appliedOverrides != []:
             if result is not None:
                 result += ',' + ','.join(self.appliedOverrides)
             else:
                 result = ','.join(self.appliedOverrides)
-        if result is None:
+                
+        if self.manual_overrides_string is not None:
+            result += self.manual_overrides_string
+#         if self.overrides_string != Verb.REGULAR_VERB:
+#             result += ' ' + self.overrides_string
+#         if self.is_derived:
+#             _derived_str = self.base_verb.complete_overrides_string
+#             
+#             if _derived_str != Verb.REGULAR_VERB:
+#                 result += ' ' +_derived_str
+        if len(result) == 0:
             return Verb.REGULAR_VERB
         else:
             return result
