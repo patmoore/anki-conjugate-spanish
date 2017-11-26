@@ -39,23 +39,41 @@ class DerivationNode():
 class DerivationTree_():
     def __init__(self):
         self._map = {}
+        self._irregular = {}
+        self._regular = []
+        self._custom = []
         
     def add_phrase(self, phrase):        
         if phrase.is_derived:
             self._add_derived(phrase, phrase.root_verb_string)
             if phrase.root_verb_string != phrase.base_verb_string:
                 self._add_derived(phrase, phrase.base_verb_string)
+        if phrase.is_regular:
+            self._regular.append(phrase.full_phrase)
+        else:
+            for override in phrase.appliedOverrides:
+                if override.endswith('_irregular'):
+                    self._custom.append(phrase.full_phrase)
+                else:
+                    if override not in self._irregular:
+                        self._irregular[override] = DerivationNode(override)
+                    self._irregular[override].add_derived(phrase.full_phrase)
             
     def _add_derived(self, phrase, parent_str):
         if parent_str not in self._map:
             self._map[parent_str] = DerivationNode(parent_str)        
         self._map[parent_str].add_derived(phrase.full_phrase)
-        print(phrase.full_phrase+"->"+parent_str)
         
     def print_tree(self):
         print('{')
         for key in sorted(self._map.keys()):
             print("'"+key+"': '" + str(self._map[key]))
+        print('}')
+        print("custom="+ str(self._custom))
+        print("regular="+ str(self._regular))
+        print('{')
+        for key in sorted(self._irregular.keys()):
+            print("'"+key+"': '" + str(self._irregular[key]))
         print('}')
         
 DerivationTree = DerivationTree_()

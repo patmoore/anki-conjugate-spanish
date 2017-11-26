@@ -809,6 +809,24 @@ Iar_CO = make_std_override(inf_match=re_compile('iar$'),
      http://www.intro2spanish.com/verbs/listas/master-iar.htm',
     examples=['confiar','criar','desviar','enfriar','esquiar'])
 
+No_Iar_CO = make_std_override(inf_match=re_compile('[d]iar$'),
+    auto_match=True,
+    key='no_iar',
+    #parents=['-iar'],
+    documentation='some iar verbs accent the i so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-iar-with-i-ii.htm\
+     http://www.intro2spanish.com/verbs/listas/master-iar.htm \
+     In listed examples -diar verbs were always "-iar"',
+    examples=['envidiar','estudiar','fastidiar','odiar'])
+
+Yes_Iar_CO = make_std_override(inf_match=re_compile('[lfr]iar$'),
+    auto_match=True,
+    key='yes_iar',
+    parents=['iar'],
+    documentation='some iar verbs accent the i so that it is not weak http://www.intro2spanish.com/verbs/conjugation/conj-iar-with-i-ii.htm\
+     http://www.intro2spanish.com/verbs/listas/master-iar.htm \
+     In listed examples -fiar,-liar,riar verbs were always "iar"',
+    examples=['amplifiar','confiar','desafiar','des-confiar','fiar','fotografiar', 'porfiar', 'telegrafiar', 'agriar','arriar','criar','enfriar'])
+
 Uar_CO = make_std_override(inf_match=re_compile('[^g]uar$'),
     key='uar',
     parents=['u:ú'],

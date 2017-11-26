@@ -160,7 +160,7 @@ class Verb(Phrase):
         self.process_conjugation_override(UniversalAccentFix)
     
     @classmethod
-    def importString(cls, phrase, definition='', conjugation_overrides=None, base_verb=None, **kwargs):
+    def importString(cls, phrase, definition='', conjugation_overrides=None, **kwargs):
                 # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
         phrase_match = Verb.is_verb(phrase)
         if phrase_match is None:
@@ -698,7 +698,7 @@ class Verb(Phrase):
         else:
             result = ''
         if self.appliedOverrides is not None and self.appliedOverrides != []:
-            if result is not None:
+            if len(result) != 0:
                 result += ',' + ','.join(self.appliedOverrides)
             else:
                 result = ','.join(self.appliedOverrides)

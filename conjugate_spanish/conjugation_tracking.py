@@ -284,6 +284,10 @@ class ConjugationNotes():
         return self
     
     @property
+    def operation_notes(self):
+        return [ note.operation for note in self._conjugation_note_list ].__str__()
+    
+    @property
     def is_regular(self):
         return self.irregular_nature == IrregularNature.regular
         

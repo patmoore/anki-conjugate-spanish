@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from conjugate_spanish.constants import Tenses, Persons
+from conjugate_spanish.constants import Tenses, Persons, Reflexive
 from conjugate_spanish.vowel import Vowels
 from conjugate_spanish.verb import Verb
 
@@ -8,7 +8,7 @@ class TestBasic(unittest.TestCase):
     """
     Tests to make sure the parts of the verb are parsed out correctly
     """
-    def __check(self, verb, stem, inf_ending, prefix_words="", prefix="", reflexive=False, suffix_words="", is_phrase=False):
+    def __check(self, verb, stem, inf_ending, prefix_words="", prefix="", reflexive=Reflexive.not_reflexive, suffix_words="", is_phrase=False):
         self.assertEqual(verb.prefix_words, prefix_words)
         self.assertEqual(verb.prefix, prefix)
         self.assertEqual(verb.stem, stem)
@@ -41,17 +41,17 @@ class TestBasic(unittest.TestCase):
         
     def test_reflexive_parsing(self):
         verb = Verb.importString("faketerse"," fake definition")
-        self.__check(verb, "faket", "er", reflexive=True)
+        self.__check(verb, "faket", "er", reflexive=Reflexive.reflexive)
         self.assertEqual(verb.base_verb_string, "faketer")
         verb = Verb.importString("faketer-se"," fake definition")
-        self.__check(verb, "faket", "er", reflexive=True)
+        self.__check(verb, "faket", "er", reflexive=Reflexive.reflexive)
         self.assertEqual(verb.base_verb_string, "faketer")
         self.assertEqual(verb.root_verb_string, "faketer")
         self.assertEqual(verb.full_phrase, "faketerse")
         
     def test_base_verb_parsing(self):
         verb = Verb.importString("abs-faketer-se"," fake definition")
-        self.__check(verb, "absfaket", "er", prefix="abs", reflexive=True)
+        self.__check(verb, "absfaket", "er", prefix="abs", reflexive=Reflexive.base_reflexive)
         self.assertEqual(verb.base_verb_string, "faketer")
         self.assertEqual(verb.root_verb_string, "faketer")
         self.assertEqual(verb.inf_verb_string, "absfaketer")
@@ -59,8 +59,8 @@ class TestBasic(unittest.TestCase):
         
     def test_phrase_parsing(self):
         # also test for excess spaces and leading spaces
-        verb = Verb.importString("  a  absfaketer  de {{inf}}  "," fake definition", root_verb="faketer")
-        self.__check(verb, "absfaket", "er", prefix="", reflexive=False, prefix_words="a", suffix_words="de {{inf}}", is_phrase=True)
+        verb = Verb.importString("  a  absfaketer  de {{inf}}  "," fake definition")
+        self.__check(verb, "absfaket", "er", prefix="", reflexive=Reflexive.not_reflexive, prefix_words="a", suffix_words="de {{inf}}", is_phrase=True)
         self.assertEqual(verb.base_verb_string, "absfaketer")
         self.assertEqual(verb.root_verb_string, "faketer")
         self.assertEqual(verb.inf_verb_string, "absfaketer")
@@ -71,10 +71,10 @@ class TestBasic(unittest.TestCase):
         Test to make sure that the u in qu is skipped.
         """
         verb = Verb.importString("acercarse","approach,draw near")
-        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.third_person_singular)
-        self.assertEqual(conjugation, 'acérquese')
-        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.third_person_plural)
-        self.assertEqual(conjugation, 'acérquense')
+        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.third_person_singular)
+        self.assertEqual(conjugation_notes.conjugation, 'acérquese')
+        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.third_person_plural)
+        self.assertEqual(conjugation_notes.conjugation, 'acérquense')
         
     def test_proper_accent_1(self):
         """
@@ -84,8 +84,8 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.base_verb_string, "divorciar")
         self.assertEqual(verb.root_verb_string, "divorciar")
         self.assertEqual(verb.inf_verb_string, "divorciar")
-        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
-        self.assertEqual('divórciate', conjugation)
+        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        self.assertEqual('divórciate', conjugation_notes.conjugation)
         
     def test_proper_accent_2(self):
         """
@@ -95,8 +95,8 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.base_verb_string, "limpiar")
         self.assertEqual(verb.root_verb_string, "limpiar")
         self.assertEqual(verb.inf_verb_string, "limpiar")
-        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
-        self.assertEqual('límpiate', conjugation)
+        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        self.assertEqual('límpiate', conjugation_notes.conjugation)
         
     def test_proper_accent_3(self):
         """
@@ -106,8 +106,8 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.base_verb_string, None)
         self.assertEqual(verb.root_verb_string, "enviar")
         self.assertEqual(verb.inf_verb_string, "enviar")
-        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
-        self.assertEqual('envía', conjugation)
+        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        self.assertEqual('envía', conjugation_notes.conjugation)
     def test_proper_accent_4(self):
         """
         make sure the o is accented not the i ( i is a weak vowel )
@@ -116,8 +116,8 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.base_verb_string, None)
         self.assertEqual(verb.root_verb_string, "erguir")
         self.assertEqual(verb.inf_verb_string, "erguirse")
-        conjugation = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
-        self.assertEqual('írguete', conjugation)
+        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        self.assertEqual('írguete', conjugation_notes.conjugation)
         
     def test_accenting_rules(self):
         samples = {
