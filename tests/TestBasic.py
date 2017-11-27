@@ -17,7 +17,7 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.suffix_words, suffix_words)
         self.assertEqual(verb.is_phrase, is_phrase)
         if not is_phrase:
-            if reflexive:
+            if reflexive != Reflexive.not_reflexive:
                 self.assertEqual(verb.full_phrase, stem+inf_ending+'se')
             else:
                 self.assertEqual(verb.full_phrase, stem+inf_ending)
@@ -35,7 +35,7 @@ class TestBasic(unittest.TestCase):
         verb = Verb.importString("faketer"," fake definition")
         self.assertFalse(verb.is_phrase)
         self.assertEqual(verb.base_verb_string, None)
-        self.assertEqual(verb.root_verb_string, "faketer")
+        self.assertEqual(verb.root_verb_string, None)
         self.assertEqual(verb.full_phrase, "faketer")
         self.__check(verb, "faket", "er")
         
@@ -44,27 +44,35 @@ class TestBasic(unittest.TestCase):
         self.__check(verb, "faket", "er", reflexive=Reflexive.reflexive)
         self.assertEqual(verb.base_verb_string, "faketer")
         verb = Verb.importString("faketer-se"," fake definition")
-        self.__check(verb, "faket", "er", reflexive=Reflexive.reflexive)
-        self.assertEqual(verb.base_verb_string, "faketer")
+        self.__check(verb, "faket", "er", reflexive=Reflexive.base_reflexive)
+        self.assertEqual(verb.base_verb_string, "faketerse")
         self.assertEqual(verb.root_verb_string, "faketer")
         self.assertEqual(verb.full_phrase, "faketerse")
         
     def test_base_verb_parsing(self):
         verb = Verb.importString("abs-faketer-se"," fake definition")
         self.__check(verb, "absfaket", "er", prefix="abs", reflexive=Reflexive.base_reflexive)
-        self.assertEqual(verb.base_verb_string, "faketer")
+        self.assertEqual(verb.base_verb_string, "faketerse")
         self.assertEqual(verb.root_verb_string, "faketer")
         self.assertEqual(verb.inf_verb_string, "absfaketer")
         self.assertEqual(verb.full_phrase, "absfaketerse")
         
     def test_phrase_parsing(self):
         # also test for excess spaces and leading spaces
-        verb = Verb.importString("  a  absfaketer  de {{inf}}  "," fake definition")
-        self.__check(verb, "absfaket", "er", prefix="", reflexive=Reflexive.not_reflexive, prefix_words="a", suffix_words="de {{inf}}", is_phrase=True)
-        self.assertEqual(verb.base_verb_string, "absfaketer")
+        # also test for cases like 'inter-cambiar'        
+        verb = Verb.importString("  a  inter-faketer deber de {{inf}}  "," fake definition")
+        self.__check(verb, "interfaket", "er", prefix="inter", reflexive=Reflexive.not_reflexive, prefix_words="a", suffix_words="deber de {{inf}}", is_phrase=True)
+        self.assertEqual(verb.base_verb_string, "interfaketer")
         self.assertEqual(verb.root_verb_string, "faketer")
-        self.assertEqual(verb.inf_verb_string, "absfaketer")
-        self.assertEqual(verb.full_phrase, "a absfaketer de {{inf}}")
+        self.assertEqual(verb.inf_verb_string, "interfaketer")
+        self.assertEqual(verb.full_phrase, "a interfaketer deber de {{inf}}")
+        
+        verb = Verb.importString("  a interfaketer /deber/ en {{inf}}  "," fake definition")
+        self.__check(verb, "deb", "er", prefix="", reflexive=Reflexive.not_reflexive, prefix_words="a interfaketer", suffix_words="en {{inf}}", is_phrase=True)
+        self.assertEqual(verb.base_verb_string, "deber")
+        self.assertEqual(verb.root_verb_string, "deber")
+        self.assertEqual(verb.inf_verb_string, "deber")
+        self.assertEqual(verb.full_phrase, "a interfaketer deber en {{inf}}")
 
     def test_explicit_accent(self):
         """
@@ -113,7 +121,7 @@ class TestBasic(unittest.TestCase):
         make sure the o is accented not the i ( i is a weak vowel )
         """
         verb = Verb.importString('erguirse','', conjugation_overrides="e:i")
-        self.assertEqual(verb.base_verb_string, None)
+        self.assertEqual(verb.base_verb_string, "erguir")
         self.assertEqual(verb.root_verb_string, "erguir")
         self.assertEqual(verb.inf_verb_string, "erguirse")
         conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)

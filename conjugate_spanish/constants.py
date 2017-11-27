@@ -211,6 +211,7 @@ class IrregularNatures_(BaseConsts_):
 IrregularNatures = IrregularNatures_(list(IrregularNature))
 #
 # Parse up the infinitive string: 
+__trim_ws='\s*'
 # verb forms: 
 #  1. verb ( has proper spanish infinitive ending )
 #  2. reflexive verb ( has proper spanish infinitive ending -se)
@@ -219,6 +220,7 @@ IrregularNatures = IrregularNatures_(list(IrregularNature))
 #  4. (prefix words)* (verb_form_1) (suffix words)*
 #  5. (prefix words)* (verb_form_2) (suffix words)* 
 # group 1 = prefix words (if present)
+__prefix_words='([^-/]*?)'
 # group 2 = prefix characters (if present)
 # group 3 = core verb (note: special case of 'ir' and 'irse'
 # group 4 = infinitive ending ( -ir,-er,-ar )
@@ -226,7 +228,18 @@ IrregularNatures = IrregularNatures_(list(IrregularNature))
 # group 6 = suffix words
 # use '-' to separate out the prefix from the base verb
 # use '/' to force the selection of the verb in complex cases or for cases where prefix words end in -ir,-ar,-er
-_phrase_parsing = re_compile('^\s*([^/]*?)[\s/]*([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?[/\s]*(.*?)\s*$')
+
+_phrase_parsing = re_compile('^'+__trim_ws+__prefix_words+__trim_ws+'/?([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?/?'+__trim_ws+'([^-/]*?)'+__trim_ws+'$')
+class PhraseMatch:
+    def __init__(self, phrase_match):
+        self._phrase_match = phrase_match
+        self._reflexive = Reflexive.getFromEnding(phrase_match)
+        
+    @property
+    def reflexive(self):
+        return self._reflexive
+    
+    
 class PhraseGroup(BaseConst):
     PREFIX_WORDS = (1, 'prefix_words', None)
     PREFIX_CHARS = (2, 'prefix', None)
@@ -240,7 +253,8 @@ class PhraseGroup(BaseConst):
 
     @classmethod
     def is_verb(cls, phrase_string):
-        return _phrase_parsing.match(phrase_string)
+        matched = _phrase_parsing.match(phrase_string)
+        return matched
     
 @unique
 class Reflexive(Enum):
