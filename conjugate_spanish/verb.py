@@ -249,7 +249,9 @@ class Verb(Phrase):
         elif tense not in Tenses.Person_Agnostic and person not in Persons.all:
             self.__raise("Tense "+Tenses[tense]+" needs a person", tense, person)
         elif not conjugation_notes.completed:
-            conjugation_overrides = self.__get_override(conjugation_notes, 'conjugations')
+            conjugation_overrides = self.__get_override(conjugation_notes, ConjugationOverrideProperties.conjugations.key)
+            conjugation_stem_overrides = self.__get_override(conjugation_notes, ConjugationOverrideProperties.conjugation_stems.key)
+            conjugation_endings_overrides = self.__get_override(conjugation_notes, ConjugationOverrideProperties.conjugation_endings.key)
             explicit_accent_already_applied = False
             
             if conjugation_overrides is not None:
@@ -272,7 +274,7 @@ class Verb(Phrase):
                             message = "Trying to conjugate irregular:%s %s" % ex.message, formatted
                             self.__raise(message, tense, person, traceback_)
                 
-            elif self.base_verb is not None:            
+            elif self.base_verb is not None and conjugation_stem_overrides is None and conjugation_endings_overrides is None:            
                 self.__derived_conjugation(conjugation_notes, options)
             else:            
                 self._conjugate_stem_and_endings(conjugation_notes, options)
@@ -292,6 +294,13 @@ class Verb(Phrase):
         """
         exists so that third person verbs can decide to conjugate normally for present subjective and past subjective
         """
+        if conjugation_notes.tense == Tenses.adjective:
+            # we know that any conjugation override for adjective would have been handled by caller
+            # decir is a good test case for this condition
+            past_participle_conjugation_notes = self.conjugate(Tenses.past_participle)
+            if past_participle_conjugation_notes.explicit_conjugation is not None:
+                conjugation_notes.change(operation="std_stem", conjugation = past_participle_conjugation_notes.explicit_conjugation, irregular_nature=IrregularNature.regular)
+                return
         if conjugation_notes.tense not in Tenses.imperative:
             self.conjugate_ending(conjugation_notes)            
             self.conjugate_stem(conjugation_notes)

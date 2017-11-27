@@ -968,12 +968,17 @@ UnaccentPresent_Past_CO.override_tense_join([Tenses.present_tense,Tenses.past_te
                 core_verb=Vowels.remove_accent(conjugation_notes.core_verb), 
                 ending=Vowels.remove_accent(conjugation_notes.ending)))
 
+def __block_conjugation(self, conjugation_notes, options, **kwargs):
+    force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
+    if not force_conjugation:
+        conjugation_notes.block()
+        
 Defective_CO = make_std_override(key='defective',
                                  documentation='special case verbs that have only a few tenses',
                                  examples=['soler'])
 tenses = list(Tenses.future_cond)
 tenses.extend(Tenses.imperative)
-Defective_CO.override_tense(tenses, lambda self, conjugation_notes, **kwargs: conjugation_notes.block())
+Defective_CO.override_tense(tenses, __block_conjugation)
 # TODO: Need to check for reflexive verb
 # Ir_Reflexive_Accent_I_CO = make_std_override(u'[ií]r$', key=u"imp_accent_i", 
 #     documentation=u"Second person plural, reflexive positive, ir verbs accent the i: Vestíos! (get dressed!) ",
@@ -983,11 +988,6 @@ Defective_CO.override_tense(tenses, lambda self, conjugation_notes, **kwargs: co
 #     overrides=lambda self, **kwargs: Vowels.remove_accent(self.stem) + u'ír'
 #     )
 # Third person only conjugations
-
-def __block_conjugation(self, conjugation_notes, options, **kwargs):
-    force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
-    if not force_conjugation:
-        conjugation_notes.block()
     
 Third_Person_Only_CO = make_std_override(key='3rd_only', examples=['gustar'])
 Third_Person_Only_CO.override_tense(tenses=Tenses.all_except(Tenses.Person_Agnostic), overrides=__block_conjugation, persons=Persons.all_except(Persons.third_person), documentation="third person only verbs don't conjugate for any other person")
