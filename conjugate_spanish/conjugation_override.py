@@ -61,6 +61,20 @@ def make_dep_override(inf_match=None, parents=None, documentation=None, examples
     return conjugation_override
 # TODO need a way of adding notes to overrides
 
+class ConjugationOverrideProperty(BaseConst):
+    conjugations = (0, 'conjugations', 'conjugations')
+    conjugation_stems = (1, 'conjugation_stems', 'conjugation_stems')
+    conjugation_endings = (2, 'conjugation_endings', 'conjugation_endings')
+    conjugation_joins = (3, 'conjugation_joins', 'conjugation_joins')
+
+class ConjugationOverrideProperties_(BaseConsts_):
+    conjugations = ConjugationOverrideProperty.conjugations
+    conjugation_stems = ConjugationOverrideProperty.conjugation_stems
+    conjugation_endings = ConjugationOverrideProperty.conjugation_endings
+    conjugation_joins = ConjugationOverrideProperty.conjugation_joins
+
+ConjugationOverrideProperties = ConjugationOverrideProperties_(list(ConjugationOverrideProperty))
+
 class ConjugationOverride(object):
     """
     TODO -- make conjugation a pipeline.
@@ -69,7 +83,6 @@ class ConjugationOverride(object):
     FORCE_CONJUGATION = 'force_conjugation'
     REFLEXIVE_OVERRIDE = 'reflexive_override'
     
-    Conjugation_Override_Properties = ['conjugations', 'conjugation_stems', 'conjugation_endings', 'conjugation_joins']
     """
     overrides are functions that are bound to the specific verb ( so become instance methods ) 
     They are called:
@@ -116,7 +129,8 @@ class ConjugationOverride(object):
     def add_manual_overrides(self, manual_overrides):
         if manual_overrides is None:
             return
-        for applies in ConjugationOverride.Conjugation_Override_Properties:
+        for conjugationOverrideProperty in ConjugationOverrideProperties.all:
+            applies = conjugationOverrideProperty.key
             if applies in manual_overrides:
                 overrides = manual_overrides[applies]
                 if overrides != None:
@@ -256,7 +270,8 @@ class ConjugationOverride(object):
             for parent in self.parents:
                 verb.process_conjugation_override(parent)
             
-        for applies in ConjugationOverride.Conjugation_Override_Properties:
+        for conjugationOverrideProperty in ConjugationOverrideProperties.all:
+            applies = conjugationOverrideProperty.key
             overrides = getattr(self, applies, None)
             if overrides != None:
                 for tense, conjugation_override in enumerate(overrides):

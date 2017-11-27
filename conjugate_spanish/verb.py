@@ -14,6 +14,7 @@ from .phrase import Phrase
 from .standard_endings import *
 from conjugate_spanish.conjugation_tracking import ConjugationTracking, ConjugationNotes
 from conjugate_spanish.constants import IrregularNature
+from conjugate_spanish.conjugation_override import ConjugationOverrideProperties
 
 _ending_vowel_check = re_compile(Vowels.all_group+'$')
 # check for word with only a single vowel ( used in imperative conjugation )
@@ -174,35 +175,7 @@ class Verb(Phrase):
                     ['suffix_words', lambda: PhraseGroup.SUFFIX_WORDS.extract(phrase_match)] ]:
             if key not in kwargs:
                 kwargs[key] = value()
-        # determine base verb string
-#         _base_verb = make_unicode(base_verb)
-#         if _base_verb == '':
-#             _base_verb = None
-#         if _base_verb is not None:        
-#             if isinstance(_base_verb, Verb):                
-#                 _base_verb_str = _base_verb.inf_verb_string
-#             elif isinstance(_base_verb, str) and _base_verb != '':
-#                 # TODO strip leading/trailing white space
-#                 _base_verb_str = _base_verb 
-#             else:
-#                 raise Exception(phrase+":base_verb must be Verb or string base_verb="+_base_verb).with_traceback()
-#             # example abatir has base: batir
-#             _base_verb_parse = Verb.is_verb(_base_verb_str)
-#             # "abat".find("bat")
-#             core_characters_ = kwargs['core_characters']
-#             base_verb_index = core_characters_.find(_base_verb_parse.group(CORE_VERB))
-#             if base_verb_index <0:
-#                 raise Exception(phrase+":"+repr(_base_verb_str)+ " is not in core characters"+repr(core_characters_))
-#             if kwargs['prefix'] == '':
-#                 kwargs['prefix'] = core_characters_[:base_verb_index]
-#                 kwargs['core_characters'] = core_characters_[base_verb_index:]
-#             elif base_verb_index != 0 and kwargs['prefix'] != core_characters_[:base_verb_index]:
-#                 raise Exception("prefix already="+kwargs['prefix']+" but should be "+core_characters_[:base_verb_index])
-#             elif core_characters_ != _base_verb_parse.group(CORE_VERB):
-#                 raise Exception("core_characters already="+core_characters_+" but should be "+_base_verb_parse.group(CORE_VERB))
-#         
-#             
-#         kwargs['base_verb'] = _base_verb_str
+
         verb = Verb(phrase, definition, conjugation_overrides, process_conjugation_overrides=False, **kwargs)
         if not verb.is_derived:
             # process root verbs so that they are available for derived verbs.
@@ -218,7 +191,7 @@ class Verb(Phrase):
         """
         conjugations = [ None ] * len(Tenses)
         def __look_for_overrides(verb):            
-            overrides = [ override_attribute for override_attribute in ['conjugations', 'conjugation_stems', 'conjugation_endings'] if hasattr(verb, override_attribute)]
+            overrides = [ override_attribute for override_attribute in ConjugationOverrideProperties.all_except(ConjugationOverrideProperties.conjugation_joins) if hasattr(verb, override_attribute)]
             if len(overrides) == 0:
                 return None
             
@@ -341,6 +314,7 @@ class Verb(Phrase):
         # we never want the base verb to apply the reflexive pronoun - irregardless of reflexive_override
         _options = { **options, **{ConjugationOverride.REFLEXIVE_OVERRIDE : False} }
         base_verb_conjugation = self.base_verb.conjugate(conjugation_notes.tense, conjugation_notes.person, _options)
+        
         if base_verb_conjugation.blocked:
             # imperative, third-person only verbs
             conjugation_notes.block()
