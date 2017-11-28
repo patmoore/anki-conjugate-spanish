@@ -9,10 +9,10 @@ from conjugate_spanish.phrase_printer import ScreenPrinter, CsvPrinter
 Espanol_Dictionary.load()
 irregular_nature=IrregularNature.regular #sound_consistence
 if len(sys.argv) < 2:
-#     print("verb tense person")
-#     print("tenses=" + str(Tenses))
-#     print("persons=" + str(Persons))
-    for phrase in Espanol_Dictionary.verbDictionary.values():
+    sorted_keys = list(Espanol_Dictionary.verbDictionary.keys())
+    sorted_keys.sort()
+    for key in sorted_keys:
+        phrase = Espanol_Dictionary.verbDictionary.get(key)
         printer = CsvPrinter(phrase, irregular_nature=irregular_nature)
         printer.print(tenses=Tenses.all)
     exit(0)
