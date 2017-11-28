@@ -1,6 +1,7 @@
 from interface import implements, Interface
 from .constants import Persons, Tenses
-from conjugate_spanish.constants import BaseConst, IrregularNature
+from conjugate_spanish.constants import BaseConst, IrregularNature,\
+    IrregularNatures
 import copy
     
 class PhrasePrinter(Interface):
@@ -12,35 +13,50 @@ class PhrasePrinter(Interface):
         pass
     
 class CsvPrinter(implements(PhrasePrinter)):
-    def __init__(self, phrase):
+    def __init__(self, phrase, irregular_nature = IrregularNature.regular, options=None):
         self._phrase = phrase
+        self._irregular_nature = irregular_nature
+        self._options = {} if options is None else copy.copy(options) 
         
     @property
     def phrase(self):
         return self._phrase
         
     def print(self, *, tenses=Tenses.all, persons=Persons.all, options={}):
-        result = '"'+self.full_phrase+'"'
-#         if full_info:
-#             if len(self.appliedOverrides) > 0:
-#                 result+=',"'+repr(self.appliedOverrides)+'"'
-#             if len(self.doNotApply) > 0:
-#                 result +=',"'+repr(self.doNotApply)+'"'
-#             if self.base_verb_string is not None:
-#                 result += ',"'+self.base_verb_string+'"'
-        
+        result = ''
+        irregular_nature = IrregularNatures.regular
+        def __process(conjugation_notes):
+            if conjugation_notes.irregular_nature > irregular_nature:
+                irregular_nature = conjugation_notes.irregular_nature
+            if conjugation_notes.conjugation is None:
+                result += ','
+            else:
+                result += ',"'+conjugation_notes.conjugation+'"'
+                
+                
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
-                conjugation = self.conjugate(tense)
-                result += ',"'+conjugation+'"'
+                conjugation_notes = self.phrase.conjugate(tense)
+                if conjugation_notes.irregular_nature > irregular_nature:
+                    irregular_nature = conjugation_notes.irregular_nature
+                if conjugation_notes.conjugation is None:
+                    result += ','
+                else:
+                    result += ',"'+conjugation_notes.conjugation+'"'
             else:
-                for person in Persons.all:
-                    conjugation = self.conjugate(tense, person)
-                    if conjugation is None:
+                persons = Persons.all_except(Persons.first_person_singular) if tense in Tenses.imperative else Persons.all
+                for person in persons:
+                    conjugation_notes = self.phrase.conjugate(tense, person)
+                    if conjugation_notes.irregular_nature > irregular_nature:
+                        irregular_nature = conjugation_notes.irregular_nature
+                    if conjugation_notes.conjugation is None:
                         result += ','
                     else:
-                        result += ',"'+conjugation+'"'
-        return result
+                        result += ',"'+conjugation_notes.conjugation+'"'
+        if irregular_nature == IrregularNatures.regular:            
+            print('"'+self.phrase.full_phrase+'","'+irregular_nature.key+'"')
+        else:
+            print('"'+self.phrase.full_phrase+'","'+irregular_nature.key+'"' + result)
     
 class ScreenPrinter(implements(PhrasePrinter)):
     def __init__(self, phrase, irregular_nature = IrregularNature.regular, options=None):

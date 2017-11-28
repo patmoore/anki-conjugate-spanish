@@ -5,7 +5,7 @@ import sys
 from conjugate_spanish import Espanol_Dictionary
 from conjugate_spanish.constants import Tense, Tenses, Persons, Person,\
     IrregularNature
-from conjugate_spanish.phrase_printer import ScreenPrinter
+from conjugate_spanish.phrase_printer import ScreenPrinter, CsvPrinter
 Espanol_Dictionary.load()
 irregular_nature=IrregularNature.regular #sound_consistence
 if len(sys.argv) < 2:
@@ -13,7 +13,7 @@ if len(sys.argv) < 2:
 #     print("tenses=" + str(Tenses))
 #     print("persons=" + str(Persons))
     for phrase in Espanol_Dictionary.verbDictionary.values():
-        printer = ScreenPrinter(phrase, irregular_nature=irregular_nature)
+        printer = CsvPrinter(phrase, irregular_nature=irregular_nature)
         printer.print(tenses=Tenses.all)
     exit(0)
     
