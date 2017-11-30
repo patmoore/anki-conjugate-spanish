@@ -26,7 +26,7 @@ class CsvPrinter(implements(PhrasePrinter)):
         result = ''
         irregular_nature = IrregularNatures.regular
         def __process(conjugation_notes):
-            if conjugation_notes.irregular_nature > irregular_nature:
+            if conjugation_notes.irregular_nature >= irregular_nature:
                 irregular_nature = conjugation_notes.irregular_nature
             if conjugation_notes.conjugation is None:
                 result += ','
@@ -41,6 +41,8 @@ class CsvPrinter(implements(PhrasePrinter)):
                     irregular_nature = conjugation_notes.irregular_nature
                 if conjugation_notes.conjugation is None:
                     result += ','
+                elif conjugation_notes.irregular_nature == IrregularNatures.regular:
+                    result += ',"-"'
                 else:
                     result += ',"'+conjugation_notes.conjugation+'"'
             else:
@@ -51,9 +53,11 @@ class CsvPrinter(implements(PhrasePrinter)):
                         irregular_nature = conjugation_notes.irregular_nature
                     if conjugation_notes.conjugation is None:
                         result += ','
+                    elif conjugation_notes.irregular_nature == IrregularNatures.regular:
+                        result += ',"-"'
                     else:
                         result += ',"'+conjugation_notes.conjugation+'"'
-        if irregular_nature == IrregularNatures.regular:            
+        if irregular_nature < self._irregular_nature:            
             print('"'+self.phrase.full_phrase+'","'+irregular_nature.key+'"')
         else:
             print('"'+self.phrase.full_phrase+'","'+irregular_nature.key+'"' + result)

@@ -7,7 +7,7 @@ from conjugate_spanish.constants import Tense, Tenses, Persons, Person,\
     IrregularNature
 from conjugate_spanish.phrase_printer import ScreenPrinter, CsvPrinter
 Espanol_Dictionary.load()
-irregular_nature=IrregularNature.regular #sound_consistence
+irregular_nature=IrregularNature.radical_stem_change
 if len(sys.argv) < 2:
     sorted_keys = list(Espanol_Dictionary.verbDictionary.keys())
     sorted_keys.sort()
@@ -22,15 +22,17 @@ phrase = Espanol_Dictionary.get(phrase_str)
 if phrase is None:
     print(phrase_str+ " : not in dictionary")
     exit(1)
-printer = ScreenPrinter(phrase, irregular_nature=irregular_nature)
+
     
 if len(sys.argv) < 3:
+    printer = ScreenPrinter(phrase, irregular_nature=irregular_nature)
     printer.print()
     exit(0)    
 
 tenseIndex=int(sys.argv[2])
 tense = Tenses[tenseIndex]
 if len(sys.argv) < 4:
+    printer = ScreenPrinter(phrase, irregular_nature=IrregularNature.regular)
     printer.print(tenses=[tense])
     exit(0)
 

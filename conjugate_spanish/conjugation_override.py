@@ -393,7 +393,9 @@ class Radical_Stem_Conjugation_Override(ConjugationOverride):
         # but for example, absolver o:ue does not have past tense stem changing
         self.stem_changing_ir_gerund = make_std_override(key=key+"_ir_gerund",
             examples=['dormir'],
-            documentation="Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form. The -er verb poder also maintains its preterite stem-change in the gerund form."
+            documentation="Any -ir verb that has a stem-change in the third person preterite (e->i, or o->u) will have the same stem-change in the gerund form.\
+             The -er verb poder also maintains its preterite stem-change in the gerund form.\
+             http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ"
         )
         self.stem_changing_ir_gerund.override_tense_stem(Tenses.gerund, infinitive_to_past_tense)     
         # http://www.spanishdict.com/answers/100043/spanish-gerund-form#.VqA5u1NsOEJ
@@ -749,11 +751,12 @@ Ducir_CO = make_std_override(inf_match=re_compile('d[úu]cir$'),
     )
 Ducir_CO.override_tense_stem(Tenses.past_tense, 
         lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, 
-                                   irregular_nature=IrregularNature.sound_consistence, core_verb=_replace_last_letter_of_stem(conjugation_notes.core_verb, 'c', 'j')),
+           irregular_nature=IrregularNatures.standard_irregular,
+           core_verb=_replace_last_letter_of_stem(conjugation_notes.core_verb, 'c', 'j')),
         documentation='past tense is special case c-> j')
 Ducir_CO.override_tense_ending(Tenses.past_tense, 
     lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, 
-                    irregular_nature=IrregularNature.sound_consistence, ending='eron'),
+        irregular_nature=IrregularNatures.standard_irregular, ending='eron'),
         Persons.third_person_plural, documentation='normally ieron')
 
 Eir_CO = make_std_override(inf_match=re_compile('eír$'),
@@ -765,13 +768,16 @@ Eir_CO = make_std_override(inf_match=re_compile('eír$'),
     )
 def _eir_present_tense_first_plural(self, conjugation_notes, **kwargs):
     _check_and_change(conjugation_notes, ENDS_WITH_E, STARTS_WITH_I, ending_beginning_replacement='í',
+                      irregular_nature=IrregularNatures.standard_irregular,
                       operation=self.key)
     
 def _eir_present_tense_most(self, conjugation_notes, **kwargs):
-    _check_and_change(conjugation_notes, ENDS_WITH_I, STARTS_WITH_NON_I_VOWEL, stem_ending_replacement='í', operation=self.key)
+    _check_and_change(conjugation_notes, ENDS_WITH_I, STARTS_WITH_NON_I_VOWEL, stem_ending_replacement='í',
+                      irregular_nature=IrregularNatures.standard_irregular, operation=self.key)
     
 def _eir_present_sub_tense_first_plural(self, conjugation_notes, **kwargs):
-    _check_and_change(conjugation_notes, ENDS_WITH_ACCENTED_I, STARTS_WITH_NON_I_VOWEL, stem_ending_replacement='i', operation=self.key)
+    _check_and_change(conjugation_notes, ENDS_WITH_ACCENTED_I, STARTS_WITH_NON_I_VOWEL, stem_ending_replacement='i',
+                      irregular_nature=IrregularNatures.standard_irregular, operation=self.key)
     
 Eir_CO.override_tense_join(Tenses.present_tense, _eir_present_tense_most, documentation="replace i (after stem change) with accented í", persons=Persons.all_except(Persons.first_person_plural))
 Eir_CO.override_tense_join(Tenses.present_tense, _eir_present_tense_first_plural, documentation="accent on the i", persons=Persons.first_person_plural)
@@ -877,28 +883,28 @@ Oy_CO.override_tense_ending(Tenses.present_tense, lambda self, conjugation_notes
 
 Infinitive_Stems_E2D = make_std_override(key='e2d', documentation="Future Tense/Conditional Tense:Some verbs convert the -er ending infinitive stem to a 'd'",
         examples=['tener'])
-Infinitive_Stems_E2D.override_tense_stem(Tenses.future_cond, lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.standard_irregular, core_verb=conjugation_notes.core_verb[:-2] + 'dr'))
+Infinitive_Stems_E2D.override_tense_stem(Tenses.future_cond, lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.rare, core_verb=conjugation_notes.core_verb[:-2] + 'dr'))
 
 Infinitive_Stems_R_Only = make_std_override(key='r_only', documentation="Future Tense/Conditional Tense:Some verbs remove the vowel in the infinitive ending to a r",
         examples=['haber'])
-Infinitive_Stems_R_Only.override_tense_stem(Tenses.future_cond, lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.standard_irregular, core_verb=conjugation_notes.core_verb[:-2] + 'r'))
+Infinitive_Stems_R_Only.override_tense_stem(Tenses.future_cond, lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.rare, core_verb=conjugation_notes.core_verb[:-2] + 'r'))
 
 Imperative_Infinitive_Stem_Only = make_std_override(key="imp_inf_stem_only", 
     documentation='in second person positive some verbs only use the infinitive stem with no ending',
     examples=['poner','salir','tener'])
 Imperative_Infinitive_Stem_Only.override_tense(Tenses.imperative_positive, 
                                                lambda self, conjugation_notes, **kwargs: 
-                                               conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.standard_irregular, core_verb=conjugation_notes.phrase.stem), Persons.second_person_singular)
+                                               conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.rare, core_verb=conjugation_notes.phrase.stem), Persons.second_person_singular)
 
 Past_Participle_To = make_std_override(key='pp_to',
                            documentation='past participle ends in -to',
                            examples=['abrir'])
 Past_Participle_To.override_tense_ending(Tenses.past_participle, 
-      lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.standard_irregular, ending='to'))
+      lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.rare, ending='to'))
 Adjective_To = make_std_override(key='adj_to',
                 documentation="adjective ends in -to but NOT the past participle")
 Adjective_To.override_tense_ending(Tenses.adjective,   
-   lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.standard_irregular, ending='to'))
+   lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.rare, ending='to'))
 
 Past_Adj_To = make_std_override(key='pa_to', parents=[Past_Participle_To, Adjective_To])
 
