@@ -5,7 +5,7 @@ from conjugate_spanish import Tenses, Persons, Verb
 import codecs
 import csv
 from conjugate_spanish.espanol_dictionary import Espanol_Dictionary, Verb_Dictionary
-from conjugate_spanish.constants import Infinitive_Endings, Persons_Indirect,\
+from conjugate_spanish.constants import Infinitive_Endings,\
     get_iterable
 from conjugate_spanish.conjugation_override import Standard_Overrides
 MASTER_DIR = './conjugate_spanish/expanded'

@@ -174,15 +174,16 @@ class Persons_(BaseConsts_):
     core = [ first_person_singular, first_person_plural, second_person_singular, third_person_singular, third_person_plural ]
 
 Persons = Persons_(list(Person))
-
-Persons_Indirect = [
+for i in range(len(Persons)):
+    Persons[i].indirect_pronoun = [
     'me',
     'te',
     'se',
     'nos',
     'os',
     'se'
-    ]
+    ][i]
+
 
 class IrregularNature(BaseConst):
     """

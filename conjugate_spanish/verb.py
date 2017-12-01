@@ -375,10 +375,10 @@ class Verb(Phrase):
         if conjugation_notes.tense in Tenses.imperative:
             self.__apply_imperative_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)                      
         elif conjugation_notes.tense not in Tenses.Person_Agnostic:
-            conjugation_notes.change(operation="apply_reflexive", conjugation = Persons_Indirect[conjugation_notes.person] +" "+ conjugation_notes.conjugation,
+            conjugation_notes.change(operation="apply_reflexive", conjugation = conjugation_notes.person.indirect_pronoun +" "+ conjugation_notes.conjugation,
                                      irregular_nature=IrregularNature.regular)
         elif conjugation_notes.tense == Tenses.gerund:
-            conjugation_notes.change(operation="apply_reflexive",conjugation = Vowels.accent(conjugation_notes.conjugation)+Persons_Indirect[Person.third_person_plural],
+            conjugation_notes.change(operation="apply_reflexive",conjugation = Vowels.accent(conjugation_notes.conjugation)+Person.third_person_plural.indirect_pronoun,
                                      irregular_nature=IrregularNature.regular)
             
     def conjugate_stem(self, conjugation_notes):
@@ -526,7 +526,7 @@ class Verb(Phrase):
             else:
                 return Vowels.accent(conjugation_notes.conjugation)
         if self.is_reflexive:
-            pronoun_indirect = Persons_Indirect[conjugation_notes.person]
+            pronoun_indirect = conjugation_notes.person.indirect_pronoun
             if len(conjugation_notes.conjugation) > len(pronoun_indirect) and conjugation_notes.conjugation[-len(pronoun_indirect):] == pronoun_indirect:
                 # there was an override that already applied the indirect pronoun
                 # irse is the current example.
