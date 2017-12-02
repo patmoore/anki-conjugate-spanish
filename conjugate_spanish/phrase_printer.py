@@ -33,7 +33,6 @@ class CsvPrinter(implements(PhrasePrinter)):
             else:
                 result += ',"'+conjugation_notes.conjugation+'"'
                 
-                
         for tense in Tenses.all:
             if tense in Tenses.Person_Agnostic:
                 conjugation_notes = self.phrase.conjugate(tense)
