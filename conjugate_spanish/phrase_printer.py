@@ -57,9 +57,9 @@ class CsvPrinter(implements(PhrasePrinter)):
                     else:
                         result += ',"'+conjugation_notes.conjugation+'"'
         if irregular_nature < self._irregular_nature:            
-            print('"'+self.phrase.full_phrase+'","'+irregular_nature.key+'"')
+            print('"'+self.phrase.full_phrase+'","'+self.phrase.definition+'","'+irregular_nature.key+'"')
         else:
-            print('"'+self.phrase.full_phrase+'","'+irregular_nature.key+'"' + result)
+            print('"'+self.phrase.full_phrase+'","'+self.phrase.definition+'","'+irregular_nature.key+'"' + result)
     
 class ScreenPrinter(implements(PhrasePrinter)):
     def __init__(self, phrase, irregular_nature = IrregularNature.regular, options=None):
