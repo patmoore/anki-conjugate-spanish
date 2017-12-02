@@ -190,7 +190,7 @@ class Verb_Dictionary_(LanguageDictionary_):
                 return True
             else:
                 # both generated -- which one has the best conjugation overrides
-                cs_debug("both are irregular")
+                cs_debug(current_verb.full_phrase +": both are irregular")
                 return False
         else:
             return True

@@ -415,7 +415,7 @@
 "responder","answer,reply,respond"
 "retirar","retire,withdraw"
 "retrasar","delay,retard"
-"reunirse","assemble,get together,meet,gather","-u:ú_past_3rd,u:ú",,"unir does not have accented u"
+"reunirse","assemble,get together,meet,gather"
 "reunir","gather","-u:ú_past_3rd,u:ú",,"unir does not have accented u need to fix pres sub nos - should not have accent"
 "revolver","revolve,turn around,turn over,turn upside down","o:ue,pp_olver"
 "robar","rob,steal"
