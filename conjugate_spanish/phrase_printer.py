@@ -126,7 +126,8 @@ class ScreenPrinter(implements(PhrasePrinter)):
         if conjugation_notes is None:
             print("---", end='; ')
         elif conjugation_notes.irregular_nature >= self._irregular_nature:
-            print(conjugation_notes.full_conjugation+"("+conjugation_notes.operation_notes+")", end='')            
+#             print(conjugation_notes.full_conjugation+"("+conjugation_notes.operation_notes+")", end='')            
+            print(conjugation_notes.full_conjugation, end='')    
             if not conjugation_notes.is_regular and self.detailed:
                 print('', end=' <= ')
                 core_verb = None

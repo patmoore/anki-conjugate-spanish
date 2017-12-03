@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # See github page to report issues or to contribute:
 import sys
+import re
+from conjugate_spanish.constants import re_compile
 from conjugate_spanish import Espanol_Dictionary
 from conjugate_spanish.constants import Tense, Tenses, Persons, Person,\
     IrregularNature
@@ -19,7 +21,21 @@ if len(sys.argv) < 2:
             printer.print(tenses=Tenses.all)
     exit(0)
     
-phrase_str = sys.argv[1]
+arg_str = sys.argv[1]
+accent_a = re_compile("'a")
+arg_str = re.sub(accent_a, 'á', arg_str)
+accent_e = re_compile("'e")
+arg_str = re.sub(accent_e, 'é', arg_str)
+accent_i = re_compile("'i")
+arg_str = re.sub(accent_i, 'í', arg_str)
+accent_o = re_compile("'o")
+arg_str = re.sub(accent_o, 'ó', arg_str)
+accent_u = re_compile("'u")
+arg_str = re.sub(accent_u, 'ú', arg_str)
+umlaut_u = re_compile("~u")
+arg_str = re.sub(umlaut_u, 'ü', arg_str)
+ny = re_compile("~n")
+phrase_str = re.sub(ny, 'ñ', arg_str)
 phrase = Espanol_Dictionary.get(phrase_str)
 if phrase is None:
     print(phrase_str+ " : not in dictionary")
