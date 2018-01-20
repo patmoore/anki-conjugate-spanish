@@ -13,7 +13,6 @@ import types
 from .phrase import Phrase
 from .standard_endings import *
 from conjugate_spanish.conjugation_tracking import ConjugationTracking, ConjugationNotes
-from conjugate_spanish.constants import IrregularNature
 from conjugate_spanish.conjugation_override import ConjugationOverrideProperties
 
 _ending_vowel_check = re_compile(Vowels.all_group+'$')
@@ -59,6 +58,7 @@ class Verb(Phrase):
         self._doNotApply = []
         self._appliedOverrides = []
         self._generated = generated
+        self._explicit_no_root_verb = False
  
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
         phrase_match = Verb.is_verb(self.phrase_string)
@@ -335,7 +335,11 @@ class Verb(Phrase):
         # TODO: look for 2/3 vowel dipthongs as well
         single_vowel_match = _single_vowel_re.match(base_verb_conjugation.conjugation)        
         
-        if conjugation_notes.tense == Tenses.imperative_positive and conjugation_notes.person == Persons.second_person_singular and single_vowel_match is not None:
+        if conjugation_notes.tense != Tenses.imperative_positive or conjugation_notes.person != Persons.second_person_singular or single_vowel_match is None \
+            or _reflexive or Vowels.ends_in_ns(base_verb_conjugation.conjugation) is None:
+            conjugation_notes.change(operation="add_prefix", 
+                 conjugation = self.prefix + base_verb_conjugation.conjugation, irregular_nature=base_verb_conjugation.irregular_nature)
+        else:
             #
             # Accent a single vowel base verb conjugation
             # 
@@ -349,21 +353,10 @@ class Verb(Phrase):
             # TODO accenting ( obtén - for example )
             # reflexive verbs are going to get 'te' at the end, so no need for an accent.
             explicit_accent_already_applied = True
-            if not _reflexive and Vowels.ends_in_ns(base_verb_conjugation.conjugation) is not None:
-                # obtén (obtener) get the accent but deshaz ( deshacer ) does not 
-                conjugation_notes.change(operation="single_vowel_accented_prefix", 
-                         conjugation = self.prefix + Vowels.accent_at(base_verb_conjugation.conjugation, single_vowel_match.start(2)), irregular_nature=base_verb_conjugation.irregular_nature)
-            else:
-                conjugation_notes.change(operation="single_vowel_unaccented_noprefix",
-                                 conjugation = self.prefix + base_verb_conjugation.conjugation, irregular_nature=base_verb_conjugation.irregular_nature)                
-#         elif single_vowel_match is not None:
-            # leave comment in so that i know this has been checked.
-            # traer and atraer -- this is fine : no accenting
-#             self.__raise("Single vowel case in tense", tense, person)
-        else:
-            conjugation_notes.change(operation="add_prefix", 
-                             conjugation = self.prefix + base_verb_conjugation.conjugation, irregular_nature=base_verb_conjugation.irregular_nature)
-            
+            # obtén (obtener) get the accent but deshaz ( deshacer ) does not 
+            conjugation_notes.change(operation="single_vowel_accented_prefix", 
+                     conjugation = self.prefix + Vowels.accent_at(base_verb_conjugation.conjugation, single_vowel_match.start(2)), irregular_nature=base_verb_conjugation.irregular_nature)              
+        
         if _reflexive:
             self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
     
@@ -727,11 +720,16 @@ class Verb(Phrase):
         and the override should not be applied.
         """        
         if conjugation_override is None:
-            return
+            return True
         elif isinstance(conjugation_override, ConjugationOverride):
             override = conjugation_override            
         elif len(conjugation_override) > 1:
             doNotApply = conjugation_override[0] == '-'
+            self._explicit_no_root_verb = conjugation_override[0] == '!' 
+            if self.explicit_no_root_verb:
+                # we don't do anything with this right now .. but in future note this in the output
+                self.base_verb_string = conjugation_override
+                return True
             if doNotApply:                
                 # we continue processing to make sure the override name was correct.
                 lookup_key = conjugation_override[1:]
@@ -825,6 +823,7 @@ class Verb(Phrase):
         """
         if verb is reflexive, the nonreflexive base verb
         if this is a phrase, the verb being conjugated.
+        Note this is NOT the root verb
         """ 
         if self.is_derived:                
             _base_verb_str= getattr(self, '_base_verb_string', None)
@@ -842,19 +841,22 @@ class Verb(Phrase):
     @base_verb_string.setter
     def base_verb_string(self, base_verb_string_):
         self._base_verb_string = base_verb_string_
-        
+      
+    @property
+    def explicit_no_root_verb(self):
+        return self._explicit_no_root_verb
+      
     @property
     def root_verb(self):
         """
         Root verb is the verb that provides the conjugation rules.
+        examples: reenviar is based on enviar
         """
-        if hasattr(self, '_root_verb'):
+        if self.explicit_no_root_verb:
+            return None
+        elif hasattr(self, '_root_verb'):
             return self._root_verb
-                    # some verbs are based off of others (tener)
-            # TODO: maldecir has different tu affirmative than decir  
-            #HACK : would prefer to not trigger sql calls... but this works o.k. 
-            # and allows for out of ordering loading.
-        if self.root_verb_string:
+        elif self.root_verb_string:
             _root_verb = self.find_verb(self.root_verb_string)
             if _root_verb is None:
                 # TODO - may not be in dictionary yet?

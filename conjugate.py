@@ -41,10 +41,10 @@ if phrase is None:
     print(phrase_str+ " : not in dictionary")
     exit(1)
 
-    
 if len(sys.argv) < 3:
     printer = ScreenPrinter(phrase, irregular_nature=irregular_nature, options=options)
     printer.print()
+    
     exit(0)    
 
 tenseIndex=int(sys.argv[2])

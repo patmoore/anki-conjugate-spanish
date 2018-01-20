@@ -64,6 +64,9 @@ class DerivationTree_():
             self._map[parent_str] = DerivationNode(parent_str)        
         self._map[parent_str].add_derived(phrase.full_phrase)
         
+    def get_derived(self, parent_str):
+        return self._map[parent_str]
+        
     def print_tree(self):
         print('{')
         for key in sorted(self._map.keys()):
@@ -280,6 +283,12 @@ class Espanol_Dictionary_():
             return self.phraseDictionary.get(phrase)
         else:
             return verb
+    def get_derived(self, phrase_str):
+        if isinstance(phrase_str, str):
+            return DerivationTree.get_derived(phrase_str)
+#         elif phrase_str.is_derived:
+#             return DerivationTree.get_derived(phrase_str.base_verb) 
+        
 
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary
