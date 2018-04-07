@@ -143,7 +143,7 @@ class Verb_Dictionary_(LanguageDictionary_):
     def get(self, phrase, default_ = None):
         verb = super().get(phrase, default_)
         if verb is None:
-            print("No verb with " + phrase)
+            cs_debug("No verb with " + phrase)
             verb = Storage.get_phrase(phrase)
             if verb is not None:
                 self[phrase] = verb

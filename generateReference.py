@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import conjugate_spanish
-from conjugate_spanish.verb_dictionary import Verb_Dictionary
+from conjugate_spanish.espanol_dictionary import Verb_Dictionary
 from conjugate_spanish.conjugation_override import Standard_Overrides
 Verb_Dictionary.load()
 
