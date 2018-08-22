@@ -9,7 +9,7 @@ This code holds the history of how the verb is conjugated
 1. Shows the rules used (in order)
 2. Is responsible for the final joining together of the verb 
 """
-from conjugate_spanish.standard_endings import Infinitive_Endings
+from conjugate_spanish.standard_endings import Infinitive_Ending
 
 class ConjugationNote:
     """
@@ -115,7 +115,7 @@ class ConjugationNotes():
         self._blocked = False
         self._completed = False
         self._phrase = phrase
-        infinitive_ending = Infinitive_Endings.index(phrase.verb_ending_index)
+        infinitive_ending = Infinitive_Ending.index(phrase.verb_ending_index)
         inf_conjugation_note = self._new_conjugation_note("infinitive")
         inf_conjugation_note.core_verb = phrase.stem
         # TODO replace with infinitive_ending.code?
@@ -293,8 +293,8 @@ class ConjugationNotes():
         
     def __raise(self, msg, traceback_=None):
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.phrase.full_phrase, 
-             Tenses[self.tense].human_readable if self.tense is not None else "-", 
-             Persons[self.person].human_readable if self.person is not None else "-", msg)
+             Tense[self.tense].human_readable if self.tense is not None else "-",
+             Person[self.person].human_readable if self.person is not None else "-", msg)
         cs_error(">>>>>>",msg_)
         
     def __repr__(self):
@@ -310,18 +310,18 @@ class ConjugationTracking():
     Owned by a phrase / verb
     """
     def __init__(self, phrase):
-        self.conjugation_notes = [ None for tense in Tenses.all ]
+        self.conjugation_notes = [ None for tense in Tense.all() ]
         self._phrase = phrase
                 
     def get_conjugation_notes(self, tense, person = None):
         if self.conjugation_notes[tense] is None:
-            if tense in Tenses.Person_Agnostic:
+            if tense in Tense.Person_Agnostic():
                 self.conjugation_notes[tense] = ConjugationNotes(tense, None, self._phrase)
             else:
                 self.conjugation_notes[tense] =\
-                    [ None for person in Persons.all ]
+                    [ None for person in Person.all() ]
         
-        if tense in Tenses.Person_Agnostic:
+        if tense in Tense.Person_Agnostic():
             conjugation_notes = self.conjugation_notes[tense] 
         elif self.conjugation_notes[tense][person] is None:
             conjugation_notes = self.conjugation_notes[tense][person] =\

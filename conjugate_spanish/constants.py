@@ -25,51 +25,75 @@ def re_group(args, not_=False):
             return "[^"+"".join(args)+"]"
         else:
             return "["+"".join(args)+"]"
-    
+
+
 class BaseConst(IntEnum):
-    def __new__(cls, code, key, human_readable):
+    def __new__(cls, code:int, key: str, human_readable: str, *subclass_args):
+        """
+        :param **kwargs:
+        :param key: unique string - used to store this in the database
+        and for look up by value
+
+        Nothing complicated should happen here. Use __init__ for more extensive setup
+        """
+        # for a string enum:
+        # inst = str.__new__(cls, key)
+        # inst._value_ = key
+
+        # for the old IntEnum
         inst = int.__new__(cls, code)
         inst._value_ = code
         return inst
-    
-    def __init__(self, code, key, human_readable):
-        self.code = code
+
+    def __init__(self, code, key: str, human_readable: str):
+        """
+        :param key: unique string - used to store this in the database
+        :param human_readable: for display
+        """
+        super().__init__()
         self.key = key
         self.human_readable = human_readable
-        
+
     def __eq__(self, right):
         if isinstance(right, str):
             return self.key == right
         else:
             return self.cmp(right) == 0
-    
+
     def __ne__(self, right):
-        return not(self.__eq__(right))
-        
+        return not (self.__eq__(right))
+
     def __lt__(self, right):
         if isinstance(right, str):
             return self.key < right
         else:
             return self.cmp(right) < 0
-        
+
     def __le__(self, right):
         if isinstance(right, str):
             return self.key <= right
         else:
             return self.cmp(right) <= 0
-        
+
     def __gt__(self, right):
         if isinstance(right, str):
             return self.key > right
         else:
             return self.cmp(right) > 0
-        
+
     def __ge__(self, right):
         if isinstance(right, str):
             return self.key >= right
         else:
             return self.cmp(right) >= 0
-        
+
+    # new str enum value
+    # def cmp(self, right):
+    #     if isinstance(right, self.__class__):
+    #         return self.__class__._member_names_.index(self) - self.__class__._member_names_.index(right)
+    #     else:
+    #         return NotImplemented
+
     def cmp(self, right):
         if isinstance(right, self.__class__):
             return self._value_ - right._value_
@@ -78,7 +102,39 @@ class BaseConst(IntEnum):
             return self._value_ - right
         else:
             return NotImplemented
-        
+
+    @classmethod
+    def all(cls):
+        return list(cls)
+
+    @classmethod
+    def all_except(cls, _except):
+        if not isinstance(_except, list):
+            _except = [_except]
+        return [e for e in cls.all() if e not in _except]
+
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Used to get all the keys for example to construct a Enum
+        :return: list(str)
+        """
+        return [v.key for v in cls.all()]
+
+    @classmethod
+    def index(cls, stringName):
+        for name, item in cls.__members__.items():
+            if item.key == stringName:
+                return item
+        else:
+            return None
+
+    def __str__(self):
+        return self.human_readable
+
+    def __repr__(self):
+        return self.key
+
 @unique
 class Tense(BaseConst):
     present_tense = (0, 'present', 'Present')
@@ -96,94 +152,67 @@ class Tense(BaseConst):
     #The boy is cursed. --> el niño está maldito. (adjective)
     #The boy has been cursed --> el niño ha sido maldecido ( one of the perfect tenses)
     adjective = (11, 'adjective', 'Adjective (usually Past Participle)' )
-    
-class BaseConsts_(list):
-    def __init__(self, constants):
-        super().__init__(constants)
-#         self._human_readable = human_readable
-        
-    @property
-    def all(self):
-        return self
-    
-    def all_except(self, _except):
-        if not isinstance(_except, list):
-            _except = [ _except ]
-        return [index for index in self.all if index not in _except]
-    
-    def human_readable(self, index):
-        return self[index].human_readable
-    
-    def index(self, index_):
-        for v in self:
-            if v == index_: 
-                return v
-        return None
 
-class Tenses_(BaseConsts_):
-    present_tense = Tense.present_tense
-    incomplete_past_tense = Tense.incomplete_past_tense
-    past_tense = Tense.past_tense
-    future_tense = Tense.future_tense
-    conditional_tense = Tense.conditional_tense
-    present_subjective_tense = Tense.present_subjective_tense
-    past_subjective_tense = Tense.past_subjective_tense
-    imperative_positive = Tense.imperative_positive
-    imperative_negative = Tense.imperative_negative
-    gerund = Tense.gerund
-    past_participle = Tense.past_participle
-    adjective = Tense.adjective
-    Person_Agnostic = [ gerund, past_participle, adjective ]
+    @classmethod
+    def Person_Agnostic(cls):
+        return [ Tense.gerund, Tense.past_participle, Tense.adjective ]
     # these tenses conjugate for all persons ( note: imperative and Person_agnostic is missing)
-    All_Persons = [ present_tense, incomplete_past_tense, past_tense, future_tense,
-        conditional_tense, present_subjective_tense, past_subjective_tense]
-    imperative = [ imperative_negative, imperative_positive ]
-    future_cond = [ future_tense, conditional_tense]
+    @classmethod
+    def All_Persons(cls):
+        return [ Tense.present_tense, Tense.incomplete_past_tense, Tense.past_tense, Tense.future_tense, \
+                 Tense.conditional_tense, Tense.present_subjective_tense, Tense.past_subjective_tense]
+
+    @classmethod
+    def imperative(cls):
+        return [ Tense.imperative_negative, Tense.imperative_positive ]
+
+    @classmethod
+    def future_cond(cls):
+        return [ Tense.future_tense, Tense.conditional_tense]
     # Most of the time these 2 have same conjugation
 #     past_part_adj = [ past_participle, adjective]
     # these tenses are the ones that are most commonly needed used in normal conversation
     # note that future tense can be "cheated" with "ir a"    
-    core = [ present_tense, past_tense ]
-    
-# names also used in manually defined override files
-Tenses = Tenses_(list(Tense))
+    @classmethod
+    def core(cls):
+        return [ Tense.present_tense, Tense.past_tense ]
 
 @unique
 class Person(BaseConst):
-    first_person_singular = (0, 'yo', 'yo')
-    second_person_singular = (1, 'tú', 'tú')
-    third_person_singular = (2, 'usted', 'usted')
-    first_person_plural = (3, 'nosotros', 'nosotros')
-    second_person_plural = (4, 'vosotros', 'vosotros')
-    third_person_plural = (5, 'ustedes', 'ustedes')
-    
-class Persons_(BaseConsts_):
-    first_person_singular = Person.first_person_singular
-    second_person_singular =Person.second_person_singular
-    third_person_singular = Person.third_person_singular
-    first_person_plural = Person.first_person_plural
-    second_person_plural = Person.second_person_plural
-    third_person_plural = Person.third_person_plural
-        
-    Present_Tense_Stem_Changing_Persons = [first_person_singular, second_person_singular, third_person_singular, third_person_plural]
-    Past_Tense_Stem_Changing_Persons = [third_person_singular, third_person_plural]
-    first_person = [ first_person_singular, first_person_plural ]
-    second_person = [ second_person_singular, second_person_plural ]
-    third_person = [ third_person_singular, third_person_plural]    
+    first_person_singular = (0, 'yo', 'yo', 'me')
+    second_person_singular = (1, 'tú', 'tú', 'te')
+    third_person_singular = (2, 'usted', 'usted', 'se')
+    first_person_plural = (3, 'nosotros', 'nosotros', 'nos')
+    second_person_plural = (4, 'vosotros', 'vosotros', 'os')
+    third_person_plural = (5, 'ustedes', 'ustedes', 'se')
+
+    def __init__(self, code:int, key: str, human_readable: str, indirect_pronoun: str):
+        super().__init__(code, key, human_readable)
+        self.indirect_pronoun = indirect_pronoun
+
+    @classmethod
+    def Present_Tense_Stem_Changing_Persons(cls):
+        return [Person.first_person_singular, Person.second_person_singular, Person.third_person_singular, Person.third_person_plural]
+
+    @classmethod
+    def Past_Tense_Stem_Changing_Persons(cls):
+        return [Person.third_person_singular, Person.third_person_plural]
+
+    @classmethod
+    def first_person(cls):
+        return [ Person.first_person_singular, Person.first_person_plural ]
+
+    @classmethod
+    def second_person(cls):
+        return [ Person.second_person_singular, Person.second_person_plural ]
+
+    @classmethod
+    def third_person(cls):
+        return [ Person.third_person_singular, Person.third_person_plural]
     # arguably second person singular is not core...
-    core = [ first_person_singular, first_person_plural, second_person_singular, third_person_singular, third_person_plural ]
-
-Persons = Persons_(list(Person))
-for i in range(len(Persons)):
-    Persons[i].indirect_pronoun = [
-    'me',
-    'te',
-    'se',
-    'nos',
-    'os',
-    'se'
-    ][i]
-
+    @classmethod
+    def core(cls):
+        return [ Person.first_person_singular, Person.first_person_plural, Person.second_person_singular, Person.third_person_singular, Person.third_person_plural ]
 
 class IrregularNature(BaseConst):
     """
@@ -198,18 +227,8 @@ class IrregularNature(BaseConst):
     standard_irregular = (3, 'std_irregular', 'irregularity comes from a standard irregular pattern')
     rare= (4, 'rare', 'irregularity is not unique but only occurs in a few verbs')
     custom = (5, 'custom', 'irregularity is unique to this verb')
-    blocked = (6, 'blocked', 'no conjugation') 
-    
-class IrregularNatures_(BaseConsts_):
-    regular = IrregularNature.regular
-    sound_consistence = IrregularNature.sound_consistence
-    radical_stem_change = IrregularNature.radical_stem_change
-    standard_irregular = IrregularNature.standard_irregular
-    rare = IrregularNature.rare
-    custom = IrregularNature.custom
-    blocked = IrregularNature.blocked
+    blocked = (6, 'blocked', 'no conjugation')
 
-IrregularNatures = IrregularNatures_(list(IrregularNature))
 #
 # Parse up the infinitive string: 
 __trim_ws='\s*'
@@ -240,7 +259,7 @@ class PhraseMatch:
     def reflexive(self):
         return self._reflexive
     
-    
+# NOTE: the index are used into a regex match so MUST start at 1
 class PhraseGroup(BaseConst):
     PREFIX_WORDS = (1, 'prefix_words', None)
     PREFIX_CHARS = (2, 'prefix', None)
@@ -250,7 +269,7 @@ class PhraseGroup(BaseConst):
     SUFFIX_WORDS = (6, 'suffix_words', None)
     
     def extract(self, phrase_match):
-        return phrase_match.group(self.code)
+        return phrase_match.group(self._value_)
 
     @classmethod
     def is_verb(cls, phrase_string):

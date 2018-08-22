@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from conjugate_spanish import Tenses, Persons, Verb
+from conjugate_spanish import Tense, Person, Verb
 
 class TestThirdPersonOnly(unittest.TestCase):
     """
@@ -38,13 +38,13 @@ class TestThirdPersonOnly(unittest.TestCase):
             'sucedido',
             'sucedido'
         ]
-        for tense in Tenses.all:
-            if tense in Tenses.Person_Agnostic:
+        for tense in Tense.all():
+            if tense in Tense.Person_Agnostic():
                 conjugation_notes = verb.conjugate(tense)
                 self.assertEqual(results[tense], conjugation_notes.conjugation)
             else:
                 index = 0
-                for person in Persons.third_person:
+                for person in Person.third_person():
                     expected = results[tense][index]
                     conjugation_notes = verb.conjugate(tense, person)
                     self.assertEqual(expected, conjugation_notes.conjugation)
@@ -66,8 +66,8 @@ class TestThirdPersonOnly(unittest.TestCase):
             'helado'
         ]
         
-        for tense in Tenses.all:
-            for person in [Persons.third_person_singular]:
+        for tense in Tense.all():
+            for person in [Person.third_person_singular]:
                 expected = results[tense]
                 conjugation = verb.conjugate(tense, person)
                 self.assertEqual(expected, conjugation)

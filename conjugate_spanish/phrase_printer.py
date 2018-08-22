@@ -1,18 +1,17 @@
-from interface import implements, Interface
-from .constants import Persons, Tenses
-from conjugate_spanish.constants import BaseConst, IrregularNature,\
-    IrregularNatures
+# from interface import implements, Interface
+from .constants import Person, Tense
+from conjugate_spanish.constants import BaseConst, IrregularNature
 import copy
+#
+# class PhrasePrinter(Interface):
+#     def print(self, *, tenses=Tense.all(), persons=Person.all(), options={}):
+#         pass
+#
+#     @property
+#     def phrase(self):
+#         pass
     
-class PhrasePrinter(Interface):
-    def print(self, *, tenses=Tenses.all, persons=Persons.all, options={}):
-        pass
-    
-    @property
-    def phrase(self):
-        pass
-    
-class CsvPrinter(implements(PhrasePrinter)):
+class CsvPrinter(object):
     def __init__(self, phrase, irregular_nature = IrregularNature.regular, options=None):
         self._phrase = phrase
         self._irregular_nature = irregular_nature
@@ -22,9 +21,9 @@ class CsvPrinter(implements(PhrasePrinter)):
     def phrase(self):
         return self._phrase
         
-    def print(self, *, tenses=Tenses.all, persons=Persons.all, options={}):
+    def print(self, *, tenses=Tense.all(), persons=Person.all(), options={}):
         result = ''
-        irregular_nature = IrregularNatures.regular
+        irregular_nature = IrregularNature.regular
         def __process(conjugation_notes):
             if conjugation_notes.irregular_nature >= irregular_nature:
                 irregular_nature = conjugation_notes.irregular_nature
@@ -33,26 +32,26 @@ class CsvPrinter(implements(PhrasePrinter)):
             else:
                 result += ',"'+conjugation_notes.conjugation+'"'
                 
-        for tense in Tenses.all:
-            if tense in Tenses.Person_Agnostic:
+        for tense in Tense.all():
+            if tense in Tense.Person_Agnostic():
                 conjugation_notes = self.phrase.conjugate(tense)
                 if conjugation_notes.irregular_nature > irregular_nature:
                     irregular_nature = conjugation_notes.irregular_nature
                 if conjugation_notes.conjugation is None:
                     result += ','
-                elif conjugation_notes.irregular_nature == IrregularNatures.regular:
+                elif conjugation_notes.irregular_nature == IrregularNature.regular:
                     result += ',"-"'
                 else:
                     result += ',"'+conjugation_notes.conjugation+'"'
             else:
-                persons = Persons.all_except(Persons.first_person_singular) if tense in Tenses.imperative else Persons.all
+                persons = Person.all_except(Person.first_person_singular) if tense in Tense.imperative() else Person.all()
                 for person in persons:
                     conjugation_notes = self.phrase.conjugate(tense, person)
                     if conjugation_notes.irregular_nature > irregular_nature:
                         irregular_nature = conjugation_notes.irregular_nature
                     if conjugation_notes.conjugation is None:
                         result += ','
-                    elif conjugation_notes.irregular_nature == IrregularNatures.regular:
+                    elif conjugation_notes.irregular_nature == IrregularNature.regular:
                         result += ',"-"'
                     else:
                         result += ',"'+conjugation_notes.conjugation+'"'
@@ -61,7 +60,7 @@ class CsvPrinter(implements(PhrasePrinter)):
         else:
             print('"'+self.phrase.full_phrase+'","'+self.phrase.definition+'","'+irregular_nature.key+'"' + result)
     
-class ScreenPrinter(implements(PhrasePrinter)):
+class ScreenPrinter(object): # implements(PhrasePrinter)
     def __init__(self, phrase, irregular_nature = IrregularNature.regular, options=None):
         self._phrase = phrase
         self._irregular_nature = irregular_nature
@@ -79,7 +78,7 @@ class ScreenPrinter(implements(PhrasePrinter)):
     def print_blocked(self):
         return 'blocked' in self._options and self._options['blocked']
     
-    def print(self, tenses=Tenses.all, persons=Persons.all, **kwargs):
+    def print(self, tenses=Tense.all(), persons=Person.all(), **kwargs):
         print(self.phrase.full_phrase+ ' : ' + self.phrase.definition + ' (' + self.phrase.complete_overrides_string+ ')')
         irregular_nature = IrregularNature.regular
         for tense in tenses:
@@ -88,13 +87,13 @@ class ScreenPrinter(implements(PhrasePrinter)):
                 irregular_nature = returned_irregular_nature
         print(irregular_nature.human_readable)
                 
-    def print_tense(self, tense, persons=Persons.all):
+    def print_tense(self, tense, persons=Person.all()):
         def _print_header_():
             print("  "+tense.human_readable+ "(" 
               + str(tense._value_) + "):")
         irregular_nature = IrregularNature.regular
 
-        if tense in Tenses.Person_Agnostic:
+        if tense in Tense.Person_Agnostic():
             conjugation_notes = self.phrase.conjugate(tense)
             if conjugation_notes.irregular_nature >= self._irregular_nature:
                 _print_header_()
@@ -104,7 +103,7 @@ class ScreenPrinter(implements(PhrasePrinter)):
         else:
             conj_list = []
             for person in persons:
-                if person != Persons.first_person_singular or tense not in Tenses.imperative:
+                if person != Person.first_person_singular or tense not in Tense.imperative():
                     conjugation_notes = self.phrase.conjugate(tense, person)
                     if conjugation_notes is not None and conjugation_notes.irregular_nature >= self._irregular_nature and (self.print_blocked or not conjugation_notes.blocked):
                         conj_list.append(conjugation_notes)
@@ -160,19 +159,19 @@ class ScreenPrinter(implements(PhrasePrinter)):
         
     def _print_conjugations(self, conjugations):
         if conjugations is not None:        
-            for tense in range(len(Tenses)):
+            for tense in range(len(Tense)):
                 if conjugations[tense] is None:
                     continue
                 
-                print("  "+ Tenses[tense], end=": ")
-                if tense in Tenses.Person_Agnostic:
+                print("  "+ tense, end=": ")
+                if tense in Tense.Person_Agnostic():
                     print(conjugations[tense])
                 else:
-                    for person in range(len(Persons)):
+                    for person in range(len(Person)):
                         if conjugations[tense][person] is not None:
                             if not self.is_reflexive:
-                                print( Persons[person]+" "+conjugations[tense][person], end="; ")
-                            elif tense not in Tenses.imperative:
+                                print( person+" "+conjugations[tense][person], end="; ")
+                            elif tense not in Tense.imperative():
                                 print(conjugations[tense][person], end="; ")
                             else:
                                 print(conjugations[tense][person])

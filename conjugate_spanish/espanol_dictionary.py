@@ -220,12 +220,12 @@ class Verb_Dictionary_(LanguageDictionary_):
         
         with codecs.open(_outputfile, "w", "utf-8") as f:
             f.write("full_phrase")
-            for tense in Tenses.all:
-                if tense in Tenses.Person_Agnostic:
-                    f.write(','+Tenses[tense])
+            for tense in Tense.all():
+                if tense in Tense.Person_Agnostic():
+                    f.write(','+tense)
                 else:
-                    for person in Persons.all:
-                        f.write(','+Tenses[tense]+"_"+Persons[person])
+                    for person in Person.all():
+                        f.write(','+tense+"_"+person)
             f.write('\n')
             for phrase in self.by[source]:
                 verb = self.get(phrase)

@@ -1,5 +1,5 @@
 import unittest
-from conjugate_spanish.constants import Tenses, Persons
+from conjugate_spanish.constants import Tense, Person
 from conjugate_spanish.vowel import Vowels
 from conjugate_spanish.verb import Verb
 from conjugate_spanish.espanol_dictionary import Espanol_Dictionary

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from conjugate_spanish.constants import Tenses, Persons, Reflexive
+from conjugate_spanish.constants import Tense, Person, Reflexive
 from conjugate_spanish.vowel import Vowels
 from conjugate_spanish.verb import Verb
 
@@ -79,9 +79,9 @@ class TestBasic(unittest.TestCase):
         Test to make sure that the u in qu is skipped.
         """
         verb = Verb.importString("acercarse","approach,draw near")
-        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.third_person_singular)
+        conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.third_person_singular)
         self.assertEqual(conjugation_notes.conjugation, 'acérquese')
-        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.third_person_plural)
+        conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.third_person_plural)
         self.assertEqual(conjugation_notes.conjugation, 'acérquense')
         
     def test_proper_accent_1(self):
@@ -92,7 +92,7 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.base_verb_string, "divorciar")
         self.assertEqual(verb.root_verb_string, "divorciar")
         self.assertEqual(verb.inf_verb_string, "divorciar")
-        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.second_person_singular)
         self.assertEqual('divórciate', conjugation_notes.conjugation)
         
     def test_proper_accent_2(self):
@@ -103,7 +103,7 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.base_verb_string, "limpiar")
         self.assertEqual(verb.root_verb_string, "limpiar")
         self.assertEqual(verb.inf_verb_string, "limpiar")
-        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.second_person_singular)
         self.assertEqual('límpiate', conjugation_notes.conjugation)
         
     def test_proper_accent_3(self):
@@ -114,7 +114,7 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.base_verb_string, None)
         self.assertEqual(verb.root_verb_string, "enviar")
         self.assertEqual(verb.inf_verb_string, "enviar")
-        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.second_person_singular)
         self.assertEqual('envía', conjugation_notes.conjugation)
     def test_proper_accent_4(self):
         """
@@ -124,7 +124,7 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(verb.base_verb_string, "erguir")
         self.assertEqual(verb.root_verb_string, "erguir")
         self.assertEqual(verb.inf_verb_string, "erguirse")
-        conjugation_notes = verb.conjugate(Tenses.imperative_positive, Persons.second_person_singular)
+        conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.second_person_singular)
         self.assertEqual('írguete', conjugation_notes.conjugation)
         
     def test_accenting_rules(self):
