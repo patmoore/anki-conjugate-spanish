@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 from conjugate_spanish.constants import Tense, Person, Reflexive
-from conjugate_spanish.vowel import Vowels
+from conjugate_spanish.vowel import Vowels, WordTokenizer
 from conjugate_spanish.verb import Verb
 
 class TestBasic(unittest.TestCase):
@@ -80,9 +80,9 @@ class TestBasic(unittest.TestCase):
         """
         verb = Verb.importString("acercarse","approach,draw near")
         conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.third_person_singular)
-        self.assertEqual(conjugation_notes.conjugation, 'acérquese')
+        self.assertEqual('acérquese', conjugation_notes.conjugation)
         conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.third_person_plural)
-        self.assertEqual(conjugation_notes.conjugation, 'acérquense')
+        self.assertEqual('acérquense', conjugation_notes.conjugation)
         
     def test_proper_accent_1(self):
         """
@@ -110,12 +110,13 @@ class TestBasic(unittest.TestCase):
         """
         make sure the o is accented not the i ( i is a weak vowel )
         """
-        verb = Verb.importString('enviar','', conjugation_overrides="iar")
+        verb = Verb.importString('enviar', conjugation_overrides="iar")
         self.assertEqual(verb.base_verb_string, None)
         self.assertEqual(verb.root_verb_string, "enviar")
-        self.assertEqual(verb.inf_verb_string, "enviar")
+        self.assertEqual(verb.full_phrase, "enviar")
         conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.second_person_singular)
         self.assertEqual('envía', conjugation_notes.conjugation)
+
     def test_proper_accent_4(self):
         """
         make sure the o is accented not the i ( i is a weak vowel )
@@ -123,16 +124,16 @@ class TestBasic(unittest.TestCase):
         verb = Verb.importString('erguirse','', conjugation_overrides="e:i")
         self.assertEqual(verb.base_verb_string, "erguir")
         self.assertEqual(verb.root_verb_string, "erguir")
-        self.assertEqual(verb.inf_verb_string, "erguirse")
+        self.assertEqual(verb.full_phrase, "erguirse")
         conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.second_person_singular)
         self.assertEqual('írguete', conjugation_notes.conjugation)
         
     def test_accenting_rules(self):
         samples = {
+            'ten': ['t', 'e', 'n', ''],
             'divorcia' : ['div', 'o','rc','ia'],
             'divorcian' : ['div', 'o','rc','ian'],
-            'divourcia' : ['div', 'ou','rc','ia'],
-            'ten' : [ 't','e','n', ''],
+            'divuorcia' : ['div', 'uo','rc','ia'],
             'di' : [ 'd','i','',''],
             'rehuso' : ['r','ehu','s','o']
         }

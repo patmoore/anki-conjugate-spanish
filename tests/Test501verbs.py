@@ -24,16 +24,16 @@ class Test501verbs(unittest.TestCase):
         errors = {}
         for tense in get_iterable(tenses):
             if tense in Tense.Person_Agnostic():
-                key = tense
+                key = repr(tense)
                 expected_conjugation = expected[key] if expected[key] != '' else None
-                conjugation = verb.conjugate(tense)
+                conjugation = verb.conjugate(tense, returnAsString=True)
                 if expected_conjugation != conjugation:
                     errors[key] = {'expected':expected_conjugation, 'actual':conjugation}
             else:
                 for person in get_iterable(persons):
-                    key = tense.__repr__()+'_'+person.__repr__()
+                    key = repr(tense)+'_'+repr(person)
                     expected_conjugation = expected[key] if expected[key] != '' else None
-                    conjugation = verb.conjugate(tense,person)
+                    conjugation = verb.conjugate(tense,person, returnAsString=True)
                     if expected_conjugation != conjugation:
                         errors[key] = {'expected':expected_conjugation, 'actual':conjugation}
         if len(errors) > 0:

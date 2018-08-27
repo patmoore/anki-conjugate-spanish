@@ -49,26 +49,26 @@ class TestDerivedVerb(unittest.TestCase):
         test to make sure that tener is being conjugated correctly
         this tests overriding the stem and conjugation because if this doesn't work the other tests will not work
         """
-        conjugation = tener.conjugate(Tense.present_tense, Person.first_person_singular)
+        conjugation = tener.conjugate(Tense.present_tense, Person.first_person_singular, returnAsString=True)
         self.assertEqual('tengo', conjugation, "Make sure that the override of the first person stem change happens")
-        conjugation = tener.conjugate(Tense.imperative_positive, Person.second_person_singular)
+        conjugation = tener.conjugate(Tense.imperative_positive, Person.second_person_singular, returnAsString=True)
         self.assertEqual('ten', conjugation, "Make sure that the override of the first person stem change happens")
-        conjugation = tener.conjugate(Tense.imperative_positive, Person.first_person_plural)
+        conjugation = tener.conjugate(Tense.imperative_positive, Person.first_person_plural, returnAsString=True)
         self.assertEqual('tengamos', conjugation, "Make sure that the override of the first_person_plural stem change happens")
          
     def test_tener_most_tenses_non_reflexive(self):
         """
         all except the imperatives
         """
-        conjugations = faketener.conjugate_all_tenses()
-        tener_conjugations = tener.conjugate_all_tenses()
+        conjugations = faketener.conjugate_all_tenses(returnAsString=True)
+        tener_conjugations = tener.conjugate_all_tenses(returnAsString=True)
         except_tenses = list(Tense.imperative())
         except_tenses.extend(Tense.Person_Agnostic())
         most_tenses = Tense.all_except(except_tenses)
         for tense in most_tenses:
             for person in Person.all():
                 tail = conjugations[tense][person][4:]
-                self.assertEqual(tail, tener_conjugations[tense][person], tail+":tense="+tense+" person="+person)
+                self.assertEqual(tail, tener_conjugations[tense][person], tail+":tense="+str(tense)+" person="+str(person))
                 
         for tense in Tense.Person_Agnostic():
             tail = conjugations[tense][4:]
@@ -78,16 +78,16 @@ class TestDerivedVerb(unittest.TestCase):
         """
         all except the imperatives
         """
-        tener_conjugations = tener.conjugate_all_tenses()
+        tener_conjugations = tener.conjugate_all_tenses(returnAsString=True)
         except_tenses = list(Tense.imperative())
         except_tenses.extend(Tense.Person_Agnostic())
         most_tenses = Tense.all_except(except_tenses)
         for tense in most_tenses:
             for person in Person.all():
-                tail = faketenerse.conjugate(tense,person).split(' ')[1][4:]
-                self.assertEqual(tail, tener_conjugations[tense][person], tail+":tense="+tense+" person="+person)
-                tail = faketenerse_1.conjugate(tense,person).split(' ')[1][4:]
-                self.assertEqual(tail, tener_conjugations[tense][person], tail+":tense="+tense+" person="+person)
+                tail = faketenerse.conjugate(tense,person, returnAsString=True).split(' ')[1][4:]
+                self.assertEqual(tail, tener_conjugations[tense][person], tail+":tense="+str(tense)+" person="+str(person))
+                tail = faketenerse_1.conjugate(tense,person, returnAsString=True).split(' ')[1][4:]
+                self.assertEqual(tail, tener_conjugations[tense][person], tail+":tense="+str(tense)+" person="+str(person))
                 
         tense = Tense.gerund
         tail = faketenerse.conjugate(tense)
@@ -96,21 +96,21 @@ class TestDerivedVerb(unittest.TestCase):
         self.assertEqual('faketeniéndose', tail, tail+":tense="+tense)
         
         for tense in Tense.past_part_adj:
-            tail = faketenerse.conjugate_tense(tense)[4:]
+            tail = faketenerse.conjugate_tense(tense, returnAsString=True)[4:]
             self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+tense)
-            tail = faketenerse_1.conjugate_tense(tense)[4:]
+            tail = faketenerse_1.conjugate_tense(tense, returnAsString=True)[4:]
             self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+tense)
 
             
     def test_tener_imperatives_non_reflexive(self):
-        tener_conjugations = tener.conjugate_all_tenses()
+        tener_conjugations = tener.conjugate_all_tenses(returnAsString=True)
         for tense in Tense.imperative():
             for person in Person.all_except([Person.first_person_singular, Person.second_person_singular]):
-                actual = faketener.conjugate(tense, person)
+                actual = faketener.conjugate(tense, person, returnAsString=True)
                 tail = actual[4:]
                 base = tener_conjugations[tense][person]
-                self.assertEqual(tail, base, actual+" "+base+":tense="+tense+" person="+person)
-            actual = faketener.conjugate(Tense.imperative_positive, Person.second_person_singular)
+                self.assertEqual(tail, base, "{0} {1} :tense={2} person={3}".format(actual, base, str(tense), str(person)))
+            actual = faketener.conjugate(Tense.imperative_positive, Person.second_person_singular, returnAsString=True)
             tail = actual[4:]
 #             print repr(tail).decode("unicode-escape") 
             self.assertEqual("tén", tail)
@@ -125,10 +125,10 @@ class TestDerivedVerb(unittest.TestCase):
         for tense in Tense.imperative():
             expected = expected_negative if tense == Tense.imperative_negative else expected_positive
             for person in Person.all_except([Person.first_person_singular]):
-                actual = faketenerse.conjugate(tense, person)
-                self.assertEqual(expected[person], actual, expected[person]+" != "+actual+":tense="+tense+" person="+person)
-                actual = faketenerse_1.conjugate(tense, person)
-                self.assertEqual(expected[person], actual, expected[person]+" != "+actual+":tense="+tense+" person="+person)
+                actual = faketenerse.conjugate(tense, person, returnAsString=True)
+                self.assertEqual(expected[person], actual, expected[person]+" != "+actual+":tense="+str(tense)+" person="+str(person))
+                actual = faketenerse_1.conjugate(tense, person, returnAsString=True)
+                self.assertEqual(expected[person], actual, expected[person]+" != "+actual+":tense="+str(tense)+" person="+str(person))
 
     def test_tener_multiple_ancestors_imperative(self):
         """
@@ -140,8 +140,8 @@ class TestDerivedVerb(unittest.TestCase):
         for tense in Tense.imperative():
             expected = expected_negative if tense == Tense.imperative_negative else expected_positive
             for person in Person.all_except([Person.first_person_singular]):
-                actual = descfaketenerse.conjugate(tense, person)
-                self.assertEqual(expected[person], actual, expected[person]+" != "+actual+":tense="+tense+" person="+person)
+                actual = descfaketenerse.conjugate(tense, person, returnAsString=True)
+                self.assertEqual(expected[person], actual, expected[person]+" != "+actual+":tense="+str(tense)+" person="+str(person))
         
     def test_acordar_multiple_ancestors(self):
         """
@@ -152,5 +152,5 @@ class TestDerivedVerb(unittest.TestCase):
         for tense in Tense.imperative():
             expected = expected_negative if tense == Tense.imperative_negative else expected_positive
             for person in Person.all_except([Person.first_person_singular]):
-                actual = descfakeacordarse.conjugate(tense, person)
-                self.assertEqual(expected[person], actual, expected[person]+" != "+actual+":tense="+tense+" person="+person)
+                actual = descfakeacordarse.conjugate(tense, person, returnAsString=True)
+                self.assertEqual(expected[person], actual, expected[person]+" != "+actual+":tense="+str(tense)+" person="+str(person))
