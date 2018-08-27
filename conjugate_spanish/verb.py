@@ -59,6 +59,7 @@ class Verb(Phrase):
         self._appliedOverrides = []
         self._generated = generated
         self._explicit_no_root_verb = False
+        self.base_verb = base_verb
  
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
         phrase_match = Verb.is_verb(self.phrase_string)
@@ -181,6 +182,7 @@ class Verb(Phrase):
             # process root verbs so that they are available for derived verbs.
             verb.process_conjugation_overrides()
         return verb
+
     @classmethod        
     def is_verb(cls, phrase_string):
         return PhraseGroup.is_verb(phrase_string)
@@ -216,21 +218,21 @@ class Verb(Phrase):
             __look_for_overrides(self.base_verb)
         return conjugations
     
-    def conjugate_all_tenses(self):
+    def conjugate_all_tenses(self, returnAsString=False):
         # present to imperative
-        return [ self.conjugate_tense(tense) for tense in Tense.all() ]
+        return [ self.conjugate_tense(tense, returnAsString=returnAsString) for tense in Tense.all() ]
         
-    def conjugate_tense(self, tense):
+    def conjugate_tense(self, tense, *, returnAsString=False):
         """
         conjugate all persons for given tense
         """
         if tense in Tense.Person_Agnostic():
-            results = self.conjugate(tense=tense, person=None)
+            results = self.conjugate(tense=tense, person=None, returnAsString=returnAsString)
         else:
-            results = [ self.conjugate(tense=tense, person=person) for person in Person.all() ]
+            results = [ self.conjugate(tense=tense, person=person, returnAsString=returnAsString) for person in Person.all() ]
         return results
             
-    def conjugate(self, tense, person=None, options={}):
+    def conjugate(self, tense, person=None, *, options={}, returnAsString=False):
         """
         :param person: usually must be set but can be None if tense in Tense.Person_Agnostic()
         options -
@@ -238,7 +240,8 @@ class Verb(Phrase):
                (needed in cases of a base verb being a reflexive verb.)
             
         :return: The conjugated verb. Note: the verb must be <indirect pronoun> <verb> or just <verb>
-        """           
+        """
+        self.process_conjugation_overrides()
         conjugation_notes = self.conjugation_tracking.get_conjugation_notes(tense, person)
         force_conjugation = pick(options, ConjugationOverride.FORCE_CONJUGATION, False)
         if conjugation_notes.blocked and force_conjugation:
@@ -288,7 +291,7 @@ class Verb(Phrase):
                     self.__apply_reflexive_pronoun(conjugation_notes, explicit_accent_already_applied)
                     
             conjugation_notes.complete()
-        return conjugation_notes
+        return conjugation_notes.full_conjugation if returnAsString else conjugation_notes
     
     def _conjugate_stem_and_endings(self, conjugation_notes, options):
         """
@@ -322,7 +325,7 @@ class Verb(Phrase):
         """
         # we never want the base verb to apply the reflexive pronoun - irregardless of reflexive_override
         _options = { **options, **{ConjugationOverride.REFLEXIVE_OVERRIDE : False} }
-        base_verb_conjugation = self.base_verb.conjugate(conjugation_notes.tense, conjugation_notes.person, _options)
+        base_verb_conjugation = self.base_verb.conjugate(conjugation_notes.tense, conjugation_notes.person, options=_options)
         
         if base_verb_conjugation.blocked:
             # imperative, third-person only verbs
@@ -568,7 +571,7 @@ class Verb(Phrase):
     def __conjugation_present_subjective_stem(self, conjugation_notes):
         # need to force for verbs that are normally third person only 
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }       
-        first_person_conjugation_notes = self.conjugate(Tense.present_tense, Person.first_person_singular, options)
+        first_person_conjugation_notes = self.conjugate(Tense.present_tense, Person.first_person_singular, options=options)
         first_person_conjugation = first_person_conjugation_notes.conjugation
         if first_person_conjugation[-1:] =='o':
             conjugation_notes.change(operation="std_stem_from_1st_present", core_verb = first_person_conjugation[:-1], irregular_nature=IrregularNature.regular)            
@@ -589,7 +592,7 @@ class Verb(Phrase):
         """
         # need to force for verbs that are normally third person only
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
-        third_person_plural_conjugation = self.conjugate(Tense.past_tense, Person.third_person_plural, options).conjugation
+        third_person_plural_conjugation = self.conjugate(Tense.past_tense, Person.third_person_plural, options=options).conjugation
         if third_person_plural_conjugation[-3:] == 'ron':
             conjugation_notes.change(operation="std_stem", irregular_nature=IrregularNature.regular,
                                      core_verb = third_person_plural_conjugation[:-3])

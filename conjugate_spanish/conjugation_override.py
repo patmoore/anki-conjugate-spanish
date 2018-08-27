@@ -862,7 +862,7 @@ Guar_CO.override_tense_join(Tense.past_tense, _umlaut_u_, Person.first_person_si
 Guar_CO.override_tense_join(Tense.present_subjective_tense, _umlaut_u_, documentation="preserves sound in infinitive")
 
 def __go(self, conjugation_notes, **kwargs):
-    if conjugation_notes.core_verb[-1:] in Vowels.all():
+    if conjugation_notes.core_verb[-1:] in Vowels.all:
         conjugation_notes.change(operation='igo', irregular_nature=IrregularNature.standard_irregular, core_verb=conjugation_notes.core_verb +'ig')
     elif conjugation_notes.core_verb[-1:] == 'c':
         # hacer, saticificar is example

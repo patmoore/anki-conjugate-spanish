@@ -285,7 +285,7 @@ class ConjugationNotes():
     
     @property
     def operation_notes(self):
-        return [ note.operation for note in self._conjugation_note_list ].__str__()
+        return str([ note.operation for note in self._conjugation_note_list ])
     
     @property
     def is_regular(self):
@@ -303,6 +303,9 @@ class ConjugationNotes():
             'person' : self.person,
             'changes' : [ conjugation_note.__repr__() for conjugation_note in self._conjugation_note_list if conjugation_note.is_irregular]
         }.__str__()
+
+    def __str__(self):
+        return self.full_conjugation
     
 class ConjugationTracking():
     """
