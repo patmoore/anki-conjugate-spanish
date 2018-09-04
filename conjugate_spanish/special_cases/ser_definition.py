@@ -10,6 +10,7 @@ def _remove_i(self, conjugation_notes, **kwargs):
 
 _conjugation_overrides = ConjugationOverride(parents=[Past_Tense_IR_CO, 'oy'], key="ser")
 _conjugation_overrides.override_tense(Tense.present_tense, [None, 'eres', 'es', 'somos', 'sois', 'son'])
+_conjugation_overrides.override_tense(Tense.imperative_positive, 'sé', Person.second_person_singular)
 _conjugation_overrides.override_tense_stem(Tense.incomplete_past_tense, 'er')
 _conjugation_overrides.override_tense_stem(Tense.incomplete_past_tense, 'ér', Person.first_person_plural)
 _conjugation_overrides.override_tense_ending(Tense.incomplete_past_tense, _remove_i, documentation="no leading i in ending")

@@ -8,7 +8,7 @@ class TestSer(unittest.TestCase):
     def __check__(self, tense, expected):
         ser = Verb_Dictionary.get("ser")
         for person, expected in expected.items():
-            self.assertEqual(expected,ser.conjugate(tense, person, returnAsString=True))
+            self.assertEqual(expected,ser.conjugate(tense, person, returnAsString=True), "person {} tense {}".format(str(person), str(tense)))
 
     def test_ser_present_tense(self):
         expected = { Person.first_person_singular: "soy",

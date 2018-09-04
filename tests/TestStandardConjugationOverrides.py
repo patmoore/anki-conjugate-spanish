@@ -9,19 +9,19 @@ from conjugate_spanish.conjugation_override import Dependent_Standard_Overrides,
 class TestStandardConjugationOverrides(unittest.TestCase):
     def test_gerund_override(self):
         ir = Verb_Dictionary.get('ir')
-        gerund = ir.conjugate_tense(Tense.gerund)
+        gerund = ir.conjugate_tense(Tense.gerund, returnAsString=True)
         self.assertEqual(gerund, 'yendo', 'ir gerund wrong')
          
     def test_past_part_override(self):
         ir = Verb_Dictionary.get('ir')
-        for tense in Tense.past_part_adj:
+        for tense in [ Tense.past_participle, Tense.adjective ]:
             pp = ir.conjugate_tense(tense)
-            self.assertEqual(pp, 'ido', 'ir past part. wrong')
+            self.assertEqual('ido', pp.conjugation, 'ir past part. wrong')
          
     def test_guir_yo(self):
         distinguir = Verb.importString('distinguir','')
         yo_present = distinguir.conjugate(Tense.present_tense, Person.first_person_singular)
-        self.assertEqual(yo_present, 'distingo', 'guir yo present wrong')
+        self.assertEqual('distingo', yo_present.conjugation, 'guir yo present wrong')
  
     def test_stem_changing_gerund_e2i(self):
         """
@@ -34,7 +34,7 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         self.assertTrue(inspect.ismethod(faketir.conjugation_stems[9][0]), "is method")
         self.assertFalse(inspect.isfunction(faketir.conjugation_stems[9][0]), "is function")
         gerund = faketir.conjugate_tense(Tense.gerund)
-        self.assertEqual(gerund, 'fakitiendo', 'e2i gerund wrong')
+        self.assertEqual('fakitiendo', gerund.conjugation, 'e2i gerund wrong')
         
     def test_stem_changing_gerund_implicit_e2i(self):
         """
@@ -44,16 +44,16 @@ class TestStandardConjugationOverrides(unittest.TestCase):
 #         self.assertTrue(fakegir.has_override_applied(u''))
         self.assertIsNotNone(fakegir.conjugation_stems, "fakegir.conjugation_stems")
         gerund = fakegir.conjugate_tense(Tense.gerund)
-        self.assertEqual(gerund, 'fakigiendo', 'e2i gerund wrong='+gerund)
+        self.assertEqual('fakigiendo', gerund.conjugation, 'e2i gerund wrong='+str(gerund))
         
     def test_beginning_word_radical_stem_changing_overrides(self):
         """
         """
         oler = Verb.importString('oler',"to hear",["o:ue"])
-        conjugation = oler.conjugate(Tense.present_tense, Person.first_person_singular)
+        conjugation = oler.conjugate(Tense.present_tense, Person.first_person_singular, returnAsString=True)
         self.assertEqual(conjugation, 'huelo', "problems with loading manual overrides "+conjugation)
         conjugation = oler.conjugate(Tense.present_subjective_tense, Person.first_person_plural)
-        self.assertEqual(conjugation, 'olamos', "replacing the beginning vowel back with the infinitive vowel")
+        self.assertEqual('olamos',conjugation.conjugation, "replacing the beginning vowel back with the infinitive vowel")
      
     def test_that_explicit_override_takes_precedent(self):
         """
@@ -64,8 +64,8 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         decir = Verb.importString("decir","to say, tell",["go","e:i","-v_cir",
             ConjugationOverride.create_from_json(""'{"conjugation_stems":{"past":"dij","future":"dir","conditional":"dir"},"conjugations":{"imperative_positive_second":"di"}}')])
         conjugations = decir.conjugate_tense(Tense.imperative_positive)
-        self.assertEqual(conjugations[Person.second_person_singular], 'di', "problems with loading manual overrides of imperative")
-        self.assertEqual(conjugations[Person.third_person_singular], 'diga', "problems with loading manual overrides of imperative")
+        self.assertEqual(conjugations[Person.second_person_singular].conjugation, 'di', "problems with loading manual overrides of imperative")
+        self.assertEqual(conjugations[Person.third_person_singular].conjugation, 'diga', "problems with loading manual overrides of imperative")
         
     def test_go_verb_rules(self):
         """-go verbs:
@@ -76,15 +76,15 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         """
         fakir = Verb.importString("fakir", "fake go 1","go")
         conjugation = fakir.conjugate(Tense.present_tense, Person.first_person_singular)
-        self.assertEqual(conjugation, "fakgo")
+        self.assertEqual("fakgo", conjugation.conjugation)
          
         fair = Verb.importString("fair", "fake go 1","go")
         conjugation = fair.conjugate(Tense.present_tense, Person.first_person_singular)
-        self.assertEqual(conjugation, "faigo")
+        self.assertEqual("faigo", conjugation.conjugation)
         
         facer = Verb.importString("facer", "fake go 1","go")
         conjugation = facer.conjugate(Tense.present_tense, Person.first_person_singular)
-        self.assertEqual(conjugation, "fago")
+        self.assertEqual("fago", conjugation.conjugation)
         
     def test_radical_o2ue__ir_changing(self):
         """
@@ -92,22 +92,22 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         """ 
         verb = Verb.importString('dormir', 'fake',"o:ue")
         conjugation = verb.conjugate(Tense.present_tense, Person.first_person_singular)
-        self.assertEqual(conjugation, 'duermo')
+        self.assertEqual('duermo', str(conjugation))
         conjugation = verb.conjugate(Tense.past_tense, Person.third_person_plural)
-        self.assertEqual(conjugation, 'durmieron')
+        self.assertEqual('durmieron', str(conjugation) )
         conjugation = verb.conjugate(Tense.present_subjective_tense, Person.first_person_plural)
-        self.assertEqual(conjugation, 'durmamos')
+        self.assertEqual('durmamos', str(conjugation))
         conjugation = verb.conjugate(Tense.present_subjective_tense, Person.third_person_plural)
-        self.assertEqual(conjugation, 'duerman')
+        self.assertEqual('duerman', str(conjugation))
         conjugation = verb.conjugate(Tense.gerund)
-        self.assertEqual(conjugation, 'durmiendo')
+        self.assertEqual('durmiendo', str(conjugation))
         
     def test_uir_verbs(self):
         """ uir verbs have to worry about removing the 'u' before o
         """
         verb = Verb.importString('constituir', "constitute") 
         conjugation = verb.conjugate(Tense.present_tense, Person.first_person_singular)
-        self.assertEqual('constituyo', conjugation, 'constituyo !='+conjugation)
+        self.assertEqual('constituyo', conjugation.conjugation)
         
     def test_u_u_verbs(self):
         """
@@ -115,9 +115,9 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         """
         verb = Verb.importString('continuar', 'continue')
         conjugation = verb.conjugate(Tense.present_tense, Person.first_person_singular)
-        self.assertEqual('continúo', conjugation, 'continúo !='+ conjugation)
+        self.assertEqual('continúo', conjugation.conjugation)
         conjugation = verb.conjugate(Tense.present_subjective_tense, Person.first_person_singular)
-        self.assertEqual('continúe', conjugation, 'continúe !='+ conjugation)
+        self.assertEqual('continúe', conjugation.conjugation)
         
     def test_complex_verbs(self):
         """
@@ -128,12 +128,12 @@ class TestStandardConjugationOverrides(unittest.TestCase):
         self.assertTrue(verb.has_override_applied(radical_stem.key))
         self.assertFalse(verb.has_override_applied(radical_stem.first_person_conjugation_override.key))
         self.assertTrue(verb.has_override_applied(radical_stem.stem_changing_ir_past_all.key))
-        conjugation = verb.conjugate(Tense.present_tense, Person.first_person_singular)
+        conjugation = verb.conjugate(Tense.present_tense, Person.first_person_singular, returnAsString=True)
         self.assertEqual('vengo', conjugation, 'vengo !='+ conjugation)
-        conjugation = verb.conjugate(Tense.present_tense, Person.second_person_singular)
+        conjugation = verb.conjugate(Tense.present_tense, Person.second_person_singular, returnAsString=True)
         self.assertEqual('vienes', conjugation, 'vienes !='+ conjugation)
         
-        conjugation = verb.conjugate(Tense.past_tense, Person.first_person_singular)
+        conjugation = verb.conjugate(Tense.past_tense, Person.first_person_singular, returnAsString=True)
         self.assertEqual('vine', conjugation, 'vine !='+ conjugation)
-        conjugation = verb.conjugate(Tense.past_tense, Person.third_person_singular)
+        conjugation = verb.conjugate(Tense.past_tense, Person.third_person_singular, returnAsString=True)
         self.assertEqual('vino', conjugation, 'vino !='+ conjugation)
