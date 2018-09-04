@@ -193,7 +193,7 @@ class Verb(Phrase):
         """
         conjugations = [ None ] * len(Tense)
         def __look_for_overrides(verb):            
-            overrides = [ override_attribute for override_attribute in ConjugationOverrideProperty.all_except(ConjugationOverrideProperty.conjugation_joins) if hasattr(verb, override_attribute)]
+            overrides = [ override_attribute.key for override_attribute in ConjugationOverrideProperty.all_except(ConjugationOverrideProperty.conjugation_joins) if hasattr(verb, override_attribute.key)]
             if len(overrides) == 0:
                 return None
             
