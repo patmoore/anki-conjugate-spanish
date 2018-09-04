@@ -112,7 +112,6 @@ class TestBasic(unittest.TestCase):
         """
         verb = Verb.importString('enviar', conjugation_overrides="iar")
         self.assertEqual(verb.base_verb_string, None)
-        self.assertEqual(verb.root_verb_string, "enviar")
         self.assertEqual(verb.full_phrase, "enviar")
         conjugation_notes = verb.conjugate(Tense.imperative_positive, Person.second_person_singular)
         self.assertEqual('envía', conjugation_notes.conjugation)

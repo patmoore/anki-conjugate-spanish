@@ -205,14 +205,14 @@ class Verb(Phrase):
                     
                     if tense in Tense.Person_Agnostic():
                         if conjugations[tense] is None:
-                            conjugations[tense] = self.conjugate_tense(tense)
+                            conjugations[tense] = self.verb_for_derived.conjugate_tense(tense)
                     else:
                         for person in range(len(Person)):
                             if override[tense][person] is not None:
                                 if conjugations[tense] is None:
                                     conjugations[tense] = [ None ] * len(Person)
                                 if conjugations[tense][person] is None:
-                                    conjugations[tense][person] = self.conjugate(tense, person)
+                                    conjugations[tense][person] = self.verb_for_derived.conjugate(tense, person)
         __look_for_overrides(self)
         if self.base_verb is not None:
             __look_for_overrides(self.base_verb)
@@ -492,7 +492,7 @@ class Verb(Phrase):
             if conjugation_notes.tense == Tense.imperative_negative or conjugation_notes.person not in Person.second_person():
                 # all negative imperatives use the present_subjective AND all positives EXCEPT second person
                 conjugation_notes.change(operation='', 
-                     conjugation = self.conjugate(Tense.present_subjective_tense, conjugation_notes.person), irregular_nature=IrregularNature.regular)
+                     conjugation = self.verb_for_derived.conjugate(Tense.present_subjective_tense, conjugation_notes.person), irregular_nature=IrregularNature.regular)
 #                 if person == Person.first_person_plural and verb.reflexive:
 #                     # properly prepare the verb by removing the trailing 's'
 #                     # TODO: notice we don't handle a case of irregular nosotros - that does not have a trailing 's'
@@ -501,7 +501,7 @@ class Verb(Phrase):
 #                     _conjugation = _replace_last_letter_of_stem(_conjugation, u's', u'')
             elif conjugation_notes.person == Person.second_person_singular and conjugation_notes.tense == Tense.imperative_positive:
                 # positive tu form uses present tense usted                
-                conjugation_notes.change(operation = '', conjugation = self.conjugate(Tense.present_tense, Person.third_person_singular), irregular_nature=IrregularNature.regular)
+                conjugation_notes.change(operation = '', conjugation = self.verb_for_derived.conjugate(Tense.present_tense, Person.third_person_singular), irregular_nature=IrregularNature.regular)
             elif conjugation_notes.person == Person.second_person_plural and conjugation_notes.tense == Tense.imperative_positive:
                 # remove 'r' from infinitive - and replace it with 'd'
                 conjugation_notes.change(operation = '', conjugation = _replace_last_letter_of_stem(self.inf_verb_string, 'r', 'd'), irregular_nature=IrregularNature.regular)
@@ -571,7 +571,7 @@ class Verb(Phrase):
     def __conjugation_present_subjective_stem(self, conjugation_notes):
         # need to force for verbs that are normally third person only 
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }       
-        first_person_conjugation_notes = self.conjugate(Tense.present_tense, Person.first_person_singular, options=options)
+        first_person_conjugation_notes = self.verb_for_derived.conjugate(Tense.present_tense, Person.first_person_singular, options=options)
         first_person_conjugation = first_person_conjugation_notes.conjugation
         if first_person_conjugation[-1:] =='o':
             conjugation_notes.change(operation="std_stem_from_1st_present", core_verb = first_person_conjugation[:-1], irregular_nature=IrregularNature.regular)            
@@ -592,7 +592,7 @@ class Verb(Phrase):
         """
         # need to force for verbs that are normally third person only
         options = { ConjugationOverride.FORCE_CONJUGATION: True, ConjugationOverride.REFLEXIVE_OVERRIDE: False }
-        third_person_plural_conjugation = self.conjugate(Tense.past_tense, Person.third_person_plural, options=options).conjugation
+        third_person_plural_conjugation = self.verb_for_derived.conjugate(Tense.past_tense, Person.third_person_plural, options=options).conjugation
         if third_person_plural_conjugation[-3:] == 'ron':
             conjugation_notes.change(operation="std_stem", irregular_nature=IrregularNature.regular,
                                      core_verb = third_person_plural_conjugation[:-3])
@@ -800,19 +800,23 @@ class Verb(Phrase):
     @property
     def is_generated(self):
         return self._generated
-    
+
+    @property
+    def verb_for_derived(self):
+        return self.base_verb if self.is_derived else self
+
     @property
     def base_verb(self):
         if not self.is_derived:
             return None
-        elif not hasattr(self, '_base_verb'):            
+        elif not hasattr(self, '_base_verb') or self._base_verb is None or self._base_verb.is_generated:
             _base_verb = self.find_verb(self.base_verb_string)
             if _base_verb is None:
                 # TODO - may not be in dictionary yet?
-                return None 
+                self._base_verb = Verb.importString(self.base_verb_string, conjugation_overrides=self.conjugation_overrides, manual_overrides=self.manual_overrides_string, generated=True)
             else:
                 self._base_verb = _base_verb
-                
+
         return self._base_verb
     
     @base_verb.setter

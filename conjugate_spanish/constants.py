@@ -54,6 +54,9 @@ class BaseConst(IntEnum):
         self.key = key
         self.human_readable = human_readable
 
+    def __hash__(self):
+        return hash(self.key)
+
     def __eq__(self, right):
         if isinstance(right, str):
             return self.key == right

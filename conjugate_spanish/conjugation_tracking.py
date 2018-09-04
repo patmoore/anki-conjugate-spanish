@@ -100,6 +100,8 @@ class ConjugationNote:
                 'ending' : self.ending,
                 'irregular_nature' : self.irregular_nature
                 }
+    def __str__(self):
+        return self.conjugation if self.conjugation else self.core_verb+self.ending
             
 class ConjugationNotes():
     """

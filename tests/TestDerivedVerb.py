@@ -18,7 +18,7 @@ tener = Verb_Dictionary.get('tener')
 # Note: need to add to dictionary in order to do base_string lookup
 # TODO : levels of dictionary so we can drop a dictionary
 faketener = Verb_Dictionary.add('faketener', "fake tener", base_verb=tener)
-faketenerse = Verb_Dictionary.add('faketenerse', "fake tener", base_verb='tener')
+faketenerse = Verb_Dictionary.add('faketenerse', "fake tener", base_verb=tener)
 
 # tests double derivatives
 # real world example: desacordarse -> acordarse -> acordar
