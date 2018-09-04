@@ -100,8 +100,6 @@ class Verb(Phrase):
         self.manual_overrides_string = manual_overrides
         self.__processed_conjugation_overrides=False
         
-        if process_conjugation_overrides or not self.is_derived:
-            self.process_conjugation_overrides()
             
     def correct_infinitive(self):
         """
