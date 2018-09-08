@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
 import inspect
+from json import JSONDecodeError
+
 from .standard_endings import *
 from .constants import *
 from .conjugation_tracking import ConjugationNotes
@@ -114,7 +116,11 @@ class ConjugationOverride(object):
                 manual_overrides = json.loads(make_unicode(json_string))
             except ValueError as e:
                 print("while parsing json manual_overrides "+ json_string + " to verb_dictionary", repr(e))
-                raise       
+                raise
+            except JSONDecodeError as e:
+                print("while parsing json manual_overrides "+ json_string + " to verb_dictionary", repr(e))
+                raise
+
         conjugation_override = ConjugationOverride(key=key,manual_overrides=manual_overrides) 
         return conjugation_override   
             

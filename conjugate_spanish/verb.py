@@ -5,9 +5,10 @@
 '''
 
 import inspect
+
 from .conjugation_override import *
 from .constants import *
-from .vowel import Vowels
+from .vowel import Vowels, WordTokenizer
 from .utils import cs_debug, cs_error
 import types
 from .phrase import Phrase
@@ -100,6 +101,8 @@ class Verb(Phrase):
         self.manual_overrides_string = manual_overrides
         self.__processed_conjugation_overrides=False
         
+        # if process_conjugation_overrides or not self.is_derived:
+        #     self.process_conjugation_overrides()
             
     def correct_infinitive(self):
         """
@@ -158,6 +161,8 @@ class Verb(Phrase):
             self.overrides_string = Verb.REGULAR_VERB
             
         self.process_conjugation_override(UniversalAccentFix)
+        # We have to allow for a verb with a generated base verb having the base verb get replaced with a real definition.
+        self.__processed_conjugation_overrides = self.verb_for_derived.is_generated is False
     
     @classmethod
     def importString(cls, phrase, definition='', conjugation_overrides=None, **kwargs):
@@ -515,7 +520,9 @@ class Verb(Phrase):
             # degenerate verbs such as solerse
             return None
         def handle_explicit_accent_():
-            if explicit_accent_already_applied:
+            # a single syllable word will have that sylabble be the second from last syllable.
+            # which means no accent needed.
+            if explicit_accent_already_applied or WordTokenizer(conjugation_notes.conjugation).check_single_syllable():
                 return conjugation_notes.conjugation
             else:
                 return Vowels.accent(conjugation_notes.conjugation)

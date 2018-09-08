@@ -63,11 +63,13 @@ class TestThirdPersonOnly(unittest.TestCase):
             'hiele',
             'hiele',
             'helando',
+            'helado',
             'helado'
         ]
-        
+        #'3rd_sing_only',
+
         for tense in Tense.all():
             for person in [Person.third_person_singular]:
                 expected = results[tense]
                 conjugation = verb.conjugate(tense, person, returnAsString=True)
-                self.assertEqual(expected, conjugation)
+                self.assertEqual(expected, conjugation, "tense {}".format(str(tense)))

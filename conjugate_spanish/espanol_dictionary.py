@@ -155,7 +155,7 @@ class Verb_Dictionary_(LanguageDictionary_):
                 root_verb = self.get(verb.root_verb_string, None)
                 
                 if root_verb is None:
-                    cs_debug(">>>> Missing root "+verb)
+                    cs_debug(">>>> Missing root "+str(verb))
                 else:
                     root_verb.process_conjugation_overrides()
                     verb.root_verb = root_verb
@@ -201,7 +201,6 @@ class Verb_Dictionary_(LanguageDictionary_):
         return Verb_Dictionary_.VERBS_FILENAME.match(fileName) 
 
 #     def load(self):
-#         import special_cases
 #         basedir = os.path.dirname(os.path.realpath(__file__))
 #         dictionaryDirectory = basedir+u'/dictionaries/'
 #     #     print(u"current directory=",basedir)
@@ -293,4 +292,3 @@ class Espanol_Dictionary_():
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary
 Phrase_Dictionary = Espanol_Dictionary.phraseDictionary
-import conjugate_spanish.special_cases

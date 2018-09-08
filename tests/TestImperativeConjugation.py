@@ -54,6 +54,6 @@ class TestImperativeConjugation(unittest.TestCase):
                 conjugation_note = fake.conjugate(Tense.imperative_positive,person)
                 self.assertEqual(conjugation_note.conjugation, Vowels.accent_at(present_subjective_tense.conjugation, 3)+person.indirect_pronoun)
                 conjugation_note = fake.conjugate(Tense.imperative_negative,person)
-                self.assertEqual(Vowels.accent_at(present_subjective_tense, 3)+person.indirect_pronoun, conjugation_note.conjugation)
+                self.assertEqual(Vowels.accent_at(present_subjective_tense.conjugation, 3)+person.indirect_pronoun, conjugation_note.conjugation)
                 
         

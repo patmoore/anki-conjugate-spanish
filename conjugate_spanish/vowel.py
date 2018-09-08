@@ -235,6 +235,8 @@ class WordTokenizer():
     two_letter_groups = "(?:" + "|".join(Vowels.two_letter_combinations) + ")"
     single_letter_groups = Vowels.all_group
     combinations = [three_letter_groups, two_letter_groups, single_letter_groups]
+
+    single_syllable = re_compile("^("+Vowels.consonants+"*)(?:"+"|".join(combinations)+")("+Vowels.consonants+"*)$")
     @classmethod
     def _create_accent_rules_array(cls, vowels_to_accent, weak_beginning, end_vowel_combinations):
         accent_rules = []
@@ -337,27 +339,28 @@ class WordTokenizer():
     def check_single_vowel_accent_rules(self):
         return self.__check_accent_rules(self.single_vowel_accent_rules)
 
+    def check_single_syllable(self):
+        match = WordTokenizer.single_syllable.match(self._word)
+        return match
+
     def tokenize(self):
         match = self.check_explicit_accent()
         if match is not None:
-            cs_debug(self._word + ": Match on explicit accent"+str(match.groups()))
+            # cs_debug(self._word + ": Match on explicit accent"+str(match.groups()))
             return match
 
-        cs_debug(self._word + ": check 3 vowel")
         match = self.check_three_vowel_accent_rules()
         if match is not None:
-            cs_debug(self._word + ": Match on three vowel group "+str(match.groups()))
+            # cs_debug(self._word + ": Match on three vowel group "+str(match.groups()))
             return match
-        cs_debug(self._word + ": check 2 vowel")
         match = self.check_two_vowel_accent_rules()
         if match is not None:
-            cs_debug(self._word + ": Match on two vowel group "+str(match.groups()))
+            # cs_debug(self._word + ": Match on two vowel group "+str(match.groups()))
             return match
 
-        cs_debug(self._word + ": check 1 vowel")
         match = self.check_single_vowel_accent_rules()
         if match is not None:
-            cs_debug(self._word + ": Match on single vowel group "+str(match.groups()))
+            # cs_debug(self._word + ": Match on single vowel group "+str(match.groups()))
             return match
         else:
             raise Exception("Problem no match on "+ self._word)
