@@ -281,7 +281,7 @@
 "introducir","introduce"
 "invitar","invite"
 "ir", "go","oy,yendo,unaccent_present_past", "{""conjugation_stems"":{""present"":""v"",""past"":""fu"",""present_subjective"":""vay""},""conjugation_endings"":{""present"":[null,""as"",""a"",""amos"",""ais"",""an""],""past"":[null,null,""e"",null,null,""eron""]},""conjugations"":{""incomplete_past"":[""iba"", ""ibas"", ""iba"", ""íbamos"",""ibais"", ""iban""],""imperative_positive"":[null, ""ve"", null, ""vamos"", null, null]}}"
-"irse","go (self)",,{""conjugations"":{""imperative_negative"":[null,null, ""se vaya"", ""nos vayamos"", ""idos"", ""se vayan""], ""imperative_positive"":[null, null,null,null,""idos"",null]}}"
+"irse","go (self)",,"{""conjugations"":{""imperative_negative"":[null,null, ""se vaya"", ""nos vayamos"", null, ""se vayan""], ""imperative_positive"":[null, null,null,null,""idos"",null]}}"
 "jugar","play (a game or sport)","u:ue",,,"only u:ue verb"
 "juntar","join,unite,connect"
 "jurar","swear,take an oath"

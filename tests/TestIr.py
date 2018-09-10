@@ -2,9 +2,11 @@
 import unittest
 
 from conjugate_spanish import Tense, Person
-from conjugate_spanish.espanol_dictionary import Verb_Dictionary
-Verb_Dictionary.add("ir", "go",conjugation_overrides="oy,yendo,unaccent_present_past", manual_overrides='{"conjugation_stems":{"present":"v","past":"fu","present_subjective":"vay"},"conjugation_endings":{"present":[null,"as","a","amos","ais","an"],"past":[null,null,"e",null,null,"eron"]},"conjugations":{"incomplete_past":["iba", "ibas", "iba", "íbamos","ibais", "iban"],"imperative_positive":[null, "ve", null, "vamos", null, null]}}')
-Verb_Dictionary.add("irse", "go (self)",manual_overrides='{"conjugations":{"imperative_negative":[null, null, "se vaya", "nos vayamos", null, "se vayan"],"imperative_positive":[null, null,null,null,"idos",null]}}')
+from conjugate_spanish.espanol_dictionary import Verb_Dictionary, Espanol_Dictionary
+# just in case there is a problem loading the 501 verbs
+# Verb_Dictionary.add("ir", "go",conjugation_overrides="oy,yendo,unaccent_present_past", manual_overrides='{"conjugation_stems":{"present":"v","past":"fu","present_subjective":"vay"},"conjugation_endings":{"present":[null,"as","a","amos","ais","an"],"past":[null,null,"e",null,null,"eron"]},"conjugations":{"incomplete_past":["iba", "ibas", "iba", "íbamos","ibais", "iban"],"imperative_positive":[null, "ve", null, "vamos", null, null]}}')
+# Verb_Dictionary.add("irse", "go (self)",manual_overrides='{"conjugations":{"imperative_negative":[null, null, "se vaya", "nos vayamos", null, "se vayan"],"imperative_positive":[null, null,null,null,"idos",null]}}')
+Espanol_Dictionary.load()
 class TestIr(unittest.TestCase):
     ir_expected = {
         Tense.present_tense:
