@@ -2,10 +2,10 @@
 import unittest
 
 from conjugate_spanish import Tense, Person
-from conjugate_spanish.espanol_dictionary import Verb_Dictionary
-
-Verb_Dictionary.add("ser", "be", conjugation_overrides="oy,yendo,unaccent_present_past", manual_overrides='{"conjugation_stems":{"present":"s","incomplete_past":["er", "er", "er", "ér", "er", "er"],"past":"fu","present_subjective":"se"},"conjugation_endings":{"present":[null,"as","a","amos","ais","an"],"incomplete_past":["a","as","a","amos","ais","an"], "past":[null,null,"e",null,null,"eron"]},"conjugations":{"present":[null, "eres", "es", "somos", "sois", "son"], "imperative_positive":[null,"sé",null,null,null,null]}}')
-
+from conjugate_spanish.espanol_dictionary import Verb_Dictionary, Espanol_Dictionary
+# save just in case problem with loading from csv file
+# Verb_Dictionary.add("ser", "be", conjugation_overrides="oy,yendo,unaccent_present_past", manual_overrides='{"conjugation_stems":{"present":"s","incomplete_past":["er", "er", "er", "ér", "er", "er"],"past":"fu","present_subjective":"se"},"conjugation_endings":{"present":[null,"as","a","amos","ais","an"],"incomplete_past":["a","as","a","amos","ais","an"], "past":[null,null,"e",null,null,"eron"]},"conjugations":{"present":[null, "eres", "es", "somos", "sois", "son"], "imperative_positive":[null,"sé",null,null,null,null]}}')
+Espanol_Dictionary.load()
 class TestSer(unittest.TestCase):
     def __check__(self, tense, expected):
         ser = Verb_Dictionary.get("ser")
