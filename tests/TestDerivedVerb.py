@@ -17,18 +17,18 @@ Espanol_Dictionary.load()
 tener = Verb_Dictionary.get('tener')
 # Note: need to add to dictionary in order to do base_string lookup
 # TODO : levels of dictionary so we can drop a dictionary
-faketener = Verb_Dictionary.add('faketener', "fake tener", base_verb=tener)
-faketenerse = Verb_Dictionary.add('faketenerse', "fake tener", base_verb=tener)
+faketener = Verb_Dictionary.add('fake-tener', "fake tener", base_verb=tener)
+faketenerse = Verb_Dictionary.add('fake-tener-se', "fake tener", base_verb=tener)
 
 # tests double derivatives
 # real world example: desacordarse -> acordarse -> acordar
 descfaketenerse = Verb_Dictionary.add('descfaketenerse', "fake tener", base_verb=faketenerse)
 faketenerse_1 = Verb.importString('faketenerse', "fake tener", base_verb=faketener)
 
-fakeacordar = Verb_Dictionary.add("fakeacordar", "fake acordar", "o:ue")
+fakeacordar = Verb_Dictionary.add("fakeacordar", "fake acordar", conjugation_overrides="o:ue")
 #derive just because of reflexive/non-reflexive
 fakeacordarse = Verb_Dictionary.add("fakeacordarse", "fake acordarse")
-descfakeacordarse = Verb_Dictionary.add("descfakeacordarse", "fake acordarse", base_verb=fakeacordarse)
+descfakeacordarse = Verb_Dictionary.add("desc-fakeacordarse", "fake word descfakeacordarse", base_verb=fakeacordarse)
 
 class TestDerivedVerb(unittest.TestCase):
         
@@ -72,7 +72,7 @@ class TestDerivedVerb(unittest.TestCase):
                 
         for tense in Tense.Person_Agnostic():
             tail = conjugations[tense][4:]
-            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+tense)
+            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+str(tense))
             
     def test_tener_most_tenses_reflexive(self):
         """
@@ -91,15 +91,15 @@ class TestDerivedVerb(unittest.TestCase):
                 
         tense = Tense.gerund
         tail = faketenerse.conjugate(tense)
-        self.assertEqual('faketeniéndose', tail, tail+":tense="+tense)
+        self.assertEqual('faketeniéndose', tail.conjugation, tail.conjugation+":tense="+str(tense))
         tail = faketenerse_1.conjugate(tense)
-        self.assertEqual('faketeniéndose', tail, tail+":tense="+tense)
+        self.assertEqual('faketeniéndose', tail.conjugation, tail.conjugation+":tense="+str(tense))
         
-        for tense in Tense.past_part_adj:
+        for tense in [Tense.past_participle, Tense.adjective]:
             tail = faketenerse.conjugate_tense(tense, returnAsString=True)[4:]
-            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+tense)
+            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+str(tense))
             tail = faketenerse_1.conjugate_tense(tense, returnAsString=True)[4:]
-            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+tense)
+            self.assertEqual(tail, tener_conjugations[tense], tail+":tense="+str(tense))
 
             
     def test_tener_imperatives_non_reflexive(self):

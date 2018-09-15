@@ -61,6 +61,8 @@ class Verb(Phrase):
         self._generated = generated
         self._explicit_no_root_verb = False
         self.base_verb = base_verb
+        if base_verb is not None:
+            self.base_verb_string = base_verb.full_phrase
  
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
         phrase_match = Verb.is_verb(self.phrase_string)
@@ -326,7 +328,7 @@ class Verb(Phrase):
         
         I would like to eliminate this code and go to a pure conjugation override model 
         """
-        # we never want the base verb to apply the reflexive pronoun - irregardless of reflexive_override
+        # we never want the base verb to apply the reflexive pronoun - irregardless of reflexive_override because the reflexive pronoun can be added in front of the word ( a problem for derived words with a prefix)
         _options = { **options, **{ConjugationOverride.REFLEXIVE_OVERRIDE : False} }
         base_verb_conjugation = self.base_verb.conjugate(conjugation_notes.tense, conjugation_notes.person, options=_options)
         
@@ -816,11 +818,12 @@ class Verb(Phrase):
             return None
         elif not hasattr(self, '_base_verb') or self._base_verb is None or self._base_verb.is_generated:
             _base_verb = self.find_verb(self.base_verb_string)
-            if _base_verb is None:
+            if _base_verb is not None:
+                self._base_verb = _base_verb
+            elif self._base_verb is None:
+                # do not replace previously generated base_verb
                 # TODO - may not be in dictionary yet?
                 self._base_verb = Verb.importString(self.base_verb_string, conjugation_overrides=self.conjugation_overrides, manual_overrides=self.manual_overrides_string, generated=True)
-            else:
-                self._base_verb = _base_verb
 
         return self._base_verb
     
