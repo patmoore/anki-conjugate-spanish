@@ -28,7 +28,7 @@ def re_group(args, not_=False):
 
 
 class BaseConst(IntEnum):
-    def __new__(cls, code:int, key: str, human_readable: str, *subclass_args):
+    def __new__(cls, code:int, key: list, human_readable: str, *subclass_args):
         """
         :param **kwargs:
         :param key: unique string - used to store this in the database
@@ -45,13 +45,14 @@ class BaseConst(IntEnum):
         inst._value_ = code
         return inst
 
-    def __init__(self, code, key: str, human_readable: str):
+    def __init__(self, code, keys: list, human_readable: str):
         """
         :param key: unique string - used to store this in the database
         :param human_readable: for display
         """
         super().__init__()
-        self.key = key
+        self.key = keys[0]
+        self.keys = keys
         self.human_readable = human_readable
 
     def __hash__(self):
@@ -127,7 +128,7 @@ class BaseConst(IntEnum):
     @classmethod
     def index(cls, stringName):
         for name, item in cls.__members__.items():
-            if item.key == stringName:
+            if stringName in item.keys:
                 return item
         else:
             return None
@@ -140,21 +141,21 @@ class BaseConst(IntEnum):
 
 @unique
 class Tense(BaseConst):
-    present_tense = (0, 'present', 'Present')
-    incomplete_past_tense = (1, 'incomplete_past',  'Incomplete Past')
-    past_tense=(2, 'past', 'Past')
-    future_tense=(3, 'future', 'Future')
-    conditional_tense=(4, 'conditional', 'Conditional')
-    present_subjective_tense = (5, 'present_subjective', 'Present Subjective')
-    past_subjective_tense = (6, 'past_subjective', 'Past Subjective')
-    imperative_positive = (7, 'imperative_positive', 'Imperative Positive')
-    imperative_negative = (8, 'imperative_negative', 'Imperative Negative')
-    gerund = (9, 'gerund', 'Gerund (-ed)')
-    past_participle = (10, 'past_participle', 'Past Participle (-ing)')
+    present_tense = (0, ['present', 'pres'], 'Present')
+    incomplete_past_tense = (1, ['incomplete_past', 'ipres'],  'Incomplete Past')
+    past_tense=(2, ['past'], 'Past')
+    future_tense=(3, ['future'], 'Future')
+    conditional_tense=(4, ['conditional', 'cond'], 'Conditional')
+    present_subjective_tense = (5, ['present_subjective', 'spres'], 'Present Subjective')
+    past_subjective_tense = (6, ['past_subjective', 'spast'], 'Past Subjective')
+    imperative_positive = (7, ['imperative_positive', 'ipos'], 'Imperative Positive')
+    imperative_negative = (8, ['imperative_negative', 'ineg'], 'Imperative Negative')
+    gerund = (9, ['gerund', 'ed'], 'Gerund (-ed)')
+    past_participle = (10, ['past_participle', 'pp', 'ing'], 'Past Participle (-ing)')
     #usually it is same as past participle: However,
     #The boy is cursed. --> el niño está maldito. (adjective)
     #The boy has been cursed --> el niño ha sido maldecido ( one of the perfect tenses)
-    adjective = (11, 'adjective', 'Adjective (usually Past Participle)' )
+    adjective = (11, ['adjective', 'adj'], 'Adjective (usually Past Participle)' )
 
     @classmethod
     def Person_Agnostic(cls):
@@ -182,15 +183,15 @@ class Tense(BaseConst):
 
 @unique
 class Person(BaseConst):
-    first_person_singular = (0, 'yo', 'yo', 'me')
-    second_person_singular = (1, 'tú', 'tú', 'te')
-    third_person_singular = (2, 'usted', 'usted', 'se')
-    first_person_plural = (3, 'nosotros', 'nosotros', 'nos')
-    second_person_plural = (4, 'vosotros', 'vosotros', 'os')
-    third_person_plural = (5, 'ustedes', 'ustedes', 'se')
+    first_person_singular = (0, ['yo', '1s'], 'yo', 'me' )
+    second_person_singular = (1, ['tú', 'tu', '2s'], 'tú', 'te')
+    third_person_singular = (2, ['usted', '3s'], 'usted', 'se')
+    first_person_plural = (3, ['nosotros', '1p'], 'nosotros', 'nos')
+    second_person_plural = (4, ['vosotros', '2p'], 'vosotros', 'os')
+    third_person_plural = (5, ['ustedes', '3p'], 'ustedes', 'se')
 
-    def __init__(self, code:int, key: str, human_readable: str, indirect_pronoun: str):
-        super().__init__(code, key, human_readable)
+    def __init__(self, code:int, keys: list, human_readable: str, indirect_pronoun: str):
+        super().__init__(code, keys, human_readable)
         self.indirect_pronoun = indirect_pronoun
 
     @classmethod
@@ -221,16 +222,16 @@ class IrregularNature(BaseConst):
     """
     Note: we don't track if from base or not because we want to know reason
     """
-    regular = (0, 'regular', 'regular')
+    regular = (0, ['regular'], 'regular')
     """ 
     preserve the sound when spoken
     """
-    sound_consistence = (1, 'sound', 'preserves sound (c->qu)')
-    radical_stem_change =(2, 'radical', "Radical Stem Change (e.g: i:ie, o:ue, e:i)")
-    standard_irregular = (3, 'std_irregular', 'irregularity comes from a standard irregular pattern')
-    rare= (4, 'rare', 'irregularity is not unique but only occurs in a few verbs')
-    custom = (5, 'custom', 'irregularity is unique to this verb')
-    blocked = (6, 'blocked', 'no conjugation')
+    sound_consistence = (1, ['sound', 's'], 'preserves sound (c->qu)')
+    radical_stem_change =(2, ['radical','r'], "Radical Stem Change (e.g: i:ie, o:ue, e:i)")
+    standard_irregular = (3, ['std_irregular', 'std'], 'irregularity comes from a standard irregular pattern')
+    rare= (4, ['rare'], 'irregularity is not unique but only occurs in a few verbs')
+    custom = (5, ['custom'], 'irregularity is unique to this verb')
+    blocked = (6, ['blocked'], 'no conjugation')
 
 #
 # Parse up the infinitive string: 
@@ -264,12 +265,12 @@ class PhraseMatch:
     
 # NOTE: the index are used into a regex match so MUST start at 1
 class PhraseGroup(BaseConst):
-    PREFIX_WORDS = (1, 'prefix_words', None)
-    PREFIX_CHARS = (2, 'prefix', None)
-    CORE_VERB = (3, 'core_characters', None)
-    INF_ENDING = (4, 'inf_ending', None)
-    REFLEXIVE_ENDING = (5, 'reflexive', None)
-    SUFFIX_WORDS = (6, 'suffix_words', None)
+    PREFIX_WORDS = (1, ['prefix_words'], None)
+    PREFIX_CHARS = (2, ['prefix'], None)
+    CORE_VERB = (3, ['core_characters'], None)
+    INF_ENDING = (4, ['inf_ending'], None)
+    REFLEXIVE_ENDING = (5, ['reflexive'], None)
+    SUFFIX_WORDS = (6, ['suffix_words'], None)
     
     def extract(self, phrase_match):
         return phrase_match.group(self._value_)

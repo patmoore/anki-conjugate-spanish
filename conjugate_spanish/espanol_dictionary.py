@@ -32,7 +32,11 @@ class DerivationNode():
             self._parent_str = parent_str
         else:
             cs_error("parent already set")
-            
+
+    @property
+    def derived(self):
+        return self._derived
+
     def __repr__(self):
         return "{'phrase_str': '" + self._phrase_str + "', 'derived' :" + str(self._derived)+ '}';
         
@@ -282,12 +286,15 @@ class Espanol_Dictionary_():
             return self.phraseDictionary.get(phrase)
         else:
             return verb
-    def get_derived(self, phrase_str):
+    def get_derived_definitions(self, phrase_str):
         if isinstance(phrase_str, str):
             return DerivationTree.get_derived(phrase_str)
-#         elif phrase_str.is_derived:
-#             return DerivationTree.get_derived(phrase_str.base_verb) 
-        
+
+    def get_derived(self, phrase_str):
+        derivation_node = self.get_derived_definitions(phrase_str)
+        derived = list(derivation_node.derived) if derivation_node is not None else []
+        derived.append(phrase_str)
+        return derived
 
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary

@@ -64,10 +64,10 @@ def make_dep_override(inf_match=None, parents=None, documentation=None, examples
 # TODO need a way of adding notes to overrides
 
 class ConjugationOverrideProperty(BaseConst):
-    conjugations = (0, 'conjugations', 'conjugations')
-    conjugation_stems = (1, 'conjugation_stems', 'conjugation_stems')
-    conjugation_endings = (2, 'conjugation_endings', 'conjugation_endings')
-    conjugation_joins = (3, 'conjugation_joins', 'conjugation_joins')
+    conjugations = (0, ['conjugations', 'c'], 'conjugations')
+    conjugation_stems = (1, ['conjugation_stems','cs'], 'conjugation_stems')
+    conjugation_endings = (2, ['conjugation_endings', 'ce'], 'conjugation_endings')
+    conjugation_joins = (3, ['conjugation_joins', 'cj'], 'conjugation_joins')
 
 class ConjugationOverride(object):
     """

@@ -2,10 +2,10 @@
 from .constants import *
 
 class Infinitive_Ending(BaseConst):
-    ar_verb = (0, 'ar', '-ar')
-    er_verb = (1, 'er', '-er')
-    ir_verb = (2, 'ir', '-ir')
-    a_ir_verb = (2, 'ír', '-ír')
+    ar_verb = (0, ['ar'], '-ar')
+    er_verb = (1, ['er'], '-er')
+    ir_verb = (2, ['ir'], '-ir')
+    a_ir_verb = (2, ['ír'], '-ír')
     def get_standard_conjugation_ending(self, conjugation_notes, verb_ending_index):
         """
         verb_ending_index - eliminate asap - this should be the code ( but not certain how the ír verbs are handled) 
