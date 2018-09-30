@@ -43,7 +43,7 @@ class Standard_Overrides_(dict):
         else:
             lookup_key = conjugation_override_string
             conjugation = self.get(lookup_key)         
-            return conjugation_override_string+":"+";".join(conjugation.documentation)            
+            return conjugation_override_string+":"+";".join(conjugation.documentation)
     
 Standard_Overrides = Standard_Overrides_()
 

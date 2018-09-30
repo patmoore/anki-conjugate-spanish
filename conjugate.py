@@ -9,12 +9,14 @@ from conjugate_spanish.phrase_printer import ScreenPrinter, CsvPrinter
 import argparse
 
 # used to avoid having to enter a number ( which is going away anyhow)
+# dest - 'destination' key in the namespace.
 class EnumAction(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         super(EnumAction, self).__init__(option_strings, dest, **kwargs)
     def __call__(self, parser, namespace, values, option_string=None):
-        prev = getattr(namespace, self.dest) if hasattr(namespace, self.dest) else []
-        prev +=  self._enum.index(int(values))
+        # get the previous setting.
+        prev = getattr(namespace, self.dest) or [] if hasattr(namespace, self.dest) else []
+        prev.append(self._enum.index(values))
         setattr(namespace, self.dest, prev)
         
 def tenseAction(**kwargs):
@@ -38,26 +40,36 @@ parser = argparse.ArgumentParser(description='Conjugate spanish verbs')
 parser.add_argument('phrases', metavar='phrase', type=str, nargs='*',
                     default=None,
                     help='a verb to conjugate')
-parser.add_argument('--printer', dest='printer_clazz', action='store_const',
+parser.add_argument('--csv', dest='printer_clazz', action='store_const',
                     const=CsvPrinter, default=ScreenPrinter,
                     help='print in csv format')
 parser.add_argument('--tenses', dest='tenses', 
                     action=tenseAction,
                     nargs='*',
-                    default=Tense.all(),
                     help='select tenses')
 parser.add_argument('--persons', dest='persons',
                     action=personAction,
-                    default=Person.all(),
                     help='select persons')
-parser.add_argument('--irregular', dest='irregular_nature', 
+parser.add_argument('--irregular','-i', dest='irregular_nature',
                     action=irregularAction,
-                    default=IrregularNature.regular,
                     help='select minimum irregularity for expansion.')
+parser.add_argument('--base','-b', dest='use_as_base_verb', action='store_true',
+                    default=False,
+                    help='print out the words with supplied base verb')
+parser.add_argument('--no','-n', dest='no_conjugation', action='store_true',
+                    default=False,
+                    help='do not conjugate just list verb')
+parser.add_argument('--verbose','-v', dest='verbose',
+                    action='store_true',
+                    default=False,
+                    help='Show how conjugation was determined')
 args = parser.parse_args()
-
-
-options={}
+args.irregular_nature = args.irregular_nature or [IrregularNature.regular]
+args.tenses = args.tenses or Tense.all()
+args.persons = args.persons or Person.all()
+options={
+    "verbose": args.verbose
+}
 verb=None
 
 spanishize_array = [
@@ -79,13 +91,17 @@ def spanishize(phrase):
 def print_all():
     if args.phrases is None:
         sorted_keys = list(Espanol_Dictionary.verbDictionary.keys())
+    elif args.use_as_base_verb:
+        sorted_keys = []
+        for phrase in args.phrases:
+            sorted_keys.extend(Espanol_Dictionary.get_derived(phrase))
     else:
         sorted_keys = list(args.phrases)
     sorted_keys.sort()
     for key in sorted_keys:
         phrase = Espanol_Dictionary.get(key)
         if not phrase.is_phrase:
-            printer = args.printer_clazz(phrase, irregular_nature=args.irregular_nature, options=options)
+            printer = args.printer_clazz(phrase, irregular_nature=args.irregular_nature[0], options=options)
             printer.print(tenses=args.tenses, persons=args.persons)
     
 Espanol_Dictionary.load()
