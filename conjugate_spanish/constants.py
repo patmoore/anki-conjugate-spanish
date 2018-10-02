@@ -139,6 +139,10 @@ class BaseConst(IntEnum):
     def __repr__(self):
         return self.key
 
+    @property
+    def short_key(self):
+        return self.keys[1] if len(self.keys) > 1 else self.keys[0]
+
 @unique
 class Tense(BaseConst):
     present_tense = (0, ['present', 'pres'], 'Present')
@@ -184,7 +188,7 @@ class Tense(BaseConst):
 @unique
 class Person(BaseConst):
     first_person_singular = (0, ['yo', '1s'], 'yo', 'me' )
-    second_person_singular = (1, ['tú', 'tu', '2s'], 'tú', 'te')
+    second_person_singular = (1, ['tú', '2s', 'tu'], 'tú', 'te')
     third_person_singular = (2, ['usted', '3s'], 'usted', 'se')
     first_person_plural = (3, ['nosotros', '1p'], 'nosotros', 'nos')
     second_person_plural = (4, ['vosotros', '2p'], 'vosotros', 'os')

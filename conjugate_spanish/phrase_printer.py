@@ -1,15 +1,15 @@
-# from interface import implements, Interface
+from interface import implements, Interface
 from .constants import Person, Tense
 from conjugate_spanish.constants import BaseConst, IrregularNature
 import copy
-#
-# class PhrasePrinter(Interface):
-#     def print(self, *, tenses=Tense.all(), persons=Person.all(), options={}):
-#         pass
-#
-#     @property
-#     def phrase(self):
-#         pass
+
+class PhrasePrinter(Interface):
+    def print(self, *, tenses=Tense.all(), persons=Person.all(), options={}):
+        pass
+
+    @property
+    def phrase(self):
+        pass
     
 class CsvPrinter(object):
     def __init__(self, phrase, irregular_nature = IrregularNature.regular, options=None):
@@ -79,7 +79,7 @@ class ScreenPrinter(object): # implements(PhrasePrinter)
         return 'blocked' in self._options and self._options['blocked']
     
     def print(self, tenses=Tense.all(), persons=Person.all(), **kwargs):
-        print(self.phrase.full_phrase+ ' : ' + self.phrase.definition + ' (' + self.phrase.complete_overrides_string+ ')')
+        print("{} : {} ( {} )".format(self.phrase.full_phrase, self.phrase.definition, self.phrase.complete_overrides_string))
         irregular_nature = IrregularNature.regular
         for tense in tenses:
             returned_irregular_nature = self.print_tense(tense, persons)
@@ -89,8 +89,7 @@ class ScreenPrinter(object): # implements(PhrasePrinter)
                 
     def print_tense(self, tense, persons=Person.all()):
         def _print_header_():
-            print("  "+tense.human_readable+ "(" 
-              + str(tense._value_) + "):")
+            print("  {} ({}):".format(tense.human_readable, str(tense._value_)))
         irregular_nature = IrregularNature.regular
 
         if tense in Tense.Person_Agnostic():
@@ -111,9 +110,9 @@ class ScreenPrinter(object): # implements(PhrasePrinter)
             if len(conj_list) > 0:                
                 _print_header_()
                 print('    ', end='')
-                for conjugation_notes in conj_list:                    
-                    print(conjugation_notes.person.human_readable + "(" 
-                          + str(conjugation_notes.person._value_) + "):", end=' ')
+                for conjugation_notes in conj_list:
+                    print("{}({}):".format(str(conjugation_notes.person),
+                        conjugation_notes.person), end=' ')
                 
                     self._print_conjugation_notes(conjugation_notes) 
                     if irregular_nature < conjugation_notes.irregular_nature:
@@ -125,8 +124,10 @@ class ScreenPrinter(object): # implements(PhrasePrinter)
         if conjugation_notes is None:
             print("---", end='; ')
         elif conjugation_notes.irregular_nature >= self._irregular_nature:
-#             print(conjugation_notes.full_conjugation+"("+conjugation_notes.operation_notes+")", end='')            
-            print(conjugation_notes.full_conjugation, end='')    
+            if self._options["verbose"]:
+                print(conjugation_notes.full_conjugation+"("+conjugation_notes.operation_notes+")", end='')
+            else:
+                print(conjugation_notes.full_conjugation, end='')
             if not conjugation_notes.is_regular and self.detailed:
                 print('', end=' <= ')
                 core_verb = None

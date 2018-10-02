@@ -45,11 +45,21 @@ parser.add_argument('--csv', dest='printer_clazz', action='store_const',
                     help='print in csv format')
 parser.add_argument('--tenses', dest='tenses', 
                     action=tenseAction,
-                    nargs='*',
+                    # nargs='*',
                     help='select tenses')
+for tense in Tense.all():
+    parser.add_argument("--"+tense.short_key, dest='tenses',
+                        action='append_const',
+                        const=tense
+                        )
 parser.add_argument('--persons', dest='persons',
                     action=personAction,
                     help='select persons')
+for person in Person.all():
+    parser.add_argument("--"+person.short_key, dest='persons',
+                        action='append_const',
+                        const=person
+                        )
 parser.add_argument('--irregular','-i', dest='irregular_nature',
                     action=irregularAction,
                     help='select minimum irregularity for expansion.')
