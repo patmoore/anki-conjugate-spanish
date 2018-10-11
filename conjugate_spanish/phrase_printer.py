@@ -72,7 +72,7 @@ class ScreenPrinter(object): # implements(PhrasePrinter)
     
     @property
     def detailed(self):
-        return 'detailed' in self._options and self._options['detailed']
+        return 'verbose' in self._options and self._options['verbose'] > 1
     
     @property
     def print_blocked(self):
@@ -124,8 +124,10 @@ class ScreenPrinter(object): # implements(PhrasePrinter)
         if conjugation_notes is None:
             print("---", end='; ')
         elif conjugation_notes.irregular_nature >= self._irregular_nature:
-            if self._options["verbose"]:
-                print(conjugation_notes.full_conjugation+"("+conjugation_notes.operation_notes+")", end='')
+            if self._options["verbose"] == 1:
+                print("{}({})".format(conjugation_notes.full_conjugation,
+                      [operation_note for operation_note in conjugation_notes.operation_notes if operation_note.irregular_nature !=  IrregularNature.base]
+                ), end='')
             else:
                 print(conjugation_notes.full_conjugation, end='')
             if not conjugation_notes.is_regular and self.detailed:

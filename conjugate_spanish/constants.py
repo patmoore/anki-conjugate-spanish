@@ -223,18 +223,19 @@ class Person(BaseConst):
         return [ Person.first_person_singular, Person.first_person_plural, Person.second_person_singular, Person.third_person_singular, Person.third_person_plural ]
 
 class IrregularNature(BaseConst):
+    base = (-1, ['base'], 'base')
     """
     Note: we don't track if from base or not because we want to know reason
     """
-    regular = (0, ['regular'], 'regular')
+    regular = (0, ['regular', 'r'], 'regular')
     """ 
     preserve the sound when spoken
     """
     sound_consistence = (1, ['sound', 's'], 'preserves sound (c->qu)')
-    radical_stem_change =(2, ['radical','r'], "Radical Stem Change (e.g: i:ie, o:ue, e:i)")
-    standard_irregular = (3, ['std_irregular', 'std'], 'irregularity comes from a standard irregular pattern')
+    radical_stem_change =(2, ['radical','rad'], "Radical Stem Change (e.g: i:ie, o:ue, e:i)")
+    standard_irregular = (3, ['std_irregular', 'std'], 'A standard irregular pattern')
     rare= (4, ['rare'], 'irregularity is not unique but only occurs in a few verbs')
-    custom = (5, ['custom'], 'irregularity is unique to this verb')
+    custom = (5, ['custom', 'c'], 'irregularity is unique to this verb')
     blocked = (6, ['blocked'], 'no conjugation')
 
 #

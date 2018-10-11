@@ -122,7 +122,7 @@ class ConjugationNotes():
         inf_conjugation_note.core_verb = phrase.stem
         # TODO replace with infinitive_ending.code?
         inf_conjugation_note.ending = phrase.inf_ending
-        inf_conjugation_note.irregular_nature = IrregularNature.regular
+        inf_conjugation_note.irregular_nature = IrregularNature.base
         std_ending = infinitive_ending.get_standard_conjugation_ending(self, phrase.verb_ending_index)
         if std_ending is not None:
             std_conjugation_note = self._new_conjugation_note("std_ending")
@@ -143,7 +143,7 @@ class ConjugationNotes():
         if not is_empty_str(self.conjugation):
             accented = Vowels.accented_vowel_check.findall(self.conjugation)
             if len(accented) > 1:
-                self.__raise("Too many accents in "+self.conjugation, self.tense, self.person)
+                self.__raise("{} {} Too many accents in {}".format(self.tense, self.person,self.conjugation))
                 
     @property
     def conjugation_note_list(self):
@@ -291,7 +291,7 @@ class ConjugationNotes():
     
     @property
     def is_regular(self):
-        return self.irregular_nature == IrregularNature.regular
+        return self.irregular_nature in [ IrregularNature.regular, IrregularNature.base]
         
     def __raise(self, msg, traceback_=None):
         msg_ = "{0}: (tense={1},person={2}): {3}".format(self.phrase.full_phrase, 

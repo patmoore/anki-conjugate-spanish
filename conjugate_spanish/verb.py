@@ -38,6 +38,7 @@ class Verb(Phrase):
                  prefix_words='', prefix='', core_characters='', inf_ending=None, reflexive=Reflexive.not_reflexive,
                  suffix_words=None,
                  generated =False, process_conjugation_overrides=True,
+                 force_auto_match=False,
                  **kwargs):
         '''
         Constructor
@@ -50,10 +51,11 @@ class Verb(Phrase):
                 for example "detenerse a [inf]","stop [inf]" -- base verb = detenerse , root = tener
                 key point is that the base_verb can be semantically related to this verb, while the root verb may have *no* relation.
                 tener and mantener are not semantically related.
-            manual_overrides: explicit string that handles very unique cases that have no pattern.  
+            manual_overrides: explicit string that handles very unique cases that have no pattern.
+            force_auto_match = True means that conjugation overrides that have auto_match==False are tested any how.
         '''
         
-        super().__init__(phrase, definition, True, **kwargs)
+        super().__init__(phrase, definition if not generated else "<generated>", True, **kwargs)
            
         # Some verbs don't follow the default rules for their ending> for example, mercer
         self._doNotApply = []
@@ -61,6 +63,7 @@ class Verb(Phrase):
         self._generated = generated
         self._explicit_no_root_verb = False
         self.base_verb = base_verb
+        self.force_auto_match=force_auto_match
         if base_verb is not None:
             self.base_verb_string = base_verb.full_phrase
  
@@ -144,7 +147,7 @@ class Verb(Phrase):
         
         # look for default overrides - apply to end so that user could explicitly turn off the default override
         for conjugation_override in Standard_Overrides.values():
-            if conjugation_override.auto_match != False and conjugation_override.is_match(self):                
+            if (conjugation_override.auto_match != False or self.force_auto_match) and (conjugation_override.inf_match and conjugation_override.is_match(self)):
                 applied = self.process_conjugation_override(conjugation_override)
                 if applied:
                     if self.overrides_string == '':

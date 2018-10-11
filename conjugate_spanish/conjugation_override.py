@@ -44,6 +44,12 @@ class Standard_Overrides_(dict):
             lookup_key = conjugation_override_string
             conjugation = self.get(lookup_key)         
             return conjugation_override_string+":"+";".join(conjugation.documentation)
+
+    def print_keys_documentation(self):
+        # used for responding to the list action
+        for conjugation_override in self.values():
+            print("{}\t{}\n".format(conjugation_override.key, str(conjugation_override)))
+
     
 Standard_Overrides = Standard_Overrides_()
 
@@ -298,6 +304,9 @@ class ConjugationOverride(object):
     @property
     def parents(self):        
         return self._parents
+
+    def __str__(self):
+        return "\n".join(self.documentation)
 
     def __repr__(self):
         return "ConjugationOverride(inf_match={0}, parents={1}, documentation={2}, examples={3}, key={4}, auto_match={5}, manual_overrides={6}, irregular_nature={7})".format(self.inf_match, self.parents, self.documentation, self.examples, self.key, self.auto_match, self.manual_overrides, self.irregular_nature)
@@ -858,14 +867,13 @@ Uar_CO = make_std_override(inf_match=re_compile('[^g]uar$'),
 Guar_CO = make_std_override(inf_match=re_compile('guar$'),
     key='guar',
     examples=['averiguar'],
-    documentation='guar verbs need a umlaut/dieresis ü to keep the u sound so we pronounce gu like gw which keeps it consistent with the infinitive sound http://www.spanish411.net/Spanish-Preterite-Tense.asp',
+    documentation=['guar verbs need a umlaut/dieresis ü to keep the u sound so we pronounce gu like gw which keeps it consistent with the infinitive sound http://www.spanish411.net/Spanish-Preterite-Tense.asp',"preserves sound in infinitive"],
     irregular_nature=IrregularNature.sound_consistence)
 def _umlaut_u_(self, conjugation_notes, **kwargs):
     _check_and_change(conjugation_notes, ENDS_WITH_U, STARTS_WITH_E, stem_ending_replacement='ü', operation=self.key)
     
-Guar_CO.override_tense_join(Tense.past_tense, _umlaut_u_, Person.first_person_singular,
-    documentation="preserves sound in infinitive")
-Guar_CO.override_tense_join(Tense.present_subjective_tense, _umlaut_u_, documentation="preserves sound in infinitive")
+Guar_CO.override_tense_join(Tense.past_tense, _umlaut_u_, Person.first_person_singular)
+Guar_CO.override_tense_join(Tense.present_subjective_tense, _umlaut_u_)
 
 def __go(self, conjugation_notes, **kwargs):
     if conjugation_notes.core_verb[-1:] in Vowels.all:

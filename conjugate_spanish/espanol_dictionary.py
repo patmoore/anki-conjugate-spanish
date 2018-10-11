@@ -69,7 +69,7 @@ class DerivationTree_():
         self._map[parent_str].add_derived(phrase.full_phrase)
         
     def get_derived(self, parent_str):
-        return self._map[parent_str]
+        return self._map[parent_str] if parent_str in self._map else None
         
     def print_tree(self):
         print('{')
@@ -82,6 +82,14 @@ class DerivationTree_():
         for key in sorted(self._irregular.keys()):
             print("'"+key+"': '" + str(self._irregular[key]))
         print('}')
+    def custom(self):
+        return self._custom
+
+    def irregularity(self, conjugation_override_key):
+        return self._irregular[conjugation_override_key].derived
+
+    def regular(self):
+        return self._regular
         
 DerivationTree = DerivationTree_()
 """
@@ -207,7 +215,7 @@ class Verb_Dictionary_(LanguageDictionary_):
 #     def load(self):
 #         basedir = os.path.dirname(os.path.realpath(__file__))
 #         dictionaryDirectory = basedir+u'/dictionaries/'
-#     #     print(u"current directory=",basedir)
+#         print(u"current directory=",basedir)
 #         for fileNameBase in [u'501verbs',u'501extendedverbs']:
 #             fileName = dictionaryDirectory+fileNameBase+u'.csv'
 #             verbs = []
@@ -295,6 +303,12 @@ class Espanol_Dictionary_():
         derived = list(derivation_node.derived) if derivation_node is not None else []
         derived.append(phrase_str)
         return derived
+
+    def get_by_irregularity(self, *, irregular_nature=IrregularNature.custom, conjugation_override_key=None):
+        if irregular_nature == IrregularNature.custom:
+            return DerivationTree.custom()
+        else:
+            return DerivationTree.irregularity(conjugation_override_key)
 
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary
