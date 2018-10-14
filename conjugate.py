@@ -154,7 +154,7 @@ def print_all():
             printer = args.printer_clazz(phrase, irregular_nature=args.irregular_nature[0], options=options)
             printer.print(tenses=args.tenses, persons=args.persons)
         else:
-            print("{} is a phrase. (Not conjugated yet)".formaat(phrase))
+            print("'{}' is a phrase. (Not conjugated yet)".format(phrase))
     
 Espanol_Dictionary.load()
 

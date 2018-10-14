@@ -41,3 +41,6 @@ class NonConjugatedPhrase(Phrase):
     @property
     def tags(self):
         return [ self.PHRASE_TAG ]
+
+    def __str__(self):
+        return self.phrase_string

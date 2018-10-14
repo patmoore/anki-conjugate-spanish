@@ -51,6 +51,9 @@ class Phrase(object):
     @property
     def has_tags(self):
         return self.tags is not None
+
+    def __str__(self):
+        return self.phrase_string
     
     @classmethod
     def table_columns(cls):

@@ -1040,14 +1040,14 @@ class Verb(Phrase):
         cs_error(">>>>>>",msg_, traceback_)
         
     def __str__(self):
+        return self.full_phrase
+    
+    def __repr__(self):
         s= ''
         for k,v in zip(Verb.table_columns(),self.sql_insert_values()):
             if v is not None and v != '':
                 s = s + str(k)+'='+str(v)+';'
         return s
-    
-    def __repr__(self):
-        return self.__str__()
 
     @classmethod
     def table_columns(cls):
