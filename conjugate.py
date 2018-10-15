@@ -43,10 +43,13 @@ parser.add_argument('phrases', metavar='phrase', type=str, nargs='*',
                     help='a verb to conjugate')
 parser.add_argument('--base','-b', dest='use_as_base_verb', action='store_true',
                     default=False,
-                    help='print out the words with supplied base verb')
+                    help='print out the words with supplied base verb (no conjugation unless -c)')
 parser.add_argument('--no','-n', dest='no_conjugation', action='store_true',
-                    default=False,
-                    help='do not conjugate just list verb')
+                    default=None,
+                    help='do not conjugate; just list verb')
+parser.add_argument('-c', dest='no_conjugation', action='store_false',
+                    default=None,
+                    help='Conjugate the verb(s)')
 parser.add_argument('--noguess', '--ng', dest='guess',
                     action='store_false',
                     default=True,
@@ -65,7 +68,7 @@ parser.add_argument('--vv', dest='verbose',
 parser.add_argument('--list-irregulars', '--lir', dest='list_irregularities',
                     action='store_const',
                     const=True)
-parser.add_argument('--conjugation-override-key','--cokey', dest='conjugation_override_key',
+parser.add_argument('--conjugation-override-key','-k', dest='conjugation_override_key',
                     type=str)
 parser.add_argument('--csv', dest='printer_clazz', action='store_const',
                     const=CsvPrinter, default=ScreenPrinter,
@@ -100,6 +103,10 @@ for irregularNature in IrregularNature.all_except(IrregularNature.base):
                         help='Select the {} irregular nature'.format(str(irregularNature))
                         )
 args = parser.parse_args()
+
+if args.no_conjugation is None:
+    args.no_conjugation = args.use_as_base_verb or args.conjugation_override_key is not None
+
 args.irregular_nature = args.irregular_nature or [IrregularNature.regular]
 args.tenses = args.tenses or Tense.all()
 args.persons = args.persons or Person.all()
