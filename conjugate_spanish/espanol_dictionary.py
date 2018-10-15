@@ -86,7 +86,11 @@ class DerivationTree_():
         return self._custom
 
     def irregularity(self, conjugation_override_key):
-        return self._irregular[conjugation_override_key].derived
+        # the dictionary(s) loaded may not have an example of the irregularity in question.
+        if conjugation_override_key in self._irregular:
+            return self._irregular[conjugation_override_key].derived
+        else:
+            return []
 
     def regular(self):
         return self._regular
