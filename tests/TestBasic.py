@@ -140,4 +140,13 @@ class TestBasic(unittest.TestCase):
             match = Vowels.find_accented(word)
             l = [i for i in match.groups()]
             self.assertListEqual(expected, l)
-        
+
+    def test_perseguir(self):
+        """
+        This test was added because of perseguir.
+        The embedded 'se' is being interpreted as a reflexive ending.
+        :return:
+        """
+        verb = Verb.importString("per-seguir")
+        self.assertEqual(verb.prefix, "per")
+        self.assertEqual(verb.base_verb_string, "seguir")

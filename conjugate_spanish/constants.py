@@ -253,12 +253,12 @@ __prefix_words='([^-/]*?)'
 # group 2 = prefix characters (if present)
 # group 3 = core verb (note: special case of 'ir' and 'irse'
 # group 4 = infinitive ending ( -ir,-er,-ar )
-# group 5 = reflexive se or -se if present
+# group 5 = reflexive se or -se if present (\\b - match the empty string ONLY at a word break - ie. end of string or whitespace) (per-seguir is test case)
 # group 6 = suffix words
 # use '-' to separate out the prefix from the base verb
 # use '/' to force the selection of the verb in complex cases or for cases where prefix words end in -ir,-ar,-er
 
-_phrase_parsing = re_compile('^'+__trim_ws+__prefix_words+__trim_ws+'/?([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se)?/?'+__trim_ws+'([^-/]*?)'+__trim_ws+'$')
+_phrase_parsing = re_compile('^'+__trim_ws+__prefix_words+__trim_ws+'/?([^/\s-]*?)-?([^/\s-]*)([iíae]r)(-?se\\b)?/?'+__trim_ws+'([^-/]*?)'+__trim_ws+'$')
 class PhraseMatch:
     def __init__(self, phrase_match):
         self._phrase_match = phrase_match
