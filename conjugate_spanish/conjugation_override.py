@@ -885,10 +885,10 @@ def __go(self, conjugation_notes, **kwargs):
     else:
         conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.standard_irregular, core_verb=conjugation_notes.core_verb +'g')
 Go_CO = make_std_override(key='go', documentation="go verbs -ig if last stem letter is vowel", examples=['caer'])
-Go_CO.override_tense_stem(Tense.present_tense, __go, Person.first_person_singular, documentation="go verb")
+Go_CO.override_tense_stem(Tense.present_tense, __go, Person.first_person_singular)
 
-Oy_CO = make_std_override(key='oy', documentation="oy verbs")
-Oy_CO.override_tense_ending(Tense.present_tense, lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.standard_irregular, ending="oy"), Person.first_person_singular, documentation="oy verb")
+Oy_CO = make_std_override(key='oy', documentation="oy verbs (ser, dar)")
+Oy_CO.override_tense_ending(Tense.present_tense, lambda self, conjugation_notes, **kwargs: conjugation_notes.change(operation=self.key, irregular_nature=IrregularNature.standard_irregular, ending="oy"), Person.first_person_singular)
 
 Infinitive_Stems_E2D = make_std_override(key='e2d', documentation="Future Tense/Conditional Tense:Some verbs convert the -er ending infinitive stem to a 'd'",
         examples=['tener'])
