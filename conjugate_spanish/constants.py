@@ -227,15 +227,15 @@ class IrregularNature(BaseConst):
     """
     Note: we don't track if from base or not because we want to know reason
     """
-    regular = (0, ['regular', 'r'], 'regular')
+    regular = (0, ['regular', 'reg'], 'regular')
     """ 
     preserve the sound when spoken
     """
-    sound_consistence = (1, ['sound', 's'], 'preserves sound (c->qu)')
+    sound_consistence = (1, ['sound', 'ps'], 'preserves sound (c->qu)')
     radical_stem_change =(2, ['radical','rad'], "Radical Stem Change (e.g: i:ie, o:ue, e:i)")
     standard_irregular = (3, ['std_irregular', 'std'], 'A standard irregular pattern')
     rare= (4, ['rare'], 'irregularity is not unique but only occurs in a few verbs')
-    custom = (5, ['custom', 'c'], 'irregularity is unique to this verb')
+    custom = (5, ['custom', 'cus'], 'irregularity is unique to this verb')
     blocked = (6, ['blocked'], 'no conjugation')
 
 #

@@ -429,7 +429,7 @@
 "salir","go out,leave","go,e2d,imp_inf_stem_only"
 "saltar","jump,leap,hop,spring"
 "saludar","greet,salute"
-"satisfacer","satisfy","go,e_and_o","{""conjugation_stems"":{""past"":""satisfic"",""future_cond"":""satisfar""}}"
+"satisfacer","satisfy","go,e_and_o,pp_acer","{""conjugation_stems"":{""past"":""satisfic"",""future_cond"":""satisfar""}}"
 "secar","dry,wipe dry"
 "secarse","dry oneself"
 "seguir","follow,pursue,continue","e:i"
