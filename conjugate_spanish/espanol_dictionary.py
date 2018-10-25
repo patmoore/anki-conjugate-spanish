@@ -46,8 +46,34 @@ class DerivationTree_():
         self._irregular = {}
         self._regular = []
         self._custom = []
+        # used to help find possible base verb
+        self._reversed_verb_map = {}
         
-    def add_phrase(self, phrase):        
+    def add_phrase(self, phrase):
+        #
+        # look for possible base verbs
+        #
+        if not phrase.is_phrase:
+            # does not have any '-'
+            reversed_verb_string = phrase.full_phrase[-1::-1]
+            # drop the infinitive endings and 'se'
+            base_reversed = reversed_verb_string[2:] if phrase.is_reflexive else reversed_verb_string
+            if len(base_reversed) > 4:
+                # exclude short verbs (dar, ser, etc.) that tend to be irregular but are not good indications of
+                # other verbs being irregular.
+                if not phrase.is_derived:
+                    # only invoke if no base verb is explicitly supplied
+                    # TODO - a way to exclude a verb from this check.
+                    for c in range(1, len(base_reversed)):
+                        possible_base_verb = self._reversed_verb_map.get(base_reversed[:-c])
+                        if possible_base_verb is not None:
+                            phrase.base_verb = possible_base_verb
+                            break
+                    # only add a verb to the reverse lookup table if it is irregular.
+                    # regular verbs do not have any impact on conjugation
+                    if not phrase.is_regular:
+                        self._reversed_verb_map[base_reversed] = phrase
+
         if phrase.is_derived:
             self._add_derived(phrase, phrase.root_verb_string)
             if phrase.root_verb_string != phrase.base_verb_string:

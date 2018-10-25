@@ -419,7 +419,7 @@
 "retrasar","delay,retard"
 "reunirse","assemble,get together,meet,gather"
 "reunir","gather","-u:ú_past_3rd,u:ú",,"unir does not have accented u need to fix pres sub nos - should not have accent"
-"revolver","revolve,turn around,turn over,turn upside down","o:ue,pp_olver"
+"re-volver","revolve,turn around,turn over,turn upside down"
 "robar","rob,steal"
 "rogar","supplicate,ask for,request,beg,pray","o:ue"
 "romper","break,shatter,tear","pa_to","{""conjugation_stems"":{""past_participle"":""ro""}}"
