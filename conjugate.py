@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys
 import re
 from conjugate_spanish.constants import re_compile
-from conjugate_spanish import Espanol_Dictionary, Verb
-from conjugate_spanish.constants import Tense, Tense, Person, IrregularNature
-from conjugate_spanish.phrase_printer import ScreenPrinter, CsvPrinter
+from conjugate_spanish import Espanol_Dictionary, Verb, ScreenPrinter
+from conjugate_spanish.constants import Tense, Person, IrregularNature
+from conjugate_spanish.phrase_printers.csv_printer import CsvPrinter
+from conjugate_spanish.phrase_printers.say_printer import SayPrinter
 from conjugate_spanish.conjugation_override import Standard_Overrides
 import argparse
 
@@ -71,12 +71,17 @@ parser.add_argument('--list-irregulars', '--lir', dest='list_irregularities',
 parser.add_argument('--conjugation-override-key','-k', dest='conjugation_override_key',
                     type=str)
 parser.add_argument('--csv', dest='printer_clazz', action='store_const',
-                    const=CsvPrinter, default=ScreenPrinter,
+                    const=CsvPrinter,
                     help='print in csv format')
+parser.add_argument('--speak','-s', dest="printer_clazz",
+                    action='store_const',
+                    const=SayPrinter,
+                    help="call the 'say' program to speak the spanish")
 parser.add_argument('--tenses', dest='tenses', 
                     action=tenseAction,
                     # nargs='*',
                     help='select tenses')
+
 
 for tense in Tense.all():
     parser.add_argument("--"+tense.short_key, dest='tenses',
@@ -107,6 +112,7 @@ args = parser.parse_args()
 if args.no_conjugation is None:
     args.no_conjugation = args.use_as_base_verb or args.conjugation_override_key is not None
 
+args.printer_clazz = args.printer_clazz or ScreenPrinter
 args.irregular_nature = args.irregular_nature or [IrregularNature.regular]
 args.tenses = args.tenses or Tense.all()
 args.persons = args.persons or Person.all()

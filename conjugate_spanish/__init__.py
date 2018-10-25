@@ -8,7 +8,7 @@ from .espanol_dictionary import Espanol_Dictionary
 from .nonconjugated_phrase import NonConjugatedPhrase
 from .storage import Storage
 from .utils import cs_debug, cs_error
-from .phrase_printer import ScreenPrinter
+from conjugate_spanish.phrase_printers.screen_printer import ScreenPrinter
 
 __all__ = ['ConjugationOverride', 'Standard_Overrides',
     'Infinitive_Ending',
@@ -22,6 +22,5 @@ __all__ = ['ConjugationOverride', 'Standard_Overrides',
     'get_iterable',
     'make_list',
     'cs_debug',
-    'Storage',
-    'ScreenPrinter'
-    ]
+    'Storage'
+           ]
