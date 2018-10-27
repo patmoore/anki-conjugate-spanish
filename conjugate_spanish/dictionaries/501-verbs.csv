@@ -20,6 +20,7 @@
 "acordar","agree upon","o:ue"
 "acordarse","remember"
 "acostarse","go to bed,lie down"
+"acostar","put to bed"
 "acostumbrar","be accustomed,be in the habit of"
 "acuchillar","knife,cut,slash,cut open"
 "acudir","attend,present frequently,respond (to a call)"
@@ -148,7 +149,7 @@
 "corregir","correct"
 "correr","run,race,flow"
 "cortar","cut,cut off,cut out",
-"costar","cost","3rd_only,o:ue"
+"costar","cost","o:ue",,"3rd_only???"
 "crecer","grow"
 "creer","believe"
 "criar","breed,raise,bring up (rear)","iar"

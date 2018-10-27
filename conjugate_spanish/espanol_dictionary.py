@@ -48,13 +48,33 @@ class DerivationTree_():
         self._custom = []
         # used to help find possible base verb
         self._reversed_verb_map = {}
-        
-    def add_phrase(self, phrase):
+        self._reversed_no_base_verb = {}
+
+    def _look_for_base_verb(self, phrase):
         #
         # look for possible base verbs
+        # TODO need to look at existing verbs already processed.
+        # TODO when looking for possible base_verbs, we really want to find the base_verb that is the longest
+        # ie. if choice between 'rebullir' and 'bullir' we want to pick 'rebullir'
         #
+        def _handle_match(phrase, possible_base_verb):
+            if phrase.full_phrase == possible_base_verb.full_phrase:
+                if possible_base_verb.is_generated:
+                    print("possible_base_verb {} generated".format(possible_base_verb.full_phrase))
+                return False
+
+            if phrase.is_generated:
+                print("phrase {} generated".format(phrase.full_phrase))
+            if possible_base_verb.is_generated:
+                print("possible_base_verb {} generated".format(possible_base_verb.full_phrase))
+
+            # phrase.base_verb = possible_base_verb
+            print("{} derived from {} ?".format(phrase.full_phrase, possible_base_verb.full_phrase))
+            return False
+
         if not phrase.is_phrase:
             # does not have any '-'
+            #( reversed because in future this will be stored in sql db and doing a like 'xxxx%' search )
             reversed_verb_string = phrase.full_phrase[-1::-1]
             # drop the infinitive endings and 'se'
             base_reversed = reversed_verb_string[2:] if phrase.is_reflexive else reversed_verb_string
@@ -67,13 +87,25 @@ class DerivationTree_():
                     for c in range(1, len(base_reversed)):
                         possible_base_verb = self._reversed_verb_map.get(base_reversed[:-c])
                         if possible_base_verb is not None:
-                            phrase.base_verb = possible_base_verb
+                            _handle_match(phrase, possible_base_verb)
                             break
                     # only add a verb to the reverse lookup table if it is irregular.
-                    # regular verbs do not have any impact on conjugation
+                    # regular verbs do not have any impact on conjugation,
+                        # however adding regular verbs allows for the discovery of possible derived verbs
                     if not phrase.is_regular:
+                        # now look for possible previous verbs
+                        # TODO (sql query)
+                        for key in self._reversed_no_base_verb.keys():
+                            if key.startswith(base_reversed):
+                                if _handle_match(self._reversed_no_base_verb[key], phrase):
+                                    del self._reversed_no_base_verb[key]
+                        # so does not match self
                         self._reversed_verb_map[base_reversed] = phrase
+                    elif not phrase.is_derived:
+                        self._reversed_no_base_verb[base_reversed] = phrase
 
+    def add_phrase(self, phrase):
+        self._look_for_base_verb(phrase)
         if phrase.is_derived:
             self._add_derived(phrase, phrase.root_verb_string)
             if phrase.root_verb_string != phrase.base_verb_string:
