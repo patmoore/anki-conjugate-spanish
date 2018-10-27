@@ -66,8 +66,12 @@ parser.add_argument('--vv', dest='verbose',
                     const=2,
                     help='Show how conjugation was determined')
 parser.add_argument('--list-irregulars', '--lir', dest='list_irregularities',
-                    action='store_const',
-                    const=True)
+                    action='store_true',
+                    default=False)
+parser.add_argument('--list-generated','--lg',
+                    action='store_true',
+                    dest='list_generated',
+                    default=False)
 parser.add_argument('--conjugation-override-key','-k', dest='conjugation_override_key',
                     type=str)
 parser.add_argument('--csv', dest='printer_clazz', action='store_const',
@@ -123,6 +127,10 @@ verb=None
 if args.list_irregularities:
     # this means we only see the standard irregularities
     Standard_Overrides.print_keys_documentation()
+    exit
+
+if args.list_generated:
+    Espanol_Dictionary.list_generated()
     exit
 
 

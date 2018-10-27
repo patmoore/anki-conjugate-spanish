@@ -817,6 +817,7 @@ class Verb(Phrase):
         if not self.is_derived:
             return None
         elif not hasattr(self, '_base_verb') or self._base_verb is None or self._base_verb.is_generated:
+            # allows replacing of a generated base verb
             _base_verb = self.find_verb(self.base_verb_string)
             if _base_verb is not None:
                 self._base_verb = _base_verb

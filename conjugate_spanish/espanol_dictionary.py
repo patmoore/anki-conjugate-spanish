@@ -240,7 +240,12 @@ class Verb_Dictionary_(LanguageDictionary_):
         else:
             return True
     def filename_match(self, fileName):
-        return Verb_Dictionary_.VERBS_FILENAME.match(fileName) 
+        return Verb_Dictionary_.VERBS_FILENAME.match(fileName)
+
+    def list_generated(self):
+        for verb in self.values():
+            if verb.is_generated:
+                print(verb.full_phrase)
 
 #     def load(self):
 #         basedir = os.path.dirname(os.path.realpath(__file__))
@@ -305,7 +310,6 @@ class Espanol_Dictionary_():
                 elif phraseMatch is not None:
                     self.phraseDictionary.load(path+'/'+fileName, phraseMatch.group(1))
         self.verbDictionary.processAllVerbs()
-#         DerivationTree.print_tree()
 
     def add_verb(self, phrase, definition, **kwargs):
         self.verbDictionary.add(phrase, definition, **kwargs)
@@ -339,6 +343,9 @@ class Espanol_Dictionary_():
             return DerivationTree.custom()
         else:
             return DerivationTree.irregularity(conjugation_override_key)
+
+    def list_generated(self):
+        return self.verbDictionary.list_generated()
 
 Espanol_Dictionary = Espanol_Dictionary_()
 Verb_Dictionary = Espanol_Dictionary.verbDictionary
