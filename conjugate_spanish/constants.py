@@ -223,20 +223,28 @@ class Person(BaseConst):
         return [ Person.first_person_singular, Person.first_person_plural, Person.second_person_singular, Person.third_person_singular, Person.third_person_plural ]
 
 class IrregularNature(BaseConst):
-    base = (-1, ['base'], 'base')
+    base = (-1, ['base'], 'base', False)
     """
     Note: we don't track if from base or not because we want to know reason
     """
-    regular = (0, ['regular', 'reg'], 'regular')
+    regular = (0, ['regular', 'reg'], 'regular', False)
     """ 
     preserve the sound when spoken
     """
-    sound_consistence = (1, ['sound', 'ps'], 'preserves sound (c->qu)')
-    radical_stem_change =(2, ['radical','rad'], "Radical Stem Change (e.g: i:ie, o:ue, e:i)")
-    standard_irregular = (3, ['std_irregular', 'std'], 'A standard irregular pattern')
-    rare= (4, ['rare'], 'irregularity is not unique but only occurs in a few verbs')
-    custom = (5, ['custom', 'cus'], 'irregularity is unique to this verb')
-    blocked = (6, ['blocked'], 'no conjugation')
+    sound_consistence = (1, ['sound', 'ps'], 'preserves sound (c->qu)', False)
+    radical_stem_change =(2, ['radical','rad'], "Radical Stem Change (e.g: i:ie, o:ue, e:i)", True)
+    standard_irregular = (3, ['std_irregular', 'std'], 'A standard irregular pattern', True)
+    rare= (4, ['rare'], 'irregularity is not unique but only occurs in a few verbs', True)
+    custom = (5, ['custom', 'cus'], 'irregularity is unique to this verb', True)
+    blocked = (6, ['blocked'], 'no conjugation', True)
+
+    def __init__(self, code:int, keys: list, human_readable: str, base_verb_interesting:bool):
+        super().__init__(code, keys, human_readable)
+        self.base_verb_interesting = base_verb_interesting
+
+    @property
+    def is_interesting(self):
+        return self.base_verb_interesting
 
 #
 # Parse up the infinitive string: 
