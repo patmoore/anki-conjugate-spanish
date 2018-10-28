@@ -31,8 +31,11 @@ class Verb(Phrase):
             # (has to handle acordarse -> acordar and descacordarse -> acordarse )
             # Note: that the prefix can be u'' - usually for reflexive verbs. 
     '''
-    # constant used to tell human that the verb is explicitly known to be a regular verb 
+    # constant used as conjugation override string to explicitly indicate a known regular verb
+    # this string is 'magical'
     REGULAR_VERB = 'regular'
+    # constant used to tell human that the verb has no known irregularities
+    ASSUMED_REGULAR_VERB = '(assumed) regular'
     
     def __init__(self, phrase, definition='', conjugation_overrides=None, base_verb=None, manual_overrides=None, 
                  prefix_words='', prefix='', core_characters='', inf_ending=None, reflexive=Reflexive.not_reflexive,
@@ -699,9 +702,13 @@ class Verb(Phrase):
 #             if _derived_str != Verb.REGULAR_VERB:
 #                 result += ' ' +_derived_str
         if len(result) == 0:
-            return Verb.REGULAR_VERB
+            return Verb.ASSUMED_REGULAR_VERB
         else:
             return result
+
+    @property
+    def is_explicit_regular(self):
+        return self.complete_overrides_string == Verb.REGULAR_VERB
         
     def __get_override(self, conjugation_notes, attr_name):
         """
@@ -970,7 +977,7 @@ class Verb(Phrase):
     
     @property
     def is_regular(self):
-        return self.appliedOverrides is None or len(self.appliedOverrides) == 0  
+        return self.appliedOverrides is None or len(self.appliedOverrides) == 0
     
     def has_conjugation_overrides(self, conjugation_overrides):
         result = True
