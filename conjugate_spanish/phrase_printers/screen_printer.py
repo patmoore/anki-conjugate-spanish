@@ -8,8 +8,10 @@ from .phrase_printer import PhrasePrinter
 class ScreenPrinter(PhrasePrinter): # implements(PhrasePrinter)
 
     def _print_verb_header(self, options={}):
-        print("{} : {} ( {} )".format(self.phrase.full_phrase, self.phrase.definition,
-                                      self.phrase.complete_overrides_string))
+        print("{} : {} ( {} ) {}".format(self.phrase.full_phrase, self.phrase.definition,
+                                    self.phrase.complete_overrides_string,
+                                    "derived from "+", ".join([ base_verb.full_phrase for base_verb in self.phrase.derived_list ]) if self.phrase.is_derived else "")
+              )
 
     def _print_tense_header(self, tense):
         print("  {} ({}):".format(tense.human_readable, str(tense._value_)))

@@ -161,10 +161,6 @@ class Verb(Phrase):
             if conjugation_override.auto_match != False and conjugation_override.is_match(self):
                 self.process_conjugation_override(conjugation_override)
             
-        ## HACK -- should be supplied when generating a card    
-        if self.overrides_string == '':
-            self.overrides_string = Verb.REGULAR_VERB
-            
         self.process_conjugation_override(UniversalAccentFix)
         # We have to allow for a verb with a generated base verb having the base verb get replaced with a real definition.
         self.__processed_conjugation_overrides = self.verb_for_derived.is_generated is False
@@ -922,7 +918,17 @@ class Verb(Phrase):
                 return [ self.base_verb_string ]
         else:
             return None
-        
+
+    @property
+    def derived_list(self):
+        phrase = self
+        derived_from = []
+        while phrase.is_derived:
+            phrase = phrase.base_verb
+            derived_from.append(phrase)
+
+        return derived_from
+
     @property
     def full_prefix(self):
         if self.base_verb is None:

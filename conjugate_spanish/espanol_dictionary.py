@@ -103,7 +103,11 @@ class DerivationTree_():
                 self._reversed_no_base_verb[base_reversed] = phrase
 
     def add_phrase(self, phrase):
-        self._look_for_base_verb(phrase)
+        if False:
+            self._look_for_base_verb(phrase)
+        else:
+            cs_debug("Not looking for derivitive possibilities")
+
         if phrase.is_derived:
             self._add_derived(phrase, phrase.root_verb_string)
             if phrase.root_verb_string != phrase.base_verb_string:
