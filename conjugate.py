@@ -86,7 +86,6 @@ parser.add_argument('--tenses', dest='tenses',
                     # nargs='*',
                     help='select tenses')
 
-
 for tense in Tense.all():
     parser.add_argument("--"+tense.short_key, dest='tenses',
                         action='append_const',
@@ -96,6 +95,11 @@ for tense in Tense.all():
 parser.add_argument('--persons', dest='persons',
                     action=personAction,
                     help='select persons')
+parser.add_argument('--all-persons', dest='persons',
+                    action='store_const',
+                    const=Person.all(),
+                    help='we skip vosotos because that person is not common')
+
 for person in Person.all():
     parser.add_argument("--"+person.short_key, dest='persons',
                         action='append_const',
@@ -119,7 +123,7 @@ if args.no_conjugation is None:
 args.printer_clazz = args.printer_clazz or ScreenPrinter
 args.irregular_nature = args.irregular_nature or [IrregularNature.regular]
 args.tenses = args.tenses or Tense.all()
-args.persons = args.persons or Person.all()
+args.persons = args.persons or Person.all_except(Person.second_person_plural)
 options={
     "verbose": args.verbose or 0
 }
