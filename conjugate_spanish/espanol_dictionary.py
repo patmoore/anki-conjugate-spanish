@@ -106,6 +106,7 @@ class DerivationTree_():
         if False:
             self._look_for_base_verb(phrase)
         else:
+            # TODO: Need option to turn off this check / explicitly indicate that the verb is not derived.
             cs_debug("Not looking for derivitive possibilities")
 
         if phrase.is_derived:
@@ -318,6 +319,7 @@ class Verb_Dictionary_(LanguageDictionary_):
 class Phrase_Dictionary_(LanguageDictionary_):
     PHRASES_FILENAME = re_compile('(.*)-phrases.csv$')
     def add(self,phrase, definition,associated_verbs=None,**kwargs):
+        # TODO: Should be able to handle conjugated phrases as well.
         phraseObj = NonConjugatedPhrase(phrase, definition,associated_verbs,**kwargs)
         if phrase in self:
             print("Phrase_Dictionary :" + phrase+" already in dictionary")

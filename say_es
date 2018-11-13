@@ -1,2 +1,2 @@
 #!/bin/zsh
-say -v Monica $*
+say -i -v Monica $*
