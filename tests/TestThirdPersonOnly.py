@@ -51,7 +51,7 @@ class TestThirdPersonOnly(unittest.TestCase):
                     index += 1
         
     def test_third_sing_only(self):
-        verb = Verb.importString('helar','freeze', conjugation_overrides=['3rd_sing_only',"e:ie"])
+        verb = Verb.importString('helar','freeze', conjugation_overrides=["e:ie"])
         results = [
             'hiela',
             'helaba',

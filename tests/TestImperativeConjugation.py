@@ -45,15 +45,3 @@ class TestImperativeConjugation(unittest.TestCase):
                 conjugation_note = fake.conjugate(Tense.imperative_negative,person)
                 self.assertEqual(conjugation_note.conjugation, present_subjective_tense.conjugation)
             
-    
-    def test_reflexive_third_person(self):        
-        for person in Person.third_person():
-            for ending in All_Infinitive_Ending:
-                fake = Verb.importString('faket'+ending.key+'se',"a fake verb")
-                present_subjective_tense = fake.conjugate(Tense.present_subjective_tense,person)
-                conjugation_note = fake.conjugate(Tense.imperative_positive,person)
-                self.assertEqual(conjugation_note.conjugation, Vowels.accent_at(present_subjective_tense.conjugation, 3)+person.indirect_pronoun)
-                conjugation_note = fake.conjugate(Tense.imperative_negative,person)
-                self.assertEqual(Vowels.accent_at(present_subjective_tense.conjugation, 3)+person.indirect_pronoun, conjugation_note.conjugation)
-                
-        
