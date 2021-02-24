@@ -7,8 +7,8 @@ flask-restful
 tornado
 python-interface
 sqlalchemy
-psycopg2
 pytest
+psycopg2-binary
 marshmallow
 marshmallow_sqlalchemy
 marshmallow_select
