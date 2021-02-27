@@ -376,10 +376,10 @@ class Espanol_Dictionary_():
         self.phraseDictionary.add(phrase, definition, **kwargs)
 
     def get_phrases(self):
-        return self.phraseDictionary.keys();
+        return self.phraseDictionary.keys()
 
     def get_verbs(self):
-        return self.verbDictionary.keys();
+        return self.verbDictionary.keys()
 
     def get_phrase(self, phrase):
         return Storage.get_phrase(phrase)
