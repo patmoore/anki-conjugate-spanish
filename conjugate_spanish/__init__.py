@@ -11,16 +11,14 @@ from .utils import cs_debug, cs_error
 from conjugate_spanish.phrase_printers.screen_printer import ScreenPrinter
 
 __all__ = ['ConjugationOverride', 'Standard_Overrides',
-    'Infinitive_Ending',
-    'Tense', 'Person',
-    'Standard_Conjugation_Endings', 
-    'ConjugateNotes',
-    'AnkiIntegration',
-    'Verb',
-    'NonConjugatedPhrase',
-    'Espanol_Dictionary',
-    'get_iterable',
-    'make_list',
-    'cs_debug',
-    'Storage'
+           'Infinitive_Ending',
+           'Tense', 'Person',
+           'Standard_Conjugation_Endings',
+           'Verb',
+           'NonConjugatedPhrase',
+           'Espanol_Dictionary',
+           'get_iterable',
+           'make_list',
+           'cs_debug',
+           'Storage'
            ]
