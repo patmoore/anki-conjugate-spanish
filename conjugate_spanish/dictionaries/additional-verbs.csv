@@ -1,4 +1,6 @@
 "phrase","definition","conjugation_overrides","manual_overrides","audio_url"
+"avisar","warn"
+"cegar", "blind/block", "e:ie"
 "competir","","e:i"
 "con-sentir","allow"
 "crear","create"
@@ -30,3 +32,4 @@
 "sustituir","substitute"
 "pro-seguir","proceed"
 "per-seguir","pursue"
+"filmar","film"
