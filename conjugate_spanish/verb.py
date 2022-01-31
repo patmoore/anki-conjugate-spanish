@@ -7,7 +7,6 @@
 import inspect
 
 from .conjugation_override import *
-from .constants import *
 from .vowel import Vowels, WordTokenizer
 from .utils import cs_debug, cs_error
 import types
@@ -69,6 +68,7 @@ class Verb(Phrase):
         self.force_auto_match=force_auto_match
         if base_verb is not None:
             self.base_verb_string = base_verb.full_phrase
+        self._root_verb = None
  
         # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
         phrase_match = Verb.is_verb(self.phrase_string)
@@ -84,8 +84,7 @@ class Verb(Phrase):
         self.conjugation_tracking = ConjugationTracking(self)
         self._verb_finder = None
         self.correct_infinitive()
-        
-                        
+
         # note: determining the conjugation overrides in constructor because:
         #    1. some conjugation overrides happen automatically based on the verb endings ( i.e. -guir)
         #    2. some overrides for pronounciation preservation are only applied if a previous override has not removed the condition
@@ -102,7 +101,7 @@ class Verb(Phrase):
             self.conjugation_overrides = conjugation_overrides
         elif isinstance(conjugation_overrides, ConjugationOverride):
             self.overrides_string = ''
-            self.conjugation_overrides = [ conjugation_overrides ]
+            self.conjugation_overrides = [conjugation_overrides]
         else:
             self.overrides_string = ''
             self.conjugation_overrides = []
@@ -167,7 +166,7 @@ class Verb(Phrase):
     
     @classmethod
     def importString(cls, phrase, definition='', conjugation_overrides=None, **kwargs):
-                # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"        
+        # determine if this verb has suffix words. for example: "aconsejar/con" which means to consult with"
         phrase_match = Verb.is_verb(phrase)
         if phrase_match is None:
             raise Exception(phrase+": does not appear to be a verb or phrase with verb infinitive in it.")            
@@ -572,7 +571,7 @@ class Verb(Phrase):
                 self.__raise("applying reflexive pronoun", conjugation_notes.tense, conjugation_notes.person)
         else:
             returned_conjugation = conjugation_notes.conjugation
-        conjugation_notes.change(operation='__apply_imperative_reflexive_pronoun', irregular_nature=IrregularNature.regular, conjugation= returned_conjugation)
+        conjugation_notes.change(operation='__apply_imperative_reflexive_pronoun', irregular_nature=IrregularNature.regular, conjugation=returned_conjugation)
              
     def __conjugation_present_subjective_stem(self, conjugation_notes):
         # need to force for verbs that are normally third person only 
@@ -857,6 +856,7 @@ class Verb(Phrase):
             return self._base_verb_string
         else:
             return None
+
     @base_verb_string.setter
     def base_verb_string(self, base_verb_string_):
         self._base_verb_string = base_verb_string_
@@ -903,6 +903,10 @@ class Verb(Phrase):
     
     @property
     def is_derived(self):
+        """
+        True means that this verb is gets its conjugation from another verb definition
+        :return:
+        """
         return self.is_phrase or self.has_prefix or self.is_reflexive    
     
     @property
@@ -940,7 +944,7 @@ class Verb(Phrase):
             return self.base_verb.full_prefix
 
     def is_child(self, ancestor_verb):
-        if self.base_verb == None or ancestor_verb is None:
+        if self.base_verb is None or ancestor_verb is None:
             return False
         elif self.base_verb.inf_verb_string == ancestor_verb.inf_verb_string:
             return True
